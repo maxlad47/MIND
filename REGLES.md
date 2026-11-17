@@ -2,6 +2,7 @@
 
 Chaque règle a un code. Une règle absente ici **n'existe pas** : Claude Code doit demander.
 Les valeurs sont des points de départ, à valider par Max sur les 3 profils (mission V0-M6).
+Version 6 — décisions de Max du 17/11/2026 : C9 (seuil abaissé à 3 h), C13 (préparation longue avant un 10 km), M12 (renfo coureur en option). Détail dans DECISIONS.md.
 Version 5 — décisions de Max du 16/11/2026 : N7 et table N (chrono), T3 et A1 (test 6 min, formule et source), M20 (back-off). Détail dans DECISIONS.md.
 Version 3 — corrections des contradictions avec Max le 16/11/2026 (S3, S3b, C9, P7, P8, J5, N2, N7, A5, M17, C6).
 Version 4 — revue technique du 16/11/2026 : contradictions (S8, S1/U6, M16), trous (C11, C12, M22, M31…),
@@ -96,7 +97,7 @@ Les valeurs marquées *(à valider par Max)* sont nouvelles : elles s'appliquent
   - courir plus : +10 %/sem. jusqu'au plafond choisi par l'utilisateur ;
   - courir plus vite : volume stable, une séance qualité en rotation, test tous les 2 mois.
   - Toutes les 4-6 semaines : proposer de continuer, changer ou se fixer une course.
-- C9 : marathon avec moins de **4 h** de course par semaine ou moins de **3 sorties** par semaine →
+- C9 : marathon avec moins de **3 h** de course par semaine *(abaissé de 4 h à 3 h par Max, 17/11/2026)* ou moins de **3 sorties** par semaine →
   **refus fort** : l'appli propose d'abord un plan « monter le volume », puis le marathon.
   Non levable (U7) : l'utilisateur ne peut pas passer outre.
 - C10 : la date de course est obligatoire pour un objectif 10 km, semi ou marathon.
@@ -112,6 +113,7 @@ Les valeurs marquées *(à valider par Max)* sont nouvelles : elles s'appliquent
   En fin de récupération, l'appli propose : nouvelle course, « pas de course prévue » (C8) ou changement d'objectif (Z5).
   La récupération compte comme une semaine non normale (U6) ; ensuite reprise à **80 % de la dernière semaine normale avant l'affûtage**, puis S1.
 - C12 : **collisions de calendrier**, ordre de priorité : affûtage > récupération après course (C11) > semaine allégée (S5) > test (T7) > progression normale.
+- C13 : **préparation longue avant un 10 km** : plus de 12 semaines avant la course → phase de préparation, volume **+5 % par semaine au maximum**, **1 séance intense** par semaine, puis plan C1 sur les **12 dernières semaines**. Les plafonds S s'appliquent aussi. *(Validé par Max, 17/11/2026.)*
 
 ---
 
@@ -205,7 +207,12 @@ Identique pour tous.
   **secondaire** → renfo, fin de séance ; **exclu** → jamais.
 - M10 : exercice exclu → remplacé par un autre du même muscle principal.
 - M11 : tous les exercices d'un muscle coché exclus → avertir l'utilisateur.
-- M12 : objectif course → « renfo coureur » proposé par défaut (désactivable, avec explication).
+- M12 : « **Renfo coureur** » est une **option** à cocher, qui s'ajoute à l'objectif muscu (M1-M4) ; ce n'est pas un objectif.
+  Cochée par défaut si objectif course (désactivable, avec explication). Option cochée :
+  - un bloc renfo coureur s'ajoute aux séances ;
+  - si aucun muscle des jambes n'est prioritaire, la semaine ne contient **aucun exercice de jambes lourdes** (U5) : les jambes sont travaillées par le renfo coureur ;
+  - si un muscle des jambes est prioritaire, les jambes lourdes restent et le renfo coureur s'ajoute.
+  *(Validé par Max, 17/11/2026.)*
 - M13 : trop de priorités pour le nombre de séances (séries M22 impossibles) → l'appli le dit et propose un arbitrage.
 - M14 : échauffement muscu = séries de montée en charge calculées (ex. 50 %, 70 %, 85 %).
 - M15 : hypertrophie : rotation des variantes possible, base stable sur plusieurs semaines.

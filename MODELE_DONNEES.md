@@ -95,7 +95,7 @@ Champs prévus pour plus tard, non saisis en V1 :
 | `objectif_course`, `objectif_muscu` | copie du profil à la génération | Traçabilité | Z5 (changement d'objectif) |
 | `phase_depart` | `fondation` / `developpement` / `specifique` / `affutage` | Phase au départ | C1-C3, Z5 |
 | `date_generation` | date | Date de calcul (« aujourd'hui ») | V1-M0 |
-| `regles_version` | texte (`REGLES v5`) | Version des règles utilisée | Traçabilité ; CLAUDE.md (alignement) |
+| `regles_version` | texte (`REGLES v6`) | Version des règles utilisée | Traçabilité ; CLAUDE.md (alignement) |
 
 ### `mind_semaines`
 

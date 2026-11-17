@@ -3,7 +3,7 @@
 Chaque décision importante est notée ici, datée. Ce qui est noté ici n'est pas rediscuté
 sans raison nouvelle.
 
-Version de référence des règles : **REGLES.md v5** (voir CLAUDE.md). Les mentions v2, v3 et v4 ci-dessous sont historiques.
+Version de référence des règles : **REGLES.md v6** (voir CLAUDE.md). Les mentions v2 à v5 ci-dessous sont historiques.
 
 | Date | Décision |
 |---|---|
@@ -86,7 +86,7 @@ Version de référence des règles : **REGLES.md v5** (voir CLAUDE.md). Les ment
 | 16/11/2026 | Dépôt public : prénoms remplacés par « profils fictifs A, B, C » (CADRAGE §2) et « un testeur extérieur au développement » (MISSIONS V3-M6). Dépôt : `maxlad47/MIND` |
 | 16/11/2026 | Version de référence : REGLES.md v5 (décision A) |
 | 16/11/2026 | V1 : profil rempli par un formulaire simple avec valeurs par défaut ; premier lancement en 3 questions reporté à V5 |
-| 16/11/2026 | Plans et données de test : profils fictifs A, B, C uniquement ; vérification manuelle avant chaque publication |
+| 16/11/2026 | ~~Plans et données de test : profils fictifs A, B, C uniquement ; vérification manuelle avant chaque publication~~ → remplacé par « Profils A, B, C = personnes réelles anonymisées, chronos conservés » (17/11/2026) |
 | 16/11/2026 | V0-M6 : statut à confirmer par Max ; bloque seulement l'étape 2 du plan |
 | 16/11/2026 | Ordre : étapes 2 et 3 en parallèle de l'étape 4 ; étapes 4 et 5 indépendantes |
 | 16/11/2026 | **Modèle de données validé** (MODELE_DONNEES.md) : stockage local ; semaines commençant le lundi ; charge de séance recalculée, non stockée |
@@ -101,3 +101,9 @@ Version de référence des règles : **REGLES.md v5** (voir CLAUDE.md). Les ment
 | 17/11/2026 | Prénom obligatoire dans le formulaire et le validateur (décision de Max) ; option « Hypertrophie » affichée « Hypertrophie et esthétisme » (affichage seulement) |
 | 17/11/2026 | Rappel d'export : bandeau après 30 jours sans export, champ `derniere_export` dans `mind_reglages` (décision de Max) |
 | 17/11/2026 | Pas d'écran de restauration de la copie de sécurité en V1 (décision de Max) ; jalons 3 et 4 validés |
+| 17/11/2026 | V1-M1, V1-M2 et retouches de design (fond orange pastel, mode sombre) validées par Max ; tests sur iPhone et Android faits |
+| 17/11/2026 | **Profils A, B, C = trois personnes réelles jugées par Max**, anonymisées sous A, B, C : aucun prénom ni lien de parenté dans le dépôt, **chronos conservés**. Remplace « profils fictifs A, B, C uniquement » (raison nouvelle : Max doit pouvoir juger les plans). Dates de course fictives |
+| 17/11/2026 | **REGLES.md v6** : C9 abaissé de 4 h à 3 h de course par semaine ; nouvelle règle C13 (préparation longue avant un 10 km) |
+| 17/11/2026 | Profil sans objectif prioritaire avec une course visée : Max choisit la course comme prioritaire (profil A). Pas de règle « à égalité » |
+| 17/11/2026 | Profils A et C : aucun groupe exclu ; renfo coureur = **option** cochée en plus de l'objectif muscu (pas un objectif comme M1-M4) ; pas de jambes lourdes (U5, ex. squat lourd) dans leur semaine. **M12 réécrite** (REGLES v6, validée par Max) : option ; sans jambes prioritaires → aucune jambe lourde ; jambes prioritaires → jambes lourdes + renfo |
+| 17/11/2026 | V0-M6 : les séances viennent de l'application (règles + `data/exercices.json`), pas d'un choix libre de Claude → V0-M7 avant les plans papier. Les plans restent calculés à la main (résultats attendus des tests) |

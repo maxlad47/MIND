@@ -16,7 +16,7 @@ MIND est une PWA installable, sans store ni serveur, qui crée et fait évoluer 
 | Fichier | Rôle |
 |---|---|
 | `CADRAGE.md` | Périmètre, public, choix techniques, design, contenu de la V6 (version partagée au groupe). |
-| `REGLES.md` | Règles d'entraînement, chacune avec un code (U, S, N, T, C, A, V, F, M, P, J, D, R, K, Z). **Version de référence : v5.** Une règle absente n'existe pas : on demande. |
+| `REGLES.md` | Règles d'entraînement, chacune avec un code (U, S, N, T, C, A, V, F, M, P, J, D, R, K, Z). **Version de référence : v6.** Une règle absente n'existe pas : on demande. |
 | `DECISIONS.md` | Journal daté des décisions. Une décision notée n'est pas rediscutée sans raison nouvelle. |
 | `MISSIONS.md` | Liste des missions V0 à V6, avec modèle assigné et critère de fin. Seul fichier qui définit une mission. |
 | `AVANCEMENT.md` | Plan jusqu'à la V1 testable, état des étapes, points ouverts. |
@@ -40,7 +40,7 @@ Les statuts sont tenus dans `AVANCEMENT.md`, pas dans `MISSIONS.md`.
 
 ## Alignement des documents
 
-- **Version de référence des règles** : `REGLES.md` (actuellement v5). Les autres documents la citent sans la recopier. Les mentions de versions antérieures sont historiques.
+- **Version de référence des règles** : `REGLES.md` (actuellement v6). Les autres documents la citent sans la recopier. Les mentions de versions antérieures sont historiques.
 - **Numérotation des missions** : `V<n>-M<k>`, avec des sous-lettres `a`, `b`, `c` pour les découpes. Une étape sans mission est marquée « hors mission ».
 - **Quand une règle change** : vérifier dans l'ordre `REGLES.md` → `DECISIONS.md` (ligne datée) → `MISSIONS.md` (critère) → `AVANCEMENT.md`.
 - **Toute incohérence trouvée** : la signaler à Max avec la correction proposée, avant de la corriger.

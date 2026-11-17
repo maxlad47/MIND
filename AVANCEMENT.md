@@ -1,10 +1,10 @@
 # MIND — Avancement et plan jusqu'à la V1 testable
 
-Document de travail. Rien n'est codé à ce stade.
+Document de travail. Code de V1-M0 à V1-M4 écrit et publié sur GitHub Pages ; restent les tests sur téléphones (section 11).
 
 Légende « qui » : **Max** = action de Max · **Claude** = action de Claude Code (modèle indiqué selon MISSIONS.md).
 « État » : vocabulaire défini dans CLAUDE.md. Le suivi détaillé appartient à Max (MISSIONS.md).
-Version de référence des règles : **REGLES.md v5** (en-tête vérifié).
+Version de référence des règles : **REGLES.md v6** (17/11/2026 : C9 à 3 h, C13, M12).
 
 ---
 
@@ -37,7 +37,7 @@ Version de référence des règles : **REGLES.md v5** (en-tête vérifié).
 - **Refus fort** : C9 non levable. S et P5 bloquantes mais levables avec confirmation explicite. Liste unique dans REGLES U7.
 - **Sortie longue avec blocs** : reste une sortie longue ; ses blocs rapides comptent dans S2 et S2b.
 - **Profil V1** : formulaire simple avec valeurs par défaut. Premier lancement en 3 questions reporté à V5.
-- **Données de test** : profils fictifs A, B, C uniquement ; vérification manuelle avant chaque publication.
+- **Données de test** : ~~profils fictifs A, B, C uniquement~~ → profils A, B, C réels anonymisés, chronos conservés (17/11/2026) ; vérification manuelle avant chaque publication.
 - **Noms dans le dépôt public** : prénoms remplacés dans CADRAGE §2 et MISSIONS V3-M6.
 - **V0-M6** : statut à confirmer par Max ; bloque seulement l'étape 2.
 - **Version de référence** : REGLES.md v5. La demande « v4 » est corrigée.
@@ -62,13 +62,13 @@ Ordre (décision de Max) : étapes 2 et 3 en parallèle de l'étape 4 ; étapes 
 |---|---|---|---|---|---|
 | 0 | Trancher les points flous | hors mission | — | Fait (16/11/2026) | Max a tranché ; Claude a reporté dans les documents |
 | 1 | Créer CLAUDE.md et aligner les missions | V0-M5 | Opus | Fait (16/11/2026, version corrigée à v5) | Claude a rédigé ; Max a validé |
-| 2 | Tester les règles à la main sur les profils fictifs A, B, C et produire les plans papier | V0-M6 | Opus | Inconnu (à confirmer par Max) | Max confirme le statut ; Claude aide à produire les plans |
+| 2 | Tester les règles à la main sur les profils fictifs A, B, C et produire les plans papier | V0-M6 | Opus | En cours (17/11/2026) : profils A, B, C fixés (section 12) ; attend V0-M7 | Max confirme le statut ; Claude aide à produire les plans |
 | 3 | Ajouter `data/exercices.json` | V0-M7 | Sonnet | À faire | Claude rédige, Max valide le contenu |
 | 4 | Définir le modèle de données : profil, plan, séances, historique, charges, version, clés `mind_`, dates en texte | V1-M0 | Opus | Validé Max (schéma 16/11/2026, code 17/11/2026) | Claude propose, Max valide |
 | 5 | Créer le dépôt GitHub `maxlad47/MIND` | hors mission | — | Fait (Max, 16/11/2026) | Max le crée lui-même |
 | 5b | Initialiser git en local | hors mission | — | Fait : `git init` sur `main`, remote `origin` ajouté, aucun commit, aucun push | Claude |
-| 6 | Projet React + Vite, `src/moteur/`, Vitest | V1-M1 | Sonnet | Fait, en attente de ta vérification (voir section 7) | Claude développe ; Max vérifie que l'appli démarre et que `npm test` passe |
-| 7 | GitHub Pages, PWA, message « Nouvelle version disponible » | V1-M2 | Sonnet | Partiel : publiée sur `maxlad47.github.io/MIND/` (17/11/2026, workflow vert) ; installation iPhone / Android, hors ligne et bandeau de mise à jour à tester par Max (section 11) | Claude développe ; Max installe sur iPhone et Android |
+| 6 | Projet React + Vite, `src/moteur/`, Vitest | V1-M1 | Sonnet | Validé Max (17/11/2026) | Claude développe ; Max vérifie que l'appli démarre et que `npm test` passe |
+| 7 | GitHub Pages, PWA, message « Nouvelle version disponible » | V1-M2 | Sonnet | Validé Max (17/11/2026) : publiée sur `maxlad47.github.io/MIND/`, installée sur iPhone et Android, restauration entre deux téléphones et bandeau de mise à jour testés | Claude développe ; Max installe sur iPhone et Android |
 | 8 | Profil utilisateur (formulaire simple, valeurs par défaut) | V1-M3 | Sonnet | Validé Max (17/11/2026) | Claude développe ; Max teste la persistance |
 | 9 | Sauvegarde export / import + rappel | V1-M4 | Sonnet | Validé Max (17/11/2026) | Claude développe ; Max teste la restauration sur un autre téléphone |
 | 10 | Retouches et validation de V1 | hors mission | Haiku | À faire | Claude corrige les retouches ; Max valide le critère de V1 |
@@ -85,16 +85,16 @@ Ordre (décision de Max) : étapes 2 et 3 en parallèle de l'étape 4 ; étapes 
 
 ## 4. Prochaine étape
 
-Jalons 3 et 4 validés par Max (17/11/2026). **Jalon 5 (V1-M2) : publié** (17/11/2026) : premier commit et push faits, Pages activé, workflow vert. Reste à tester sur téléphones (section 11, points 4 à 6).
+Jalons 3, 4 et 5 validés par Max (17/11/2026). Le critère de sortie de V1 est rempli ; il reste l'étape 10 (retouches et validation finale de V1).
+**Mission en cours : V0-M6 (étape 2), lancée le 17/11/2026 sur décision de Max.**
+Retouches de design depuis, hors mission, déjà commitées : couleur de la barre d'état alignée sur le fond (`2fe32be`), puis fond orange pastel (essai) et mode sombre (`db1d81b`). Validées par Max (17/11/2026).
 Les étapes 2 et 3 ne sont pas lancées : elles attendent la confirmation de Max pour V0-M6.
 
 ---
 
 ## 5. Ce qui attend Max
 
-- Confirmer le statut de V0-M6 (étape 2).
-- Jalon 5 : installer l'appli sur iPhone et Android, tester la restauration entre deux téléphones et le bandeau de mise à jour (section 11, points 4 à 6).
-- Dire si je corrige MODELE_DONNEES.md §3 et DECISIONS.md pour la copie de sécurité avant migration (section 9, « À signaler »).
+- V1-M2 : l'invitation à installer avant de remplir le profil (iPhone, CADRAGE §2) n'est pas codée. À ajouter, ou à retirer du critère.
 - Valider le choix Vite 8, React 19 et Vitest 5 (versions installées par npm).
 
 ---
@@ -117,11 +117,6 @@ Les étapes 2 et 3 ne sont pas lancées : elles attendent la confirmation de Max
 - I : les lignes historiques de DECISIONS.md remplacées sont barrées, avec renvoi à la ligne qui les remplace.
 
 ### Contradictions restantes : aucune connue
-
-- **F. CADRAGE.md §2** présente « Premier lancement en 3 questions (objectif, jours, chrono) » comme une contrainte générale. Proposition : ajouter « (reporté à V5) ».
-- **G. CADRAGE.md §3** dit « chrono 5 ou 10 km (obligatoire) », alors que N7 prévoit des profils sans chrono. Proposition : « chrono 5 ou 10 km recommandé ; sans chrono, règle N7 (EF uniquement, test 6 min) ».
-- **H. Terminologie.** CADRAGE.md §5 et CLAUDE.md disent « profils anonymes A, B, C », et DECISIONS (ligne du 16/11 sur les tests) dit « profils anonymes ». La décision 14 dit « fictifs ». Proposition : remplacer « anonymes » par « fictifs » dans CADRAGE §5 et CLAUDE.md. Les lignes historiques de DECISIONS restent telles quelles.
-- **I. Lignes historiques de DECISIONS.md** : « Chrono obligatoire », « forçable (C9) », « niveau déduit du chrono + volume + régularité », « Tests avec profils anonymes ». Elles sont remplacées par des lignes plus récentes. Proposition : les garder comme historique, ou les barrer avec « ~~…~~ » comme le reste du journal. Je recommande de les barrer, pour éviter les lectures contradictoires.
 
 ### Vérifié, sans correction
 
@@ -283,3 +278,29 @@ Arrêt après le jalon 4. J'attends ton test.
 6. **Tester le bandeau de mise à jour** : après une modification publiée, rouvrir l'appli installée ; le bandeau doit apparaître (parfois à la deuxième ouverture).
 
 Arrêt après le code du jalon 5, conformément à ta consigne. Aucun commit, aucun push.
+
+---
+
+## 12. V0-M6 : profils A, B, C (fixés par Max le 17/11/2026)
+
+Personnes réelles anonymisées : aucun prénom ni lien dans le dépôt, chronos conservés. Dates de course fictives. Volumes déclarés identiques sur les 4 dernières semaines.
+
+| | A | B | C |
+|---|---|---|---|
+| Objectif course | 10 km, 01/03/2027 ; course prioritaire | 10 km, 01/03/2027 | Marathon, 01/06/2027 ; montée en volume d'abord (C9) |
+| Chrono 10 km | 42'00 (confirmé) | 60'00 (débutant) | 44'00 (confirmé) |
+| Course | 3 sorties, 30 km/sem. | 2 sorties, 10 km/sem. | 3 sorties d'1 h, 30 km/sem. ; sortie longue au-delà d'1 h permise |
+| Régulier depuis 6 mois | Oui | Oui | Oui |
+| Muscu | 3 séances, hypertrophie (M3), > 2 ans, salle | 2 séances, hypertrophie (M3), < 6 mois, salle | 3 séances, tonification (M4) + renfo coureur, > 2 ans, salle |
+| Organisation | « Je ne sais pas » (M26) | « Je ne sais pas » | « Je ne sais pas » |
+| Groupes | Aucun exclu ; option renfo coureur, pas de jambes lourdes (voir « Ouvert ») | Prioritaires : quadriceps, ischios, fessiers, dos | Aucun exclu ; option renfo coureur, pas de jambes lourdes |
+| Jours | Lun (2 séances), mer, ven, sam, dim | Lun, mer, sam, dim | Lun, mar, jeu, ven, sam, dim |
+| Temps par séance | 1 h ; sortie longue 1 h-1 h 30 | 1 h ; sortie longue 1 h-1 h 30 | 45 min (course : 1 h) |
+
+**Ce que donnent déjà les règles** : A et C confirmés → 2 séances intenses (N) ; B débutant → 1. A et B : 14 semaines avant la course → C13 (2 semaines de préparation, puis C1 sur 12). C : 3 h/sem. = seuil C9 v6 atteint.
+
+**Ordre** : V0-M7 (`data/exercices.json`) d'abord, puis les plans papier, calculés à la main depuis REGLES.md v6 et la bibliothèque.
+
+**Ouvert** :
+- Renfo coureur (A et C) : pas de groupe exclu ; renfo coureur en **option** cochée en plus de l'objectif muscu, et pas de squat lourd dans la semaine (Max, 17/11/2026). M12 réécrite en conséquence (REGLES v6, validée par Max). B : jambes prioritaires → jambes lourdes conservées + renfo. À faire plus tard : case « Renfo coureur » dans le formulaire (le champ `renfo_coureur` existe déjà).
+- C : 6 jours disponibles sur 7 ; le mercredi reste libre, P5 est respecté.
