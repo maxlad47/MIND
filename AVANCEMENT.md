@@ -68,7 +68,7 @@ Ordre (décision de Max) : étapes 2 et 3 en parallèle de l'étape 4 ; étapes 
 | 5 | Créer le dépôt GitHub `maxlad47/MIND` | hors mission | — | Fait (Max, 16/11/2026) | Max le crée lui-même |
 | 5b | Initialiser git en local | hors mission | — | Fait : `git init` sur `main`, remote `origin` ajouté, aucun commit, aucun push | Claude |
 | 6 | Projet React + Vite, `src/moteur/`, Vitest | V1-M1 | Sonnet | Fait, en attente de ta vérification (voir section 7) | Claude développe ; Max vérifie que l'appli démarre et que `npm test` passe |
-| 7 | GitHub Pages, PWA, message « Nouvelle version disponible » | V1-M2 | Sonnet | Partiel : code prêt ; publication en attente du premier commit / push et de l'activation de Pages (section 11) | Claude développe ; Max installe sur iPhone et Android |
+| 7 | GitHub Pages, PWA, message « Nouvelle version disponible » | V1-M2 | Sonnet | Partiel : publiée sur `maxlad47.github.io/MIND/` (17/11/2026, workflow vert) ; installation iPhone / Android, hors ligne et bandeau de mise à jour à tester par Max (section 11) | Claude développe ; Max installe sur iPhone et Android |
 | 8 | Profil utilisateur (formulaire simple, valeurs par défaut) | V1-M3 | Sonnet | Validé Max (17/11/2026) | Claude développe ; Max teste la persistance |
 | 9 | Sauvegarde export / import + rappel | V1-M4 | Sonnet | Validé Max (17/11/2026) | Claude développe ; Max teste la restauration sur un autre téléphone |
 | 10 | Retouches et validation de V1 | hors mission | Haiku | À faire | Claude corrige les retouches ; Max valide le critère de V1 |
@@ -85,7 +85,7 @@ Ordre (décision de Max) : étapes 2 et 3 en parallèle de l'étape 4 ; étapes 
 
 ## 4. Prochaine étape
 
-Jalons 3 et 4 validés par Max (17/11/2026). **Jalon 5 (V1-M2) : code prêt, arrêt** : la publication demande ton premier commit / push et l'activation de GitHub Pages (section 11). Aucun commit n'a été fait.
+Jalons 3 et 4 validés par Max (17/11/2026). **Jalon 5 (V1-M2) : publié** (17/11/2026) : premier commit et push faits, Pages activé, workflow vert. Reste à tester sur téléphones (section 11, points 4 à 6).
 Les étapes 2 et 3 ne sont pas lancées : elles attendent la confirmation de Max pour V0-M6.
 
 ---
@@ -93,8 +93,7 @@ Les étapes 2 et 3 ne sont pas lancées : elles attendent la confirmation de Max
 ## 5. Ce qui attend Max
 
 - Confirmer le statut de V0-M6 (étape 2).
-- Me signaler quand le dépôt GitHub existe (étape 5), pour que j'initialise git.
-- Jalon 5 : lire la section 11, tester en local, puis me demander le premier commit / push et activer GitHub Pages.
+- Jalon 5 : installer l'appli sur iPhone et Android, tester la restauration entre deux téléphones et le bandeau de mise à jour (section 11, points 4 à 6).
 - Dire si je corrige MODELE_DONNEES.md §3 et DECISIONS.md pour la copie de sécurité avant migration (section 9, « À signaler »).
 - Valider le choix Vite 8, React 19 et Vitest 5 (versions installées par npm).
 
