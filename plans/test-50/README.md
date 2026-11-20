@@ -1,6 +1,6 @@
 # MIND — Règles v7 testées sur 50 profils
 
-Document de travail du 19/11/2026, **hors mission**. Règles appliquées : `REGLES.md` **v7** (à valider par Max ; la v6 est conservée dans `REGLES-v6.md`) et `data/exercices.json` v2.
+Document de travail du 19/11/2026, **hors mission**. Règles appliquées : `REGLES.md` **v7** (la v6 et la v7 se retrouvent dans le commit `ddde9cd` ; référence actuelle : v8) et `data/exercices.json` v2.
 
 ## Ce qui a été fait
 

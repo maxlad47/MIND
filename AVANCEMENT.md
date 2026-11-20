@@ -4,7 +4,7 @@ Document de travail. Code de V1-M0 à V1-M4 écrit et publié sur GitHub Pages ;
 
 Légende « qui » : **Max** = action de Max · **Claude** = action de Claude Code (modèle indiqué selon MISSIONS.md).
 « État » : vocabulaire défini dans CLAUDE.md. Le suivi détaillé appartient à Max (MISSIONS.md).
-Version de référence des règles : **REGLES.md v6** (17/11/2026 : C9 à 3 h, C13, M12).
+Version de référence des règles : **REGLES.md v8** (20/11/2026). Un seul fichier de règles ; anciennes versions dans Git.
 
 ---
 
@@ -375,7 +375,7 @@ Demandé par Max. **Fait**, à relire par Max. Aucune règle modifiée.
 ## 16. Règles v7 et test sur 50 profils (hors mission, 19/11/2026)
 
 Demandé par Max (« simplifier au maximum, rester cohérent, optimiser »). **Fait, à valider par Max.**
-- `REGLES-v6.md` : copie intégrale de la v6 (non commitée jusque-là).
+- `REGLES-v6.md` : copie intégrale de la v6 (commit `ddde9cd`, retirée le 20/11/2026).
 - `REGLES.md` **v7** : mêmes codes et valeurs validées ; tableau des changements en tête ; nouveau code **E** (contrôles du profil) ; N6 fusionnée dans N8 ; nouvelles V7, P12, P13, M33 ; C4, C5, C8, C9, C14, M6, M8, M12, M20, M22, M23, M26, J5 réécrites. Ligne datée dans DECISIONS.md.
 - `plans/test-50/` : `README.md`, `Q01.md` à `Q50.md` (35 tirés au hasard, graine fixe, + 15 cas limites), `BILAN.md`, `outils/` (script qui applique la v7 règle par règle, profils, avis).
 - Verdict de coach : 31 bons, 19 à retoucher, 0 à refuser (v6 : 9 / 14 / 7). Les 24 constats du test v6 sont réglés ou améliorés.
@@ -383,3 +383,13 @@ Demandé par Max (« simplifier au maximum, rester cohérent, optimiser »). **F
 - À prévoir après validation : formulaire (E1-E9), libellé `ppH` dans `src/profil/options.js`, MODELE_DONNEES (RPE par exercice + nouveaux champs), recalcul des plans A, B, C (référence v6 jusque-là).
 - Points ouverts de la session précédente toujours en attente : les 6 incohérences de documents signalées le 18/11.
 - PDF envoyé par mail à Max (hors dépôt). Rien n'est commité.
+
+---
+
+## 17. Règles v8, un seul fichier (hors mission, 20/11/2026)
+
+- **Commit `ddde9cd`** : état du 17 au 19/11 sauvegardé tel quel (v6 validée, v7, brouillon v8, `data/exercices.json`, plans A/B/C, tests 30 et 50 profils).
+- **REGLES.md v8 = version de référence** (Max : « la V8 est prête »). Le fichier ne contient plus que les règles en vigueur : tableau des changements et renvois aux copies retirés. Liste des changements v7 → v8 : ligne du 20/11/2026 dans `DECISIONS.md`.
+- **`REGLES-v6.md` et `REGLES-v7.md` supprimés** : un seul fichier de règles, anciennes versions dans l'historique Git. CLAUDE.md, MISSIONS.md, DECISIONS.md et `plans/test-50/README.md` alignés sur la v8.
+- **À faire ensuite** : nouvel examen des 50 programmes par le coach avec la v8 (script `moteur8.py`). Remarques du test v7 que la v8 ne couvre pas encore : Q13 (sortie longue de 2 h pour un débutant au semi), Q23 (VMA la veille de la sortie longue quand les jours se suivent), Q24 (séances de force de 1 h 30), Q31 et Q46 (exclusion des abdos ou du dos chez un coureur), Q09 (4 séances de muscu de 26 min).
+- Plans A, B, C : calculés en v6, à recalculer en v8.

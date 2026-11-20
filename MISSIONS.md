@@ -2,7 +2,7 @@
 
 Une session = une mission. Le suivi détaillé (statuts, retours) est tenu par Max à part.
 
-Version de référence des règles : **REGLES.md v6** (voir CLAUDE.md). Modèles : Opus (conception, règles), Sonnet (développement), Haiku (retouches). « — » = tâche humaine, sans modèle.
+Version de référence des règles : **REGLES.md v8** (voir CLAUDE.md). Modèles : Opus (conception, règles), Sonnet (développement), Haiku (retouches). « — » = tâche humaine, sans modèle.
 
 Note : V0-M0 à V0-M4 ne sont pas suivies dans ce fichier et ne bloquent pas V1.
 

@@ -1,32 +1,8 @@
 # MIND — Règles d'entraînement
 
-**Version 8 — 19/11/2026, à valider par Max.** Corrections de la v7 (copie : `REGLES-v7.md` ; v6 : `REGLES-v6.md`) d'après les 50 avis de coach du test v7 (`plans/test-50/`). Mêmes codes ; une règle absente **n'existe pas** : Claude Code demande.
+**Version 8 (20/11/2026).** Liste des règles en vigueur. L'historique des changements est dans `DECISIONS.md`. Une règle absente **n'existe pas** : Claude Code demande.
 
 **Statut des règles (U7)** : par défaut **bloquante** (un plan généré ne la viole jamais). **Conseil** : affiché, pas appliqué. **Proposée** : l'appli propose, l'utilisateur décide.
-
-## Changements v7 → v8
-
-Les changements v6 → v7 sont listés en tête de `REGLES-v7.md`.
-
-| Code | Changement | Avis de coach (test v7) |
-|---|---|---|
-| E10 (nouveau) | Qualité en moins de 45 min pour un coureur intermédiaire ou plus → 45 min proposées le jour de la qualité | Q03, Q34 |
-| E11 (nouveau) | Sorties trop courtes (< 25 min en moyenne) ou sortie unique trop longue (> 1 h 30) → autre répartition proposée | Q06, Q08, Q38 |
-| E12 (nouveau) | Nombre de séances maximal conseillé selon le niveau (6 / 7 / 8), séance retirée sur l'objectif secondaire | Q11, Q28, Q44 |
-| E13 (nouveau) | Au plus un muscle prioritaire par séance de muscu | Q22, Q30 |
-| C8 | « Garder la forme » : 1 qualité au plus | Q02 |
-| C9 | 10 km : 60 min par semaine au moins | Q24 |
-| C5 | Le plan « finir » s'appelle « plan court » à partir du niveau confirmé ; il annonce la sortie longue max atteinte | Q25, Q36 |
-| C13 | Préparation : rotation côtes, fartlek, seuil (plus 17 semaines de côtes) | Q09, Q35 |
-| C14 | Pic au plus départ × 1,6 (ou départ + 60 min si c'est plus) ; message quand la qualité remplace une sortie facile | Q12, Q14, Q29, Q39 |
-| C15 | Débutant : fartlek une semaine sur deux à la place de la qualité ; marathon : allure marathon dès le développement | Q17, Q23, Q43 |
-| M8 | Dernier recours : un exercice spécifique (renfo) quand un muscle n'a plus rien d'autre | Q04, Q07, Q42 |
-| M16c, M23 | Force ou force + esthétique au poids du corps, ou en moins de 45 min → l'hypertrophie est proposée | Q04, Q20, Q22, Q50 |
-| M22 | Débutant en muscu : secondaires au bas réduit (2 / 3 / 4 séries) | Q01 |
-| M32 | Pas deux exercices de la même famille dans une séance (sauf l'assistance du principal) | Q44 |
-| P5 | Sans refus explicite, le plan garde toujours un jour de repos (quitte à doubler un jour) | Q19 |
-
-**Propositions dans les tests papier** : E10, E11, E12, M16c / M23 (hypertrophie), C5 (plan court) et J8 (sortie de plus) sont supposées **acceptées** ; la 2e qualité N8 est supposée **refusée** ; un refus C9 reste un refus.
 
 ---
 
@@ -46,7 +22,7 @@ Les changements v6 → v7 sont listés en tête de `REGLES-v7.md`.
 
 ---
 
-## E — Profil : contrôles et questions *(nouveau en v7)*
+## E — Profil : contrôles et questions
 
 | Code | Règle |
 |---|---|
@@ -235,7 +211,7 @@ Les changements v6 → v7 sont listés en tête de `REGLES-v7.md`.
 | Sortie longue | facile, progressive, fin rapide, blocs allure marathon, vallonnée |
 
 - V1 : dans un bloc, la famille reste, la variante change. V2 : rotation **déterministe** selon le numéro de semaine ; même variante pas avant 3-4 semaines. V3 : variantes de charge équivalente. V4 : leviers : distance, allure, nombre, récupération (arrêt, marche, trot, EF), structure. V5 : gammes avant tout fractionné. V6 : pas de fartlek libre.
-- V7 : **durée et progression d'une qualité** *(nouveau en v7)* — séance = échauffement **15 min** + travail + récupérations + retour au calme **10 min** (10 + 5 si le temps du jour est ≤ 30 min ou le volume de la semaine < 120 min). Une qualité ne dépasse pas **40 %** du volume de la semaine (au moins 25 min). Le **travail rapide** monte du **début** à la **fin** de la phase, semaine normale après semaine normale :
+- V7 : **durée et progression d'une qualité** — séance = échauffement **15 min** + travail + récupérations + retour au calme **10 min** (10 + 5 si le temps du jour est ≤ 30 min ou le volume de la semaine < 120 min). Une qualité ne dépasse pas **40 %** du volume de la semaine (au moins 25 min). Le **travail rapide** monte du **début** à la **fin** de la phase, semaine normale après semaine normale :
 
 | Famille | Travail rapide (début → fin) | Récupération entre fractions |
 |---|---|---|
