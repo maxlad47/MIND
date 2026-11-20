@@ -1,0 +1,3888 @@
+{
+ "P02": {
+  "id": "P02",
+  "notes": [],
+  "gaps": [],
+  "t10": 3112,
+  "t10_txt": "51'52",
+  "niveau": "intermediaire",
+  "allures": {
+   "VMA courte (3 km)": "4'50",
+   "VMA longue (5 km)": "4'59",
+   "allure 10 km": "5'11",
+   "seuil (15 km)": "5'19",
+   "allure semi": "5'25",
+   "allure marathon": "5'49",
+   "EF interne": "6'49"
+  },
+  "t_semi": "1 h 54'26",
+  "t_marathon": "4 h 05'34",
+  "ef_pace": 409.18893030780174,
+  "v0": 225,
+  "pls_min": 89,
+  "sl0": 89,
+  "phases": {
+   "preparation": 0,
+   "fondation": 2,
+   "developpement": 3,
+   "specifique": 2,
+   "affutage": 1,
+   "plan": 7
+  },
+  "slmax": 89,
+  "pic": 359,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 89,
+    "vol": 225,
+    "qualite": "côtes + fartlek structuré"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 89,
+    "vol": 248,
+    "qualite": "côtes + fartlek structuré"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 89,
+    "vol": 272,
+    "qualite": "VMA longue + VMA courte"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 53,
+    "vol": 163,
+    "qualite": "VMA longue + VMA courte"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 299 visé, 289 possible",
+    "sl": 89,
+    "vol": 289,
+    "qualite": "VMA longue + VMA courte"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 318 visé, 289 possible",
+    "sl": 89,
+    "vol": 289,
+    "qualite": "allure 10 km + VMA longue"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 53,
+    "vol": 173,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "144 (course comprise)"
+   }
+  ]
+ },
+ "P03": {
+  "id": "P03",
+  "notes": [],
+  "gaps": [],
+  "t10": 2218,
+  "t10_txt": "36'58",
+  "niveau": "avance",
+  "allures": {
+   "VMA courte (3 km)": "3'26",
+   "VMA longue (5 km)": "3'33",
+   "allure 10 km": "3'42",
+   "seuil (15 km)": "3'47",
+   "allure semi": "3'52",
+   "allure marathon": "4'09",
+   "EF interne": "5'09"
+  },
+  "t_semi": "1 h 21'34",
+  "t_marathon": "2 h 55'01",
+  "ef_pace": 308.87565791218003,
+  "v0": 206,
+  "pls_min": null,
+  "sl0": null,
+  "phases": {
+   "preparation": 6,
+   "fondation": 4,
+   "developpement": 5,
+   "specifique": 5,
+   "affutage": 2,
+   "plan": 14
+  },
+  "slmax": 90,
+  "pic": 210,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 123,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 123,
+    "qualite": "côtes"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "côtes"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "côtes"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "seuil"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 123,
+    "qualite": "seuil"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 207 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "seuil"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 208 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "seuil"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 210 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "seuil"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "specifique",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 123,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 208 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 210 visé, 205 possible",
+    "sl": 90,
+    "vol": 205,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 63,
+    "vol": 144,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 20,
+    "lundi": "05/04",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 102,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 21,
+    "lundi": "12/04",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "102 (course comprise)"
+   }
+  ]
+ },
+ "P05": {
+  "id": "P05",
+  "notes": [],
+  "gaps": [],
+  "t10": 3244.15344773757,
+  "t10_txt": "54'04 (équivalent du 5 km, N1)",
+  "niveau": "intermediaire",
+  "allures": {
+   "VMA courte (3 km)": "5'02",
+   "VMA longue (5 km)": "5'11",
+   "allure 10 km": "5'24",
+   "seuil (15 km)": "5'32",
+   "allure semi": "5'39",
+   "allure marathon": "6'04",
+   "EF interne": "7'04"
+  },
+  "t_semi": "1 h 59'18",
+  "t_marathon": "4 h 16'00",
+  "ef_pace": 424.0175039106199,
+  "v0": 250,
+  "pls_min": 100,
+  "sl0": 100,
+  "phases": {
+   "preparation": 8,
+   "fondation": 7,
+   "developpement": 6,
+   "specifique": 7,
+   "affutage": 2,
+   "plan": 20
+  },
+  "slmax": 165,
+  "pic": 255,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 250 visé, 190 possible",
+    "sl": 100,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 104,
+    "vol": 194,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 109,
+    "vol": 199,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 65,
+    "vol": 119,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 113,
+    "vol": 203,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 117,
+    "vol": 207,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 122,
+    "vol": 212,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 73,
+    "vol": 127,
+    "qualite": "côtes"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 126,
+    "vol": 216,
+    "qualite": "côtes"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 130,
+    "vol": 220,
+    "qualite": "côtes"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 135,
+    "vol": 225,
+    "qualite": "côtes"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 81,
+    "vol": 135,
+    "qualite": "côtes"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 139,
+    "vol": 229,
+    "qualite": "côtes"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 143,
+    "vol": 233,
+    "qualite": "côtes"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 148,
+    "vol": 238,
+    "qualite": "côtes"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 89,
+    "vol": 143,
+    "qualite": "seuil"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 152,
+    "vol": 242,
+    "qualite": "seuil"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 156,
+    "vol": 246,
+    "qualite": "seuil"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 161,
+    "vol": 251,
+    "qualite": "seuil"
+   },
+   {
+    "w": 20,
+    "lundi": "05/04",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 96,
+    "vol": 150,
+    "qualite": "seuil"
+   },
+   {
+    "w": 21,
+    "lundi": "12/04",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 165,
+    "vol": 255,
+    "qualite": "seuil"
+   },
+   {
+    "w": 22,
+    "lundi": "19/04",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 165,
+    "vol": 255,
+    "qualite": "allure marathon"
+   },
+   {
+    "w": 23,
+    "lundi": "26/04",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 165,
+    "vol": 255,
+    "qualite": "allure marathon"
+   },
+   {
+    "w": 24,
+    "lundi": "03/05",
+    "phase": "specifique",
+    "type": "allégée",
+    "sl": 99,
+    "vol": 153,
+    "qualite": "allure marathon"
+   },
+   {
+    "w": 25,
+    "lundi": "10/05",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 165,
+    "vol": 255,
+    "qualite": "allure marathon"
+   },
+   {
+    "w": 26,
+    "lundi": "17/05",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 165,
+    "vol": 255,
+    "qualite": "allure marathon"
+   },
+   {
+    "w": 27,
+    "lundi": "24/05",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 115,
+    "vol": 178,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 28,
+    "lundi": "31/05",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 82,
+    "vol": 128,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 29,
+    "lundi": "07/06",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "course + EF ≤ 30"
+   }
+  ]
+ },
+ "P06": {
+  "id": "P06",
+  "notes": [],
+  "gaps": [],
+  "t10": 4238.66578358,
+  "t10_txt": "70'39 (équivalent du 5 km, N1)",
+  "niveau": "debutant",
+  "allures": {
+   "VMA courte (3 km)": "6'34",
+   "VMA longue (5 km)": "6'47",
+   "allure 10 km": "7'04",
+   "seuil (15 km)": "7'14",
+   "allure semi": "7'23",
+   "allure marathon": "7'56",
+   "EF interne": "8'56"
+  },
+  "t_semi": "2 h 35'52",
+  "t_marathon": "5 h 34'28",
+  "ef_pace": 535.6089880785928,
+  "v0": 79,
+  "pls_min": 32,
+  "sl0": null,
+  "phases": {
+   "preparation": 3,
+   "fondation": 4,
+   "developpement": 4,
+   "specifique": 4,
+   "affutage": 1,
+   "plan": 12
+  },
+  "slmax": 75,
+  "pic": 165,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 18,
+    "vol": 79,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 19,
+    "vol": 83,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 21,
+    "vol": 87,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": null,
+    "vol": 52,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 24,
+    "vol": 96,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 27,
+    "vol": 105,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 31,
+    "vol": 116,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": null,
+    "vol": 70,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 43,
+    "vol": 128,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 55,
+    "vol": 140,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 69,
+    "vol": 154,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "specifique",
+    "type": "allégée",
+    "sl": 42,
+    "vol": 93,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 75,
+    "vol": 160,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 165 visé, 160 possible",
+    "sl": 75,
+    "vol": 160,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 96,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "80 (course comprise)"
+   }
+  ]
+ },
+ "P07": {
+  "id": "P07",
+  "notes": [],
+  "gaps": [],
+  "t10": 3529,
+  "t10_txt": "aucun ; hypothèse de test 6 min en W1 → 58'49 (T3)",
+  "niveau": "intermediaire",
+  "allures": {
+   "VMA courte (3 km)": "5'28",
+   "VMA longue (5 km)": "5'39",
+   "allure 10 km": "5'53",
+   "seuil (15 km)": "6'02",
+   "allure semi": "6'09",
+   "allure marathon": "6'36",
+   "EF interne": "7'36"
+  },
+  "t_semi": "2 h 09'46",
+  "t_marathon": "4 h 38'28",
+  "ef_pace": 455.9793493111287,
+  "v0": 76,
+  "pls_min": null,
+  "sl0": null,
+  "phases": {
+   "preparation": 0,
+   "fondation": 2,
+   "developpement": 3,
+   "specifique": 2,
+   "affutage": 1,
+   "plan": 7
+  },
+  "slmax": 60,
+  "pic": 330,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 13,
+    "vol": 76,
+    "qualite": "côtes + fartlek structuré"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 17,
+    "vol": 84,
+    "qualite": "côtes + fartlek structuré"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 21,
+    "vol": 92,
+    "qualite": "VMA longue + VMA courte"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": null,
+    "vol": 55,
+    "qualite": "VMA longue + VMA courte"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 26,
+    "vol": 101,
+    "qualite": "VMA longue + VMA courte"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 31,
+    "vol": 111,
+    "qualite": "allure 10 km + VMA longue"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": null,
+    "vol": 67,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "56 (course comprise)"
+   }
+  ]
+ },
+ "P08": {
+  "id": "P08",
+  "notes": [],
+  "gaps": [],
+  "t10": 4257.43016727514,
+  "t10_txt": "70'57 (équivalent du 5 km, N1)",
+  "niveau": "debutant",
+  "allures": {
+   "VMA courte (3 km)": "6'36",
+   "VMA longue (5 km)": "6'48",
+   "allure 10 km": "7'06",
+   "seuil (15 km)": "7'16",
+   "allure semi": "7'25",
+   "allure marathon": "7'58",
+   "EF interne": "8'58"
+  },
+  "t_semi": "2 h 36'34",
+  "t_marathon": "5 h 35'57",
+  "ef_pace": 537.7144877798752,
+  "v0": 243,
+  "pls_min": null,
+  "sl0": null,
+  "phases": {
+   "preparation": 8,
+   "fondation": 4,
+   "developpement": 4,
+   "specifique": 4,
+   "affutage": 1,
+   "plan": 12
+  },
+  "slmax": 75,
+  "pic": 195,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 243 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 191 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 114,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 191 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 191 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 191 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 114,
+    "qualite": "côtes"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 191 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 191 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 191 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "côtes"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 114,
+    "qualite": "côtes"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 192 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 192 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 195 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 114,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 192 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 192 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 195 visé, 190 possible",
+    "sl": 75,
+    "vol": 190,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 20,
+    "lundi": "05/04",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 114,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 21,
+    "lundi": "12/04",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "95 (course comprise)"
+   }
+  ]
+ },
+ "P09": {
+  "id": "P09",
+  "notes": [
+   "N2 : un niveau en dessous"
+  ],
+  "gaps": [],
+  "t10": 3530,
+  "t10_txt": "58'50",
+  "niveau": "debutant",
+  "allures": {
+   "VMA courte (3 km)": "5'28",
+   "VMA longue (5 km)": "5'39",
+   "allure 10 km": "5'53",
+   "seuil (15 km)": "6'02",
+   "allure semi": "6'09",
+   "allure marathon": "6'36",
+   "EF interne": "7'36"
+  },
+  "t_semi": "2 h 09'49",
+  "t_marathon": "4 h 38'33",
+  "ef_pace": 456.09155655094486,
+  "v0": 258,
+  "pls_min": 106,
+  "sl0": 106,
+  "phases": {
+   "preparation": 9,
+   "fondation": 4,
+   "developpement": 5,
+   "specifique": 5,
+   "affutage": 2,
+   "plan": 14
+  },
+  "slmax": 90,
+  "pic": 150,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 258 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 146 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 87,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 146 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 146 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 87,
+    "qualite": "côtes"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 146 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 146 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 146 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 87,
+    "qualite": "côtes"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 146 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "côtes"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 146 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "seuil"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 147 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "seuil"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 87,
+    "qualite": "seuil"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 148 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "seuil"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 150 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "seuil"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 148 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 20,
+    "lundi": "05/04",
+    "phase": "specifique",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 87,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 21,
+    "lundi": "12/04",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 150 visé, 145 possible",
+    "sl": 90,
+    "vol": 145,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 22,
+    "lundi": "19/04",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 63,
+    "vol": 102,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 23,
+    "lundi": "26/04",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 72,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 24,
+    "lundi": "03/05",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "72 (course comprise)"
+   }
+  ]
+ },
+ "P10": {
+  "id": "P10",
+  "notes": [],
+  "gaps": [],
+  "t10": 4059.3616727153267,
+  "t10_txt": "67'39 (équivalent du 5 km, N1)",
+  "niveau": "debutant",
+  "allures": {
+   "VMA courte (3 km)": "6'18",
+   "VMA longue (5 km)": "6'29",
+   "allure 10 km": "6'46",
+   "seuil (15 km)": "6'56",
+   "allure semi": "7'05",
+   "allure marathon": "7'35",
+   "EF interne": "8'35"
+  },
+  "t_semi": "2 h 29'17",
+  "t_marathon": "5 h 20'19",
+  "ef_pace": 515.4897687107821,
+  "v0": 128,
+  "pls_min": 51,
+  "sl0": null,
+  "phases": {
+   "preparation": 0,
+   "fondation": 3,
+   "developpement": 4,
+   "specifique": 3,
+   "affutage": 1,
+   "plan": 10
+  },
+  "slmax": 75,
+  "pic": 210,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 32,
+    "vol": 128,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 36,
+    "vol": 141,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 41,
+    "vol": 155,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": null,
+    "vol": 93,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 48,
+    "vol": 170,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 65,
+    "vol": 187,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 206 visé, 197 possible",
+    "sl": 75,
+    "vol": 197,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "specifique",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 118,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 210 visé, 197 possible",
+    "sl": 75,
+    "vol": 197,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 118,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "98 (course comprise)"
+   }
+  ]
+ },
+ "P13": {
+  "id": "P13",
+  "notes": [],
+  "gaps": [],
+  "t10": 2520,
+  "t10_txt": "42'00",
+  "niveau": "confirme",
+  "allures": {
+   "VMA courte (3 km)": "3'54",
+   "VMA longue (5 km)": "4'02",
+   "allure 10 km": "4'12",
+   "seuil (15 km)": "4'18",
+   "allure semi": "4'24",
+   "allure marathon": "4'43",
+   "EF interne": "5'43"
+  },
+  "t_semi": "1 h 32'40",
+  "t_marathon": "3 h 18'51",
+  "ef_pace": 342.7622443366518,
+  "v0": 297,
+  "pls_min": 120,
+  "sl0": 120,
+  "phases": {
+   "preparation": 0,
+   "fondation": 2,
+   "developpement": 2,
+   "specifique": 2,
+   "affutage": 1,
+   "plan": 6
+  },
+  "slmax": 120,
+  "pic": 180,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 297 visé, 175 possible",
+    "sl": 120,
+    "vol": 175,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 178 visé, 175 possible",
+    "sl": 120,
+    "vol": 175,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 180 visé, 175 possible",
+    "sl": 120,
+    "vol": 175,
+    "qualite": "seuil"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 72,
+    "vol": 105,
+    "qualite": "seuil"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 180 visé, 175 possible",
+    "sl": 120,
+    "vol": 175,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 72,
+    "vol": 105,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "88 (course comprise)"
+   }
+  ]
+ },
+ "P14": {
+  "id": "P14",
+  "notes": [],
+  "gaps": [],
+  "t10": 4042,
+  "t10_txt": "67'22",
+  "niveau": "debutant",
+  "allures": {
+   "VMA courte (3 km)": "6'16",
+   "VMA longue (5 km)": "6'28",
+   "allure 10 km": "6'44",
+   "seuil (15 km)": "6'54",
+   "allure semi": "7'03",
+   "allure marathon": "7'34",
+   "EF interne": "8'34"
+  },
+  "t_semi": "2 h 28'38",
+  "t_marathon": "5 h 18'57",
+  "ef_pace": 513.5416633368043,
+  "v0": 70,
+  "pls_min": 70,
+  "sl0": 70,
+  "phases": {
+   "preparation": 8,
+   "fondation": 4,
+   "developpement": 5,
+   "specifique": 5,
+   "affutage": 2,
+   "plan": 14
+  },
+  "slmax": 90,
+  "pic": 90,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 70,
+    "vol": 70,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 72,
+    "vol": 72,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 73,
+    "vol": 73,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 44,
+    "vol": 44,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 75,
+    "vol": 75,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 77,
+    "vol": 77,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 78,
+    "vol": 78,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 47,
+    "vol": 47,
+    "qualite": "côtes"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 80,
+    "vol": 80,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 82,
+    "vol": 82,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 83,
+    "vol": 83,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 50,
+    "vol": 50,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 85,
+    "vol": 85,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 87,
+    "vol": 87,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 88,
+    "vol": 88,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 53,
+    "vol": 53,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 90,
+    "vol": 90,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 90,
+    "vol": 90,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 90,
+    "vol": 90,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 20,
+    "lundi": "05/04",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 90,
+    "vol": 90,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 21,
+    "lundi": "12/04",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 63,
+    "vol": 63,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 22,
+    "lundi": "19/04",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 45,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 23,
+    "lundi": "26/04",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "45 (course comprise)"
+   }
+  ]
+ },
+ "P15": {
+  "id": "P15",
+  "notes": [],
+  "gaps": [],
+  "t10": 2667,
+  "t10_txt": "44'27",
+  "niveau": "confirme",
+  "allures": {
+   "VMA courte (3 km)": "4'08",
+   "VMA longue (5 km)": "4'16",
+   "allure 10 km": "4'27",
+   "seuil (15 km)": "4'33",
+   "allure semi": "4'39",
+   "allure marathon": "4'59",
+   "EF interne": "5'59"
+  },
+  "t_semi": "1 h 38'04",
+  "t_marathon": "3 h 30'27",
+  "ef_pace": 359.2567085896232,
+  "v0": 251,
+  "pls_min": null,
+  "sl0": null,
+  "phases": {
+   "preparation": 0,
+   "fondation": 3,
+   "developpement": 4,
+   "specifique": 3,
+   "affutage": 1,
+   "plan": 10
+  },
+  "slmax": 75,
+  "pic": 165,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 251 visé, 130 possible",
+    "sl": 75,
+    "vol": 130,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 137 visé, 130 possible",
+    "sl": 75,
+    "vol": 130,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 139 visé, 130 possible",
+    "sl": 75,
+    "vol": 130,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 78,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 142 visé, 130 possible",
+    "sl": 75,
+    "vol": 130,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 143 visé, 130 possible",
+    "sl": 75,
+    "vol": 130,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 143 visé, 130 possible",
+    "sl": 75,
+    "vol": 130,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "specifique",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 78,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 143 visé, 130 possible",
+    "sl": 75,
+    "vol": 130,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 78,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "65 (course comprise)"
+   }
+  ]
+ },
+ "P20": {
+  "id": "P20",
+  "notes": [
+   "N2 : un niveau en dessous"
+  ],
+  "gaps": [],
+  "t10": 2491,
+  "t10_txt": "41'31",
+  "niveau": "confirme",
+  "allures": {
+   "VMA courte (3 km)": "3'52",
+   "VMA longue (5 km)": "3'59",
+   "allure 10 km": "4'09",
+   "seuil (15 km)": "4'15",
+   "allure semi": "4'21",
+   "allure marathon": "4'40",
+   "EF interne": "5'40"
+  },
+  "t_semi": "1 h 31'36",
+  "t_marathon": "3 h 16'34",
+  "ef_pace": 339.508234381984,
+  "v0": 153,
+  "pls_min": 62,
+  "sl0": 62,
+  "phases": {
+   "preparation": 16,
+   "fondation": 4,
+   "developpement": 4,
+   "specifique": 4,
+   "affutage": 1,
+   "plan": 12
+  },
+  "slmax": 75,
+  "pic": 75,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "bloque": "volume plafonné : 153 visé, 62 possible",
+    "sl": 62,
+    "vol": 62,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 63,
+    "vol": 63,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 64,
+    "vol": 64,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 38,
+    "vol": 38,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 64,
+    "vol": 64,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 65,
+    "vol": 65,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 66,
+    "vol": 66,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 39,
+    "vol": 39,
+    "qualite": "côtes"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 67,
+    "vol": 67,
+    "qualite": "côtes"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 67,
+    "vol": 67,
+    "qualite": "côtes"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 68,
+    "vol": 68,
+    "qualite": "côtes"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 41,
+    "vol": 41,
+    "qualite": "côtes"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 69,
+    "vol": 69,
+    "qualite": "côtes"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 70,
+    "vol": 70,
+    "qualite": "côtes"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 70,
+    "vol": 70,
+    "qualite": "côtes"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": 42,
+    "vol": 42,
+    "qualite": "côtes"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 71,
+    "vol": 71,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 72,
+    "vol": 72,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 73,
+    "vol": 73,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 20,
+    "lundi": "05/04",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 44,
+    "vol": 44,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 21,
+    "lundi": "12/04",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 73,
+    "vol": 73,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 22,
+    "lundi": "19/04",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 74,
+    "vol": 74,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 23,
+    "lundi": "26/04",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 75,
+    "vol": 75,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 24,
+    "lundi": "03/05",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 45,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 25,
+    "lundi": "10/05",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 75,
+    "vol": 75,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 26,
+    "lundi": "17/05",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 75,
+    "vol": 75,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 27,
+    "lundi": "24/05",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 75,
+    "vol": 75,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 28,
+    "lundi": "31/05",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 45,
+    "qualite": "EF seulement"
+   },
+   {
+    "w": 29,
+    "lundi": "07/06",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "38 (course comprise)"
+   }
+  ]
+ },
+ "P21": {
+  "id": "P21",
+  "notes": [],
+  "gaps": [],
+  "t10": 2700,
+  "t10_txt": "45'00",
+  "niveau": "confirme",
+  "allures": {
+   "VMA courte (3 km)": "4'11",
+   "VMA longue (5 km)": "4'19",
+   "allure 10 km": "4'30",
+   "seuil (15 km)": "4'37",
+   "allure semi": "4'42",
+   "allure marathon": "5'03",
+   "EF interne": "6'03"
+  },
+  "t_semi": "1 h 39'17",
+  "t_marathon": "3 h 33'03",
+  "ef_pace": 362.95954750355554,
+  "v0": 240,
+  "pls_min": 110,
+  "sl0": 110,
+  "phases": {
+   "preparation": 0,
+   "fondation": 2,
+   "developpement": 1,
+   "specifique": 2,
+   "affutage": 2,
+   "plan": 5
+  },
+  "slmax": 165,
+  "pic": 345,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 110,
+    "vol": 240,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 125,
+    "vol": 264,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 140,
+    "vol": 290,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 98,
+    "vol": 203,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 70,
+    "vol": 145,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "course + EF ≤ 30"
+   }
+  ]
+ },
+ "P22": {
+  "id": "P22",
+  "notes": [],
+  "gaps": [],
+  "t10": 3850,
+  "t10_txt": "aucun ; hypothèse de test 6 min en W1 → 64'10 (T3)",
+  "niveau": "debutant",
+  "allures": {
+   "VMA courte (3 km)": "5'58",
+   "VMA longue (5 km)": "6'09",
+   "allure 10 km": "6'25",
+   "seuil (15 km)": "6'34",
+   "allure semi": "6'43",
+   "allure marathon": "7'12",
+   "EF interne": "8'12"
+  },
+  "t_semi": "2 h 21'35",
+  "t_marathon": "5 h 03'48",
+  "ef_pace": 491.99787329210693,
+  "v0": 50,
+  "pls_min": 25,
+  "sl0": null,
+  "phases": {
+   "preparation": 4,
+   "fondation": 4,
+   "developpement": 4,
+   "specifique": 4,
+   "affutage": 1,
+   "plan": 12
+  },
+  "slmax": 60,
+  "pic": 90,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 25,
+    "vol": 50,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 28,
+    "vol": 52,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 30,
+    "vol": 55,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": null,
+    "vol": 33,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 36,
+    "vol": 61,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 42,
+    "vol": 67,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 47,
+    "vol": 72,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": null,
+    "vol": 43,
+    "qualite": "côtes"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 53,
+    "vol": 78,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 59,
+    "vol": 84,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 90 visé, 85 possible",
+    "sl": 60,
+    "vol": 85,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 36,
+    "vol": 51,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 87 visé, 85 possible",
+    "sl": 60,
+    "vol": 85,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 88 visé, 85 possible",
+    "sl": 60,
+    "vol": 85,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 90 visé, 85 possible",
+    "sl": 60,
+    "vol": 85,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 36,
+    "vol": 51,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "42 (course comprise)"
+   }
+  ]
+ },
+ "P23": {
+  "id": "P23",
+  "notes": [],
+  "gaps": [],
+  "t10": 2820,
+  "t10_txt": "47'00",
+  "niveau": "confirme",
+  "allures": {
+   "VMA courte (3 km)": "4'22",
+   "VMA longue (5 km)": "4'31",
+   "allure 10 km": "4'42",
+   "seuil (15 km)": "4'49",
+   "allure semi": "4'55",
+   "allure marathon": "5'16",
+   "EF interne": "6'16"
+  },
+  "t_semi": "1 h 43'42",
+  "t_marathon": "3 h 42'32",
+  "ef_pace": 376.4244162814913,
+  "v0": 170,
+  "pls_min": 70,
+  "sl0": 70,
+  "phases": {
+   "preparation": 2,
+   "fondation": 7,
+   "developpement": 6,
+   "specifique": 7,
+   "affutage": 2,
+   "plan": 20
+  },
+  "slmax": 165,
+  "pic": 345,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 70,
+    "vol": 170,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 78,
+    "vol": 178,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 94,
+    "vol": 195,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 56,
+    "vol": 117,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 108,
+    "vol": 212,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 124,
+    "vol": 228,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 138,
+    "vol": 245,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 83,
+    "vol": 147,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 154,
+    "vol": 262,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 165,
+    "vol": 278,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 165,
+    "vol": 295,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 99,
+    "vol": 177,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 312 visé, 310 possible",
+    "sl": 165,
+    "vol": 310,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 328 visé, 310 possible",
+    "sl": 165,
+    "vol": 310,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 341 visé, 310 possible",
+    "sl": 165,
+    "vol": 310,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "specifique",
+    "type": "allégée",
+    "sl": 99,
+    "vol": 186,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 319 visé, 310 possible",
+    "sl": 165,
+    "vol": 310,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 322 visé, 310 possible",
+    "sl": 165,
+    "vol": 310,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 328 visé, 310 possible",
+    "sl": 165,
+    "vol": 310,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 20,
+    "lundi": "05/04",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 341 visé, 310 possible",
+    "sl": 165,
+    "vol": 310,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 21,
+    "lundi": "12/04",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 115,
+    "vol": 217,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 22,
+    "lundi": "19/04",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 82,
+    "vol": 155,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 23,
+    "lundi": "26/04",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "course + EF ≤ 30"
+   }
+  ]
+ },
+ "P25": {
+  "id": "P25",
+  "notes": [],
+  "gaps": [],
+  "t10": 2010,
+  "t10_txt": "33'30",
+  "niveau": "expert",
+  "allures": {
+   "VMA courte (3 km)": "3'07",
+   "VMA longue (5 km)": "3'13",
+   "allure 10 km": "3'21",
+   "seuil (15 km)": "3'26",
+   "allure semi": "3'30",
+   "allure marathon": "3'46",
+   "EF interne": "4'46"
+  },
+  "t_semi": "1 h 13'55",
+  "t_marathon": "2 h 38'37",
+  "ef_pace": 285.5365520304247,
+  "v0": 357,
+  "pls_min": 105,
+  "sl0": 105,
+  "phases": {
+   "preparation": 0,
+   "fondation": 4,
+   "developpement": 4,
+   "specifique": 4,
+   "affutage": 2,
+   "plan": 12
+  },
+  "slmax": 105,
+  "pic": 465,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 105,
+    "vol": 357,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 105,
+    "vol": 379,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 400 visé, 395 possible",
+    "sl": 105,
+    "vol": 395,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 63,
+    "vol": 237,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 418 visé, 395 possible",
+    "sl": 105,
+    "vol": 395,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 430 visé, 395 possible",
+    "sl": 105,
+    "vol": 395,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 434 visé, 395 possible",
+    "sl": 105,
+    "vol": 395,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 63,
+    "vol": 237,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 430 visé, 395 possible",
+    "sl": 105,
+    "vol": 395,
+    "qualite": "allure semi + seuil"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 434 visé, 395 possible",
+    "sl": 105,
+    "vol": 395,
+    "qualite": "allure semi + seuil"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 74,
+    "vol": 276,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 52,
+    "vol": 198,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "198 (course comprise)"
+   }
+  ]
+ },
+ "P26": {
+  "id": "P26",
+  "notes": [],
+  "gaps": [],
+  "t10": 3002.3013912224296,
+  "t10_txt": "50'02 (équivalent du 5 km, N1)",
+  "niveau": "intermediaire",
+  "allures": {
+   "VMA courte (3 km)": "4'39",
+   "VMA longue (5 km)": "4'48",
+   "allure 10 km": "5'00",
+   "seuil (15 km)": "5'08",
+   "allure semi": "5'14",
+   "allure marathon": "5'37",
+   "EF interne": "6'37"
+  },
+  "t_semi": "1 h 50'24",
+  "t_marathon": "3 h 56'55",
+  "ef_pace": 396.87995220520094,
+  "v0": 165,
+  "pls_min": 66,
+  "sl0": 66,
+  "phases": {
+   "preparation": 0,
+   "fondation": 4,
+   "developpement": 4,
+   "specifique": 4,
+   "affutage": 1,
+   "plan": 12
+  },
+  "slmax": 75,
+  "pic": 135,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 165 visé, 126 possible",
+    "sl": 66,
+    "vol": 126,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 68,
+    "vol": 128,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 70,
+    "vol": 130,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 42,
+    "vol": 78,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 71,
+    "vol": 131,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 73,
+    "vol": 133,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 75,
+    "vol": 135,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 81,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 75,
+    "vol": 135,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 75,
+    "vol": 135,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 75,
+    "vol": 135,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 81,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "68 (course comprise)"
+   }
+  ]
+ },
+ "P27": {
+  "id": "P27",
+  "notes": [
+   "N2 : un niveau en dessous"
+  ],
+  "gaps": [],
+  "t10": 3300,
+  "t10_txt": "55'00",
+  "niveau": "debutant",
+  "allures": {
+   "VMA courte (3 km)": "5'07",
+   "VMA longue (5 km)": "5'17",
+   "allure 10 km": "5'30",
+   "seuil (15 km)": "5'38",
+   "allure semi": "5'45",
+   "allure marathon": "6'10",
+   "EF interne": "7'10"
+  },
+  "t_semi": "2 h 01'21",
+  "t_marathon": "4 h 20'24",
+  "ef_pace": 430.2838913932345,
+  "v0": 90,
+  "pls_min": 40,
+  "sl0": null,
+  "phases": {
+   "preparation": 4,
+   "fondation": 4,
+   "developpement": 5,
+   "specifique": 5,
+   "affutage": 2,
+   "plan": 14
+  },
+  "slmax": 105,
+  "pic": 195,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 30,
+    "vol": 90,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 32,
+    "vol": 94,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "preparation",
+    "type": "normale",
+    "sl": 35,
+    "vol": 99,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "preparation",
+    "type": "allégée",
+    "sl": null,
+    "vol": 60,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 40,
+    "vol": 109,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 45,
+    "vol": 120,
+    "qualite": "côtes"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 57,
+    "vol": 132,
+    "qualite": "côtes"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": null,
+    "vol": 79,
+    "qualite": "côtes"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 70,
+    "vol": 145,
+    "qualite": "seuil"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 85,
+    "vol": 160,
+    "qualite": "seuil"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 176 visé, 175 possible",
+    "sl": 100,
+    "vol": 175,
+    "qualite": "seuil"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 60,
+    "vol": 105,
+    "qualite": "seuil"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 192 visé, 180 possible",
+    "sl": 105,
+    "vol": 180,
+    "qualite": "seuil"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 185 visé, 180 possible",
+    "sl": 105,
+    "vol": 180,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 188 visé, 180 possible",
+    "sl": 105,
+    "vol": 180,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 195 visé, 180 possible",
+    "sl": 105,
+    "vol": 180,
+    "qualite": "allure semi"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 74,
+    "vol": 126,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 52,
+    "vol": 90,
+    "qualite": "allure semi raccourcie"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "90 (course comprise)"
+   }
+  ]
+ },
+ "P28": {
+  "id": "P28",
+  "notes": [],
+  "gaps": [],
+  "t10": 2340,
+  "t10_txt": "39'00",
+  "niveau": "avance",
+  "allures": {
+   "VMA courte (3 km)": "3'38",
+   "VMA longue (5 km)": "3'44",
+   "allure 10 km": "3'54",
+   "seuil (15 km)": "4'00",
+   "allure semi": "4'05",
+   "allure marathon": "4'23",
+   "EF interne": "5'23"
+  },
+  "t_semi": "1 h 26'03",
+  "t_marathon": "3 h 04'39",
+  "ef_pace": 322.5649411697481,
+  "v0": 300,
+  "pls_min": 120,
+  "sl0": 120,
+  "phases": {
+   "preparation": 0,
+   "fondation": 6,
+   "developpement": 6,
+   "specifique": 6,
+   "affutage": 2,
+   "plan": 18
+  },
+  "slmax": 165,
+  "pic": 405,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 120,
+    "vol": 300,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 133,
+    "vol": 313,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 146,
+    "vol": 326,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 88,
+    "vol": 196,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 159,
+    "vol": 339,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 165,
+    "vol": 352,
+    "qualite": "côtes + seuil"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 165,
+    "vol": 366,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 99,
+    "vol": 219,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 165,
+    "vol": 379,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 165,
+    "vol": 392,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 405 visé, 395 possible",
+    "sl": 165,
+    "vol": 395,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 99,
+    "vol": 237,
+    "qualite": "seuil + VMA longue"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 398 visé, 395 possible",
+    "sl": 165,
+    "vol": 395,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 398 visé, 395 possible",
+    "sl": 165,
+    "vol": 395,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 400 visé, 395 possible",
+    "sl": 165,
+    "vol": 395,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 405 visé, 395 possible",
+    "sl": 165,
+    "vol": 395,
+    "qualite": "allure marathon + seuil"
+   },
+   {
+    "w": 17,
+    "lundi": "15/03",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 115,
+    "vol": 276,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 18,
+    "lundi": "22/03",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 82,
+    "vol": 198,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 19,
+    "lundi": "29/03",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "course + EF ≤ 30"
+   }
+  ]
+ },
+ "P29": {
+  "id": "P29",
+  "notes": [],
+  "gaps": [],
+  "t10": 3180,
+  "t10_txt": "53'00",
+  "niveau": "intermediaire",
+  "allures": {
+   "VMA courte (3 km)": "4'56",
+   "VMA longue (5 km)": "5'05",
+   "allure 10 km": "5'18",
+   "seuil (15 km)": "5'26",
+   "allure semi": "5'33",
+   "allure marathon": "5'57",
+   "EF interne": "6'57"
+  },
+  "t_semi": "1 h 56'56",
+  "t_marathon": "4 h 10'56",
+  "ef_pace": 416.8190226152987,
+  "v0": 139,
+  "pls_min": 63,
+  "sl0": 63,
+  "phases": {
+   "preparation": 0,
+   "fondation": 3,
+   "developpement": 3,
+   "specifique": 3,
+   "affutage": 1,
+   "plan": 9
+  },
+  "slmax": 75,
+  "pic": 195,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 63,
+    "vol": 139,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 75,
+    "vol": 153,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 75,
+    "vol": 167,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 45,
+    "vol": 100,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 75,
+    "vol": 181,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "developpement",
+    "type": "normale",
+    "bloque": "volume plafonné : 195 visé, 181 possible",
+    "sl": 75,
+    "vol": 181,
+    "qualite": "VMA longue"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 188 visé, 181 possible",
+    "sl": 75,
+    "vol": 181,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "specifique",
+    "type": "normale",
+    "bloque": "volume plafonné : 195 visé, 181 possible",
+    "sl": 75,
+    "vol": 181,
+    "qualite": "allure 10 km"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 109,
+    "qualite": "allure 10 km raccourcie"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "91 (course comprise)"
+   }
+  ]
+ },
+ "P17": {
+  "id": "P17",
+  "notes": [],
+  "gaps": [],
+  "t10": 4332.4877020557005,
+  "t10_txt": "72'12 (équivalent du 5 km, N1)",
+  "niveau": "debutant",
+  "allures": {
+   "VMA courte (3 km)": "6'43",
+   "VMA longue (5 km)": "6'56",
+   "allure 10 km": "7'13",
+   "seuil (15 km)": "7'24",
+   "allure semi": "7'33",
+   "allure marathon": "8'06",
+   "EF interne": "9'06"
+  },
+  "t_semi": "2 h 39'19",
+  "t_marathon": "5 h 41'53",
+  "ef_pace": 546.1364865850052,
+  "v0": 210,
+  "pls_min": 84,
+  "sl0": 84,
+  "phases": {
+   "preparation": 0,
+   "fondation": 5,
+   "developpement": 5,
+   "specifique": 5,
+   "affutage": 2,
+   "plan": 15
+  },
+  "slmax": 90,
+  "pic": 135,
+  "weeks": [
+   {
+    "w": 1,
+    "lundi": "23/11",
+    "phase": "fondation",
+    "type": "normale",
+    "bloque": "volume plafonné : 210 visé, 129 possible",
+    "sl": 84,
+    "vol": 129,
+    "qualite": "côtes"
+   },
+   {
+    "w": 2,
+    "lundi": "30/11",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 85,
+    "vol": 130,
+    "qualite": "côtes"
+   },
+   {
+    "w": 3,
+    "lundi": "07/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 86,
+    "vol": 131,
+    "qualite": "côtes"
+   },
+   {
+    "w": 4,
+    "lundi": "14/12",
+    "phase": "fondation",
+    "type": "allégée",
+    "sl": 51,
+    "vol": 78,
+    "qualite": "côtes"
+   },
+   {
+    "w": 5,
+    "lundi": "21/12",
+    "phase": "fondation",
+    "type": "normale",
+    "sl": 87,
+    "vol": 132,
+    "qualite": "côtes"
+   },
+   {
+    "w": 6,
+    "lundi": "28/12",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 87,
+    "vol": 132,
+    "qualite": "seuil"
+   },
+   {
+    "w": 7,
+    "lundi": "04/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 88,
+    "vol": 133,
+    "qualite": "seuil"
+   },
+   {
+    "w": 8,
+    "lundi": "11/01",
+    "phase": "developpement",
+    "type": "allégée",
+    "sl": 53,
+    "vol": 80,
+    "qualite": "seuil"
+   },
+   {
+    "w": 9,
+    "lundi": "18/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 89,
+    "vol": 134,
+    "qualite": "seuil"
+   },
+   {
+    "w": 10,
+    "lundi": "25/01",
+    "phase": "developpement",
+    "type": "normale",
+    "sl": 90,
+    "vol": 135,
+    "qualite": "seuil"
+   },
+   {
+    "w": 11,
+    "lundi": "01/02",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 90,
+    "vol": 135,
+    "qualite": "allure marathon"
+   },
+   {
+    "w": 12,
+    "lundi": "08/02",
+    "phase": "specifique",
+    "type": "allégée",
+    "sl": 54,
+    "vol": 81,
+    "qualite": "allure marathon"
+   },
+   {
+    "w": 13,
+    "lundi": "15/02",
+    "phase": "specifique",
+    "type": "normale",
+    "sl": 90,
+    "vol": 135,
+    "qualite": "allure marathon"
+   },
+   {
+    "w": 14,
+    "lundi": "22/02",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 63,
+    "vol": 94,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 15,
+    "lundi": "01/03",
+    "phase": "affutage",
+    "type": "affûtage",
+    "sl": 45,
+    "vol": 68,
+    "qualite": "allure marathon raccourcie"
+   },
+   {
+    "w": 16,
+    "lundi": "08/03",
+    "phase": "course",
+    "type": "récupération 1",
+    "vol": "course + EF ≤ 30"
+   }
+  ]
+ }
+}

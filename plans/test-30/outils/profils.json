@@ -1,0 +1,1206 @@
+[
+ {
+  "id": "P01",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "garder_forme",
+  "semaines_avant_course": null,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 1186
+  },
+  "regulier_6_mois": false,
+  "nb_sorties": 3,
+  "volume_unite": "min",
+  "volume": 130,
+  "plus_longue_sortie": {
+   "valeur": 52,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "force_esthetique",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "haut_bas",
+  "prioritaires": [
+   "fessiers",
+   "ischios",
+   "biceps"
+  ],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 3,
+  "jours": [
+   "mar",
+   "ven",
+   "dim"
+  ],
+  "temps_par_jour": 30,
+  "temps_sortie_longue": 150,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue sam hors des jours choisis → dim"
+  ]
+ },
+ {
+  "id": "P02",
+  "objectif_course": "10km",
+  "semaines_avant_course": 7,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 3112
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "km",
+  "volume": 33,
+  "plus_longue_sortie": {
+   "valeur": 13,
+   "unite": "km"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "force",
+  "nb_seances_muscu": 1,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "ppj",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 3,
+  "jours": [
+   "lun",
+   "mar",
+   "ven",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 90,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P03",
+  "objectif_course": "semi",
+  "semaines_avant_course": 20,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2218
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 5,
+  "volume_unite": "km",
+  "volume": 40,
+  "plus_longue_sortie": null,
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 1,
+  "niveau_muscu": "debutant",
+  "equipement": "maison_halteres",
+  "organisation": "ppj",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 0,
+  "jours": [
+   "mar",
+   "jeu",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 90,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P04",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "courir_plus",
+  "semaines_avant_course": null,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 1976
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 3,
+  "volume_unite": "min",
+  "volume": 226,
+  "plus_longue_sortie": {
+   "valeur": 90,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "mer",
+  "objectif_muscu": "force",
+  "nb_seances_muscu": "jnsp",
+  "niveau_muscu": "intermediaire",
+  "equipement": "poids_du_corps",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [
+   "mollets",
+   "ischios"
+  ],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 10,
+  "jours": [
+   "mar",
+   "mer",
+   "jeu",
+   "ven",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 30,
+  "temps_sortie_longue": 90,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P05",
+  "objectif_course": "marathon",
+  "semaines_avant_course": 28,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 1556
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 3,
+  "volume_unite": "min",
+  "volume": 250,
+  "plus_longue_sortie": {
+   "valeur": 100,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 4,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "full_body",
+  "prioritaires": [],
+  "exclus": [
+   "dos"
+  ],
+  "renfo_coureur": false,
+  "tractions_strictes": 6,
+  "jours": [
+   "mar",
+   "jeu",
+   "ven",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 45,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue mer hors des jours choisis → dim"
+  ]
+ },
+ {
+  "id": "P06",
+  "objectif_course": "10km",
+  "semaines_avant_course": 15,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 2033
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "min",
+  "volume": 79,
+  "plus_longue_sortie": {
+   "valeur": 32,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "force_esthetique",
+  "nb_seances_muscu": 4,
+  "niveau_muscu": "intermediaire",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 3,
+  "jours": [
+   "lun",
+   "mar",
+   "jeu",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 30,
+  "temps_sortie_longue": 180,
+  "prioritaire": "muscu",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P07",
+  "objectif_course": "10km",
+  "semaines_avant_course": 7,
+  "chrono": null,
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "km",
+  "volume": 10,
+  "plus_longue_sortie": null,
+  "jour_sortie_longue": "sam",
+  "objectif_muscu": "aucun",
+  "nb_seances_muscu": 0,
+  "niveau_muscu": "debutant",
+  "equipement": "salle",
+  "organisation": null,
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 10,
+  "jours": [
+   "lun",
+   "mar",
+   "mer",
+   "jeu",
+   "ven",
+   "sam"
+  ],
+  "temps_par_jour": 90,
+  "temps_sortie_longue": 60,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P08",
+  "objectif_course": "10km",
+  "semaines_avant_course": 20,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 2042
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 3,
+  "volume_unite": "min",
+  "volume": 243,
+  "plus_longue_sortie": null,
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "tonification",
+  "nb_seances_muscu": 3,
+  "niveau_muscu": "debutant",
+  "equipement": "maison_halteres",
+  "organisation": "full_body",
+  "prioritaires": [
+   "mollets",
+   "pectoraux"
+  ],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 1,
+  "jours": [
+   "lun",
+   "mar",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P09",
+  "objectif_course": "semi",
+  "semaines_avant_course": 23,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 3530
+  },
+  "regulier_6_mois": false,
+  "nb_sorties": "jnsp",
+  "volume_unite": "km",
+  "volume": 34,
+  "plus_longue_sortie": {
+   "valeur": 14,
+   "unite": "km"
+  },
+  "jour_sortie_longue": "mer",
+  "objectif_muscu": "force_esthetique",
+  "nb_seances_muscu": "jnsp",
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "mar",
+   "mer",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 90,
+  "prioritaire": "muscu",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P10",
+  "objectif_course": "10km",
+  "semaines_avant_course": 10,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 1947
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "min",
+  "volume": 128,
+  "plus_longue_sortie": {
+   "valeur": 51,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "sam",
+  "objectif_muscu": "tonification",
+  "nb_seances_muscu": 3,
+  "niveau_muscu": "debutant",
+  "equipement": "salle",
+  "organisation": "ppj",
+  "prioritaires": [
+   "biceps",
+   "pectoraux"
+  ],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "mar",
+   "mer",
+   "ven",
+   "sam"
+  ],
+  "temps_par_jour": 45,
+  "temps_sortie_longue": 150,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P11",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "courir_plus",
+  "semaines_avant_course": null,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2986
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "min",
+  "volume": 168,
+  "plus_longue_sortie": {
+   "valeur": 67,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "sam",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 1,
+  "niveau_muscu": "debutant",
+  "equipement": "salle",
+  "organisation": "ppH",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "mar",
+   "sam"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue dim hors des jours choisis → sam"
+  ]
+ },
+ {
+  "id": "P12",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "courir_plus",
+  "semaines_avant_course": null,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2923
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 2,
+  "volume_unite": "km",
+  "volume": 53,
+  "plus_longue_sortie": null,
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 4,
+  "niveau_muscu": "confirme",
+  "equipement": "poids_du_corps",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [
+   "pectoraux",
+   "fessiers"
+  ],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 0,
+  "jours": [
+   "mer",
+   "ven",
+   "dim"
+  ],
+  "temps_par_jour": 45,
+  "temps_sortie_longue": 150,
+  "prioritaire": "muscu",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue sam hors des jours choisis → dim"
+  ]
+ },
+ {
+  "id": "P13",
+  "objectif_course": "semi",
+  "semaines_avant_course": 6,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2520
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "km",
+  "volume": 52,
+  "plus_longue_sortie": {
+   "valeur": 21,
+   "unite": "km"
+  },
+  "jour_sortie_longue": "mer",
+  "objectif_muscu": "force_esthetique",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "confirme",
+  "equipement": "maison_halteres",
+  "organisation": "full_body",
+  "prioritaires": [
+   "quadriceps",
+   "abdos"
+  ],
+  "exclus": [
+   "fessiers"
+  ],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "mer"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 180,
+  "prioritaire": "muscu",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue dim hors des jours choisis → mer"
+  ]
+ },
+ {
+  "id": "P14",
+  "objectif_course": "semi",
+  "semaines_avant_course": 22,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 4042
+  },
+  "regulier_6_mois": false,
+  "nb_sorties": 1,
+  "volume_unite": "min",
+  "volume": 70,
+  "plus_longue_sortie": {
+   "valeur": 70,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "sam",
+  "objectif_muscu": "aucun",
+  "nb_seances_muscu": 0,
+  "niveau_muscu": "confirme",
+  "equipement": "poids_du_corps",
+  "organisation": null,
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "mar",
+   "mer",
+   "jeu",
+   "sam"
+  ],
+  "temps_par_jour": 45,
+  "temps_sortie_longue": 90,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue dim hors des jours choisis → sam",
+   "volume 247 min en 1 sortie (4 h d'un coup) jugé absurde → 70 min"
+  ]
+ },
+ {
+  "id": "P15",
+  "objectif_course": "10km",
+  "semaines_avant_course": 10,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2667
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 2,
+  "volume_unite": "min",
+  "volume": 251,
+  "plus_longue_sortie": null,
+  "jour_sortie_longue": "ven",
+  "objectif_muscu": "force",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "haut_bas_fb",
+  "prioritaires": [
+   "mollets"
+  ],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 1,
+  "jours": [
+   "mar",
+   "ven"
+  ],
+  "temps_par_jour": 90,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue mer hors des jours choisis → ven"
+  ]
+ },
+ {
+  "id": "P16",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "courir_plus_vite",
+  "semaines_avant_course": null,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2940
+  },
+  "regulier_6_mois": false,
+  "nb_sorties": 1,
+  "volume_unite": "min",
+  "volume": 108,
+  "plus_longue_sortie": {
+   "valeur": 43,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "tonification",
+  "nb_seances_muscu": 3,
+  "niveau_muscu": "intermediaire",
+  "equipement": "salle",
+  "organisation": "ppH",
+  "prioritaires": [],
+  "exclus": [
+   "mollets"
+  ],
+  "renfo_coureur": false,
+  "tractions_strictes": 6,
+  "jours": [
+   "lun",
+   "mer",
+   "jeu",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 45,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P17",
+  "objectif_course": "marathon",
+  "semaines_avant_course": 15,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 2078
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 2,
+  "volume_unite": "min",
+  "volume": 210,
+  "plus_longue_sortie": {
+   "valeur": 84,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "force",
+  "nb_seances_muscu": 1,
+  "niveau_muscu": "intermediaire",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 6,
+  "jours": [
+   "lun",
+   "mar",
+   "jeu",
+   "ven",
+   "dim"
+  ],
+  "temps_par_jour": 45,
+  "temps_sortie_longue": 90,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue sam hors des jours choisis → dim"
+  ]
+ },
+ {
+  "id": "P18",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "courir_plus_vite",
+  "semaines_avant_course": null,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2256
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "min",
+  "volume": 181,
+  "plus_longue_sortie": {
+   "valeur": 72,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "ppH",
+  "prioritaires": [],
+  "exclus": [
+   "epaules"
+  ],
+  "renfo_coureur": false,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "jeu",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 60,
+  "prioritaire": "muscu",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P19",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "courir_plus",
+  "semaines_avant_course": null,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 2148
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": "jnsp",
+  "volume_unite": "min",
+  "volume": 143,
+  "plus_longue_sortie": {
+   "valeur": 57,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "mer",
+  "objectif_muscu": "tonification",
+  "nb_seances_muscu": 3,
+  "niveau_muscu": "confirme",
+  "equipement": "maison_halteres",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 10,
+  "jours": [
+   "mar",
+   "mer"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 90,
+  "prioritaire": "muscu",
+  "note": "tiré au hasard",
+  "retouches": [
+   "jour de sortie longue dim hors des jours choisis → mer"
+  ]
+ },
+ {
+  "id": "P20",
+  "objectif_course": "10km",
+  "semaines_avant_course": 28,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2491
+  },
+  "regulier_6_mois": false,
+  "nb_sorties": 1,
+  "volume_unite": "km",
+  "volume": 27,
+  "plus_longue_sortie": {
+   "valeur": 11,
+   "unite": "km"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "debutant",
+  "equipement": "salle",
+  "organisation": "haut_bas_fb",
+  "prioritaires": [
+   "pectoraux"
+  ],
+  "exclus": [
+   "fessiers"
+  ],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "mar",
+   "mer",
+   "jeu",
+   "ven",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 150,
+  "prioritaire": "course",
+  "note": "tiré au hasard",
+  "retouches": []
+ },
+ {
+  "id": "P21",
+  "note": "Marathon dans 5 semaines (C5), coureur confirmé",
+  "objectif_course": "marathon",
+  "semaines_avant_course": 5,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2700
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "min",
+  "volume": 240,
+  "plus_longue_sortie": {
+   "valeur": 110,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "aucun",
+  "nb_seances_muscu": 0,
+  "niveau_muscu": "debutant",
+  "equipement": "salle",
+  "organisation": null,
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "mar",
+   "jeu",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "retouches": [],
+  "pas_de_course_type": null
+ },
+ {
+  "id": "P22",
+  "note": "Débutant total sans chrono (N7, T3), 10 km dans 16 semaines",
+  "objectif_course": "10km",
+  "semaines_avant_course": 16,
+  "chrono": null,
+  "regulier_6_mois": false,
+  "nb_sorties": 2,
+  "volume_unite": "min",
+  "volume": 50,
+  "plus_longue_sortie": {
+   "valeur": 25,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "tonification",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "debutant",
+  "equipement": "maison_halteres",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "mer",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 30,
+  "temps_sortie_longue": 60,
+  "prioritaire": "course",
+  "retouches": [],
+  "pas_de_course_type": null
+ },
+ {
+  "id": "P23",
+  "note": "Marathon dans 22 semaines avec 170 min/sem. : sous le seuil C9 de 10 min",
+  "objectif_course": "marathon",
+  "semaines_avant_course": 22,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2820
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 4,
+  "volume_unite": "min",
+  "volume": 170,
+  "plus_longue_sortie": {
+   "valeur": 70,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "intermediaire",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 4,
+  "jours": [
+   "lun",
+   "mar",
+   "jeu",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "retouches": [],
+  "pas_de_course_type": null
+ },
+ {
+  "id": "P24",
+  "note": "Muscu seule : aucune course (0 sortie), force, 4 séances",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "garder_forme",
+  "semaines_avant_course": null,
+  "chrono": null,
+  "regulier_6_mois": false,
+  "nb_sorties": 0,
+  "volume_unite": "min",
+  "volume": 0,
+  "plus_longue_sortie": null,
+  "jour_sortie_longue": null,
+  "objectif_muscu": "force",
+  "nb_seances_muscu": 4,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [
+   "pectoraux",
+   "dos",
+   "quadriceps"
+  ],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 12,
+  "jours": [
+   "lun",
+   "mar",
+   "jeu",
+   "ven"
+  ],
+  "temps_par_jour": 90,
+  "temps_sortie_longue": null,
+  "prioritaire": "muscu",
+  "retouches": []
+ },
+ {
+  "id": "P25",
+  "note": "Expert (33'30), semi dans 12 semaines, gros volume, 6 jours",
+  "objectif_course": "semi",
+  "semaines_avant_course": 12,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2010
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 5,
+  "volume_unite": "km",
+  "volume": 75,
+  "plus_longue_sortie": {
+   "valeur": 22,
+   "unite": "km"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "force_esthetique",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "intermediaire",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 8,
+  "jours": [
+   "lun",
+   "mar",
+   "mer",
+   "jeu",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 90,
+  "temps_sortie_longue": 150,
+  "prioritaire": "course",
+  "retouches": [],
+  "pas_de_course_type": null
+ },
+ {
+  "id": "P26",
+  "note": "Poids du corps seul, objectif force, 30 min, aucune traction stricte",
+  "objectif_course": "10km",
+  "semaines_avant_course": 12,
+  "chrono": {
+   "distance": 5,
+   "temps_s": 1440
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 3,
+  "volume_unite": "km",
+  "volume": 25,
+  "plus_longue_sortie": {
+   "valeur": 10,
+   "unite": "km"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "force",
+  "nb_seances_muscu": 3,
+  "niveau_muscu": "intermediaire",
+  "equipement": "poids_du_corps",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "mar",
+   "jeu",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 30,
+  "temps_sortie_longue": 90,
+  "prioritaire": "course",
+  "retouches": [],
+  "pas_de_course_type": null
+ },
+ {
+  "id": "P27",
+  "note": "Reprise après arrêt (N2), ancien chrono 55'00, semi dans 18 semaines, jambes prioritaires",
+  "objectif_course": "semi",
+  "semaines_avant_course": 18,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 3300
+  },
+  "regulier_6_mois": false,
+  "nb_sorties": 3,
+  "volume_unite": "min",
+  "volume": 90,
+  "plus_longue_sortie": {
+   "valeur": 40,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "sam",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 2,
+  "niveau_muscu": "intermediaire",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [
+   "fessiers",
+   "quadriceps"
+  ],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "mar",
+   "jeu",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 45,
+  "temps_sortie_longue": 120,
+  "prioritaire": "course",
+  "retouches": [],
+  "pas_de_course_type": null
+ },
+ {
+  "id": "P28",
+  "note": "7 jours, 5 sorties + 3 muscu, refuse le jour de repos (P5), marathon dans 18 semaines",
+  "objectif_course": "marathon",
+  "semaines_avant_course": 18,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 2340
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 5,
+  "volume_unite": "min",
+  "volume": 300,
+  "plus_longue_sortie": {
+   "valeur": 120,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 3,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": true,
+  "tractions_strictes": 10,
+  "jours": [
+   "lun",
+   "mar",
+   "mer",
+   "jeu",
+   "ven",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 180,
+  "prioritaire": "course",
+  "refus_repos": true,
+  "retouches": [],
+  "pas_de_course_type": null
+ },
+ {
+  "id": "P29",
+  "note": "Exclusions lourdes (dos, quadriceps, ischios) + renfo coureur coché, biceps prioritaire",
+  "objectif_course": "10km",
+  "semaines_avant_course": 9,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 3180
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 3,
+  "volume_unite": "km",
+  "volume": 20,
+  "plus_longue_sortie": {
+   "valeur": 9,
+   "unite": "km"
+  },
+  "jour_sortie_longue": "dim",
+  "objectif_muscu": "hypertrophie",
+  "nb_seances_muscu": 3,
+  "niveau_muscu": "intermediaire",
+  "equipement": "salle",
+  "organisation": "full_body",
+  "prioritaires": [
+   "biceps"
+  ],
+  "exclus": [
+   "dos",
+   "quadriceps",
+   "ischios"
+  ],
+  "renfo_coureur": true,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "mer",
+   "ven",
+   "sam",
+   "dim"
+  ],
+  "temps_par_jour": 60,
+  "temps_sortie_longue": 90,
+  "prioritaire": "course",
+  "retouches": [],
+  "pas_de_course_type": null
+ },
+ {
+  "id": "P30",
+  "note": "« Courir plus vite » sans course, 30 min par jour, sortie longue le samedi",
+  "objectif_course": "pas_de_course",
+  "pas_de_course_type": "courir_plus_vite",
+  "semaines_avant_course": null,
+  "chrono": {
+   "distance": 10,
+   "temps_s": 3120
+  },
+  "regulier_6_mois": true,
+  "nb_sorties": 3,
+  "volume_unite": "min",
+  "volume": 120,
+  "plus_longue_sortie": {
+   "valeur": 50,
+   "unite": "min"
+  },
+  "jour_sortie_longue": "sam",
+  "objectif_muscu": "tonification",
+  "nb_seances_muscu": 1,
+  "niveau_muscu": "debutant",
+  "equipement": "salle",
+  "organisation": "haut_bas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo_coureur": false,
+  "tractions_strictes": 0,
+  "jours": [
+   "lun",
+   "mer",
+   "sam"
+  ],
+  "temps_par_jour": 30,
+  "temps_sortie_longue": 90,
+  "prioritaire": "course",
+  "retouches": []
+ }
+]

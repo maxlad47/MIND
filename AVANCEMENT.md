@@ -62,8 +62,8 @@ Ordre (décision de Max) : étapes 2 et 3 en parallèle de l'étape 4 ; étapes 
 |---|---|---|---|---|---|
 | 0 | Trancher les points flous | hors mission | — | Fait (16/11/2026) | Max a tranché ; Claude a reporté dans les documents |
 | 1 | Créer CLAUDE.md et aligner les missions | V0-M5 | Opus | Fait (16/11/2026, version corrigée à v5) | Claude a rédigé ; Max a validé |
-| 2 | Tester les règles à la main sur les profils fictifs A, B, C et produire les plans papier | V0-M6 | Opus | En cours (17/11/2026) : profils A, B, C fixés (section 12) ; attend V0-M7 | Max confirme le statut ; Claude aide à produire les plans |
-| 3 | Ajouter `data/exercices.json` | V0-M7 | Sonnet | À faire | Claude rédige, Max valide le contenu |
+| 2 | Tester les règles à la main sur les profils fictifs A, B, C et produire les plans papier | V0-M6 | Opus | Validé Max (18/11/2026) : plans A, B, C version 3 dans `plans/` (section 14) | Max confirme le statut ; Claude aide à produire les plans |
+| 3 | Ajouter `data/exercices.json` | V0-M7 | Sonnet (fait en Opus sur demande de Max) | Validé Max (17/11/2026) | Claude rédige, Max valide le contenu |
 | 4 | Définir le modèle de données : profil, plan, séances, historique, charges, version, clés `mind_`, dates en texte | V1-M0 | Opus | Validé Max (schéma 16/11/2026, code 17/11/2026) | Claude propose, Max valide |
 | 5 | Créer le dépôt GitHub `maxlad47/MIND` | hors mission | — | Fait (Max, 16/11/2026) | Max le crée lui-même |
 | 5b | Initialiser git en local | hors mission | — | Fait : `git init` sur `main`, remote `origin` ajouté, aucun commit, aucun push | Claude |
@@ -86,9 +86,9 @@ Ordre (décision de Max) : étapes 2 et 3 en parallèle de l'étape 4 ; étapes 
 ## 4. Prochaine étape
 
 Jalons 3, 4 et 5 validés par Max (17/11/2026). Le critère de sortie de V1 est rempli ; il reste l'étape 10 (retouches et validation finale de V1).
-**Mission en cours : V0-M6 (étape 2), lancée le 17/11/2026 sur décision de Max.**
+**V0-M6 (étape 2) validée par Max le 18/11/2026.** Aucune mission en cours : la suivante attend le choix de Max.
 Retouches de design depuis, hors mission, déjà commitées : couleur de la barre d'état alignée sur le fond (`2fe32be`), puis fond orange pastel (essai) et mode sombre (`db1d81b`). Validées par Max (17/11/2026).
-Les étapes 2 et 3 ne sont pas lancées : elles attendent la confirmation de Max pour V0-M6.
+Étapes 2 et 3 validées. Reste l'étape 10 (retouches et validation de V1).
 
 ---
 
@@ -289,7 +289,7 @@ Personnes réelles anonymisées : aucun prénom ni lien dans le dépôt, chronos
 |---|---|---|---|
 | Objectif course | 10 km, 01/03/2027 ; course prioritaire | 10 km, 01/03/2027 | Marathon, 01/06/2027 ; montée en volume d'abord (C9) |
 | Chrono 10 km | 42'00 (confirmé) | 60'00 (débutant) | 44'00 (confirmé) |
-| Course | 3 sorties, 30 km/sem. | 2 sorties, 10 km/sem. | 3 sorties d'1 h, 30 km/sem. ; sortie longue au-delà d'1 h permise |
+| Course | 3 sorties, 30 km/sem. | 2 sorties, **15 km/sem. (10 + 5, corrigé le 18/11/2026)** | 3 sorties d'1 h (**180 min/sem.**, déclaré en minutes : C9 passe dès W1), 30 km/sem. ; sortie longue au-delà d'1 h permise |
 | Régulier depuis 6 mois | Oui | Oui | Oui |
 | Muscu | 3 séances, hypertrophie (M3), > 2 ans, salle | 2 séances, hypertrophie (M3), < 6 mois, salle | 3 séances, tonification (M4) + renfo coureur, > 2 ans, salle |
 | Organisation | « Je ne sais pas » (M26) | « Je ne sais pas » | « Je ne sais pas » |
@@ -304,3 +304,82 @@ Personnes réelles anonymisées : aucun prénom ni lien dans le dépôt, chronos
 **Ouvert** :
 - Renfo coureur (A et C) : pas de groupe exclu ; renfo coureur en **option** cochée en plus de l'objectif muscu, et pas de squat lourd dans la semaine (Max, 17/11/2026). M12 réécrite en conséquence (REGLES v6, validée par Max). B : jambes prioritaires → jambes lourdes conservées + renfo. À faire plus tard : case « Renfo coureur » dans le formulaire (le champ `renfo_coureur` existe déjà).
 - C : 6 jours disponibles sur 7 ; le mercredi reste libre, P5 est respecté.
+
+---
+
+## 13. V0-M7 : `data/exercices.json`
+
+**Créé** :
+- `data/exercices.json` : version 1, **76 exercices** (40 classiques, 25 complémentaires, 11 spécifiques « renfo coureur »), et la table `equipements` (M29) : salle = tout ; maison avec haltères = haltères + poids du corps ; poids du corps = poids du corps.
+- Champs par exercice (critère de MISSIONS.md) : `niveau_usage`, `famille`, `principal_possible`, `materiel` (M25), `muscle_principal` (clés de `src/profil/groupes.js`), `zone` (haut / bas, M17), `type` (polyarticulaire / isolation). En plus : `id`, `nom`, `contexte` (`renfo_coureur` pour un spécifique, sinon `null`, M8) et `mesure` (voir ci-dessous).
+- `src/donnees/exercices.test.js` : 13 contrôles (champs, valeurs, M6, M7, M8, M10-M11, M12, M17, M29, U5). Il a trouvé un trou à la première exécution (famille « presse » sans assistance), corrigé par l'ajout de la presse à une jambe.
+- `src/profil/groupes.js` : commentaire mis à jour (liste alignée, plus « provisoire »).
+
+**Vérifications** : `npm test` : 12 fichiers, 107 tests passent. Lint sans alerte. Build réussi.
+
+**Choix validés par Max (17/11/2026)** :
+1. **Champ `mesure` (`reps` / `duree`)**, absent du critère : le gainage se compte en secondes, pas en répétitions.
+2. **Abdos en zone « haut »** : le critère ne prévoit que haut / bas (sans effet pratique : M17 ne joue qu'à la barre).
+3. **Soulevé de terre : muscle principal = dos** (correction de Max, 17/11/2026 : exercice de dos, ischios en secondaire, non comptés par M22). Zone « bas » conservée (M17, +5 kg), famille charnière de hanche (U5). Le soulevé de terre roumain reste en ischios.
+4. ~~Hip thrust hors jambes lourdes~~ → **tranché par Max (17/11/2026)** : le « lourd » dépend de l'intensité, pas du mouvement. U5 réécrite (polyarticulaire jambes, hip thrust compris, lourd si RPE visé ≥ 7), M20b (RPE visé seulement sur les séries « dures »), M17b (progression en léger). Valeurs de RPE visé validées (force 7-9, force + esthétique 6-9, hypertrophie 6-8).
+5. **Renfo coureur** : 11 exercices au poids du corps ou aux haltères (montées sur banc, fentes arrière, squat sur une jambe, soulevé de terre sur une jambe, nordic curl, pont fessier sur une jambe, abduction, mollets excentriques, corde à sauter, dead bug, gainage dynamique). Ils sont dans les familles squat / fentes / charnière, mais **ne comptent pas comme jambes lourdes** (U5 exclut le renfo coureur).
+6. **Équipement « poids du corps » seul** : biceps et triceps sans exercice classique possible → l'appli avertira (M11). Sans effet sur A, B, C (tous en salle).
+
+---
+
+## 14. V0-M6 : plans papier (validés par Max le 18/11/2026)
+
+**Créé** : `plans/README.md` (conventions, choix provisoires G1-G13), `plans/plan-A.md`, `plans/plan-B.md`, `plans/plan-C.md`. Chaque plan : entrées, paramètres calculés (niveau, volume, allures), calendrier semaine par semaine, une semaine détaillée (placement P / J, séances course et muscu), contrôle des règles. Aucun prénom ni lien dans ces fichiers.
+
+**Constats principaux, à trancher par Max** :
+1. **M22 et M23 incompatibles** pour tous les profils (G13) : 10 groupes à 6 séries minimum ne tiennent pas dans le nombre d'exercices M23. B est très loin (M13 déclenchée, arbitrage non défini).
+2. **Sortie longue plafonnée** par S3 quand les autres sorties sont limitées au temps par jour : B 60 min (cible C1 non atteinte), C 2 h 00 (cible C3 2 h 45-3 h non atteinte).
+3. **C9 refuse C de 2 minutes** au départ (178 min < 180) ; levé dès W2.
+4. Règles absentes : hausse de volume visée (G1), contenu des phases (G4), jour de la sortie longue (G5), mouvement principal (G9), marathon plus de 20 semaines à l'avance (C3).
+5. S4 a forcé à réduire les fractions de C en W22 : le moteur doit vérifier S4 avant de fixer les fractions.
+
+**Non fait** : plans des semaines autres que la semaine détaillée ; charges (aucune déclarée, M19).
+
+
+**Relecture point par point (18/11/2026)** :
+- **Charges** : M19 réécrite (calibrage au RPE en semaine 1, suivi des charges au choix, Epley corrigée RPE). Les plans n'ont plus de « charges à calibrer » : la semaine 1 s'écrit en reps + RPE. À prévoir en V2 : un indicateur « suivi » par exercice dans le modèle de données (`mind_charges` ou `mind_reglages`), sans changement avant V2.
+- **M22 / M23 (G13)** : tranché. M22 selon le nombre de séances (tableau prudent), minimum prioritaire seul bloquant ; M23 = proposition, le temps limite ; M13 précisé. Les sections muscu des plans seront recalculées une fois tous les points revus.
+- **Pour plus tard (après V2)** : demi-série pour le muscle secondaire d'un exercice (champ « muscle secondaire » dans `data/exercices.json`) ; superséries. Notés à la demande de Max, sans date.
+- **Sortie longue et durées** : tranché. S3 sans plafond en % (progression + cible de course + 3 h, conseil > 50 %), S3b supprimée, U9 (sortie longue ≥ 60 min), J8 (sortie de plus proposée, jamais imposée), A3 (EF en distance par défaut, séance = durée de son contenu). À prévoir : réglage « EF en durée » dans le profil (formulaire, `mind_reglages`).
+- **C9 et unité du volume** : tranché. C retenu à 180 min (minutes déclarées) → C9 passe dès W1. C13 étendue au semi (> 14 semaines) et au marathon (> 20 semaines). À prévoir : le formulaire accepte le volume **en km ou en minutes** au choix de l'utilisateur (km convertis par U2 si un chrono existe ; sans chrono, minutes).
+- **Volume, jour et départ de la sortie longue (G1, G5, G6)** : tranché. C14 (hausse calculée sur la prépa), P10 (jour choisi par l'utilisateur, conseil si J+2 non respecté), N3b (sortie longue de départ déclarée). À prévoir dans le formulaire : jour de sortie longue, plus longue sortie récente (km ou min).
+- **Profils, sortie longue (18/11/2026)** : plus longue sortie récente A 15 km (≈ 86 min → sortie longue de départ, N3b), B 10 km (≈ 77 min → sortie longue de départ) ; volume de B corrigé par Max : **15 km/sem. (10 + 5) ≈ 116 min**, C 8 km (≈ 48 min < 60 → pas de sortie longue au départ). Jour de sortie longue : dimanche pour les trois (P10).
+- **Intenses et nombre de sorties** : tranché, N8 (option B avec proposition de 2e qualité dès le développement). A et C : 1 qualité + 1 EF + sortie longue par défaut.
+- **Contenu des phases (G4)** : tranché, C15.
+- **G3, G7 à G12** : tranchés (C16, S5, M26, M6, M32, M9, M12). Mouvements principaux : A développé couché / tractions / développé militaire ; B squat / soulevé de terre roumain / hip thrust ; C développé couché / rowing / développé épaules. **Tous les choix provisoires G1-G13 sont tranchés : plans à recalculer.**
+- **Plans version 2 (18/11/2026)** : A, B, C recalculés avec toutes les règles revues. M22 tenu pour A et C (10 groupes à 6 séries ou plus) ; B : prioritaires à 8-9, secondaires en conseil, plus de M13. Questions restantes : A Q1 (pic si sortie longue de départ > bas de la cible, appliqué), Q4 (2e qualité + lundi doublé), Q5 (jour de l'EF) ; B4 (principal du samedi jamais lourd, P2) ; C Q2 (affûtage 2 ou 3 semaines), C7 (semaine de course = récupération 1).
+- **Plans version 3 (18/11/2026)** : réponses de Max appliquées. Règles : C14 (pic), J6 (jour doublé choisi par l'utilisateur, message si une règle de placement est enfreinte, choix maintenu), P11 (jour de l'EF), M6 (pas de principal jambes la veille d'une qualité ou de la sortie longue), C3 et C6 (affûtage marathon 2 semaines), C11 (semaine de course = récupération 1), U7 (liste des conseils). A : 2e qualité avec lundi doublé → VMA longue lundi + VMA courte mercredi, message J6. B : principal du samedi = tractions (M6), soulevé de terre roumain en léger, dos 8 séries. C : inchangé, sauf les renvois.
+- **B5 tranchée (18/11/2026)** : tractions assistées « principal possible » (`data/exercices.json` v2, test mis à jour, 107 tests passent) ; tractions au poids du corps au-delà de 4 tractions strictes (M6). B : tractions assistées le samedi.
+- **Tractions (18/11/2026)** : strictes dès une possible, assistées sinon ; schéma propre (< 5 : 3-4 séries au max ; ≥ 5 : 4 × 5 → 4 × 12, +1 rep si RPE de l'exercice < 7) ; lest à définir plus tard. A-Q7 tranchée. A-Q6 et B6 tranchées : A 8 tractions strictes (4 × 5), B 2 (4 séries au max + 2 séries de tirage horizontal, dos 9).
+- **RPE (18/11/2026)** : toujours sur l'exercice entier, jamais sur une série (M16, M17b, M19, M20b, R2). Conséquence à prévoir : MODELE_DONNEES ne stocke que `rpe_principal` ; il faudra un RPE par exercice dur (changement du modèle validé, à soumettre à Max avant le moteur).
+- **V0-M6 « Validé Max » (18/11/2026).** Ensuite, relecture des plans v3 par Max → V0-M6 « Validé Max ». À prévoir dans le formulaire : choix du jour doublé (J6), nombre de tractions strictes (M6).
+
+---
+
+## 15. Test des règles sur 30 profils (hors mission, 18/11/2026)
+
+Demandé par Max. **Fait**, à relire par Max. Aucune règle modifiée.
+- `plans/test-30/` : `README.md` (méthode, choix provisoires H1-H10), `P01.md` à `P30.md` (20 profils tirés au hasard, graine fixe, + 10 cas limites ; tableau profil / proposition, calendrier, semaine détaillée, constats, avis de coach), `BILAN.md` (verdicts et 24 constats classés), `outils/` (scripts de tirage et de calcul, données).
+- Verdict de coach : 9 plans bons, 14 à retoucher, 7 à refuser.
+- Constats principaux : volume déclaré > contenu possible (9 profils, sans règle) ; organisation muscu incompatible avec le nombre de séances ; M6 (principal par défaut) ; plus de séances que de jours accepté ; durée des qualités sans règle et pic C14 inatteignable ; aucun minimum de sorties pour 10 km / semi ; bibliothèque au poids du corps trop pauvre avec M8.
+- Incohérences signalées, non corrigées : libellé `ppH` dans `src/profil/options.js` (« haut-bas ») contre M26 (« sans jambes ») ; S5 (« reprise au niveau ») contre les plans A-C (reprise + hausse).
+- PDF envoyé par mail à Max (hors dépôt).
+
+---
+
+## 16. Règles v7 et test sur 50 profils (hors mission, 19/11/2026)
+
+Demandé par Max (« simplifier au maximum, rester cohérent, optimiser »). **Fait, à valider par Max.**
+- `REGLES-v6.md` : copie intégrale de la v6 (non commitée jusque-là).
+- `REGLES.md` **v7** : mêmes codes et valeurs validées ; tableau des changements en tête ; nouveau code **E** (contrôles du profil) ; N6 fusionnée dans N8 ; nouvelles V7, P12, P13, M33 ; C4, C5, C8, C9, C14, M6, M8, M12, M20, M22, M23, M26, J5 réécrites. Ligne datée dans DECISIONS.md.
+- `plans/test-50/` : `README.md`, `Q01.md` à `Q50.md` (35 tirés au hasard, graine fixe, + 15 cas limites), `BILAN.md`, `outils/` (script qui applique la v7 règle par règle, profils, avis).
+- Verdict de coach : 31 bons, 19 à retoucher, 0 à refuser (v6 : 9 / 14 / 7). Les 24 constats du test v6 sont réglés ou améliorés.
+- Reste à trancher (v8) : plafond de hausse sur une prépa, temps minimal conseillé pour les qualités et pour la force, longue préparation plate, charge totale par niveau, « garder la forme » à 1 qualité, deux variantes du même mouvement, volume muscu débutant (BILAN §4).
+- À prévoir après validation : formulaire (E1-E9), libellé `ppH` dans `src/profil/options.js`, MODELE_DONNEES (RPE par exercice + nouveaux champs), recalcul des plans A, B, C (référence v6 jusque-là).
+- Points ouverts de la session précédente toujours en attente : les 6 incohérences de documents signalées le 18/11.
+- PDF envoyé par mail à Max (hors dépôt). Rien n'est commité.
