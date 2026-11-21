@@ -1,0 +1,426 @@
+[
+[
+"A",
+"10 km dans 14 sem., 3 sorties, hypertrophie × 3",
+"Profil A (10 km prioritaire, hypertrophie 3 séances)",
+9,
+"Bon",
+"Très bon plan de 10 km : 2 semaines de préparation, une VMA longue qui monte (4 × 1000 m en 4'02), une sortie longue stable à 15 km et un volume de +20 % sans à-coup."
+],
+[
+"B",
+"10 km dans 14 sem., 2 sorties, hypertrophie × 2",
+"Profil B (10 km débutant, jambes et dos prioritaires)",
+7,
+"À retoucher",
+"Base saine pour un débutant : VMA courte (3 × 800 m) une semaine sur deux, fartlek l'autre semaine, sortie longue de 10 km."
+],
+[
+"C",
+"Marathon dans 27 sem., 3 sorties, tonification × 3",
+"Profil C (marathon, tonification 3 séances)",
+8,
+"Bon",
+"Préparation marathon sérieuse et identique à ton plan v6 au pic (≈ 284 min, sortie longue de 28 km puis 3 h) : 7 semaines de préparation en rotation (côtes, fartlek, seuil), seuil puis allure marathon, affûtage de 2 semaines."
+],
+[
+"R01",
+"10 km dans 10 sem., 3 sorties, pas de muscu",
+"10 km, délai normal, débutant, 3 sorties, sans muscu",
+8,
+"Bon",
+"Bon plan pour un débutant : fartlek une semaine sur deux, VMA courte (3 × 800 m), hausse limitée à +5 % par semaine (100 → 134 min)."
+],
+[
+"R02",
+"10 km dans 11 sem., 3 sorties, tonification × 1",
+"10 km, délai normal, intermédiaire, 3 sorties, tonification 1",
+8,
+"Bon",
+"Course propre : VMA longue en 3 × 800 m (assez de fractions), sortie longue qui finit à 1 h 18."
+],
+[
+"R03",
+"10 km dans 12 sem., 4 sorties, force × 2",
+"10 km, délai normal, confirmé, 4 sorties, force 2",
+8,
+"Bon",
+"Bon plan de 10 km pour un confirmé : 2 qualités (VMA longue et courte, 48 h d'écart), sortie longue de 1 h 25, 89 % de facile."
+],
+[
+"R04",
+"10 km dans 10 sem., 5 sorties, pas de muscu",
+"10 km, délai normal, expert, 5 sorties, sans muscu",
+7,
+"À retoucher",
+"Les 2 qualités d'un expert sont justes (5 × 1000 m, 7 × 400 m)."
+],
+[
+"R05",
+"10 km dans 3 sem., 3 sorties, hypertrophie × 1",
+"10 km dans 3 semaines (C5 « finir »), intermédiaire",
+8,
+"Bon",
+"À 3 semaines du 10 km, le plan « finir » est exactement ce qu'il faut : allure 10 km deux fois, une sortie longue d'1 h 03, puis l'affûtage."
+],
+[
+"R06",
+"10 km dans 6 sem., 4 sorties, pas de muscu",
+"10 km dans 6 semaines (C4 compressé), avancé",
+8,
+"Bon",
+"Délai court bien géré (C4) : hausse limitée à +5 %, test en semaine 2, 2 qualités puis l'allure 10 km."
+],
+[
+"R07",
+"10 km dans 26 sem., 3 sorties, tonification × 2",
+"10 km dans 26 semaines (C13 préparation), débutant sans chrono",
+8,
+"Bon",
+"Débutant sans chrono, 26 semaines : test 6 min, 14 semaines de préparation en rotation à +5 %, et la sortie la plus longue devient une vraie sortie longue (1 h) avant le plan 10 km."
+],
+[
+"R08",
+"10 km dans 12 sem., 2 sorties, hypertrophie × 2",
+"10 km avec 2 sorties sur deux jours qui se suivent (P7)",
+7,
+"À retoucher",
+"Deux jours qui se suivent : la qualité de la veille passe au seuil (P7 v8) et la sortie longue reste facile, c'est la bonne réponse."
+],
+[
+"R09",
+"10 km dans 12 sem., 1 sortie, hypertrophie × 3",
+"10 km avec 1 sortie (C9 : refus)",
+8,
+"Bon",
+"Refus juste : on ne prépare pas un 10 km avec une seule sortie."
+],
+[
+"R10",
+"10 km dans 9 sem., 2 sorties, pas de muscu",
+"10 km, très petit volume (40 min/sem.) : C9 volume",
+8,
+"Bon",
+"Refus juste (40 min par semaine)."
+],
+[
+"R11",
+"Semi dans 12 sem., 4 sorties, tonification × 1",
+"Semi, délai normal, intermédiaire régulier, 4 sorties (2 qualités possibles)",
+8,
+"Bon",
+"Bon plan de semi : seuil + VMA longue, sortie longue jusqu'à 2 h, +35 % de volume en 7 semaines, 85 % de facile."
+],
+[
+"R12",
+"Semi dans 13 sem., 3 sorties, hypertrophie × 2",
+"Semi, délai normal, confirmé, 3 sorties, hypertrophie 2",
+9,
+"Bon",
+"Plan très équilibré : seuil puis allure semi, sortie longue de 1 h 57, 89 % de facile, et 2 full body complets avec la muscu prioritaire."
+],
+[
+"R13",
+"Semi dans 14 sem., 3 sorties, pas de muscu",
+"Semi, débutant pas régulier, 3 sorties, 30 min par jour",
+7,
+"À retoucher",
+"Plan sûr pour un débutant pas régulier : fartlek une semaine sur deux, sortie longue qui monte à 1 h 40."
+],
+[
+"R14",
+"Semi dans 5 sem., 4 sorties, force + esthétique × 1",
+"Semi dans 5 semaines (C5), avancé (« plan court »)",
+8,
+"Bon",
+"« Plan court » à 5 semaines du semi pour un avancé : allure semi chaque semaine, sortie longue jusqu'à 1 h 41, puis l'affûtage."
+],
+[
+"R15",
+"Semi dans 30 sem., 4 sorties, hypertrophie × 2",
+"Semi dans 30 semaines (C13 longue préparation), confirmé, 4 sorties",
+8,
+"Bon",
+"Très longue préparation (16 semaines) enfin variée (côtes, fartlek, seuil en rotation) puis 2 qualités."
+],
+[
+"R16",
+"Semi dans 12 sem., 2 sorties, tonification × 2",
+"Semi avec 2 sorties, 45 min par jour et 1 h 30 de sortie longue",
+6,
+"À retoucher",
+"Le semi passe le minimum C9, mais avec 2 sorties et une sortie longue plafonnée à 1 h 30 (sous la cible d'1 h 45), le plan est juste : 65 % du volume dans la sortie longue."
+],
+[
+"R17",
+"Semi dans 12 sem., 3 sorties, hypertrophie × 2",
+"Semi avec sortie longue limitée à 1 h (C9 : refus)",
+8,
+"Bon",
+"Refus juste : 1 h de sortie longue ne prépare pas un semi."
+],
+[
+"R18",
+"Semi dans 10 sem., 6 sorties, force × 1",
+"Semi, expert, 6 sorties, 7 jours sur 7, musculation 1",
+7,
+"À retoucher",
+"Plan d'expert solide (seuil 3 × 10', 7 × 1000 m, 89 % de facile) et le jour de repos est gardé (P5)."
+],
+[
+"R19",
+"Semi dans 11 sem., 3 sorties, pas de muscu",
+"Semi, volume déclaré trop grand pour le temps (E3)",
+8,
+"Bon",
+"E3 fait son travail : 330 min déclarées, 210 possibles, départ à la capacité."
+],
+[
+"R20",
+"Marathon dans 18 sem., 4 sorties, tonification × 1",
+"Marathon, délai normal, confirmé, 4 sorties",
+9,
+"Bon",
+"Très bon plan de marathon : seuil + allure marathon, sortie longue de 3 h en spécifique, +27 % de volume, affûtage de 2 semaines."
+],
+[
+"R21",
+"Marathon dans 16 sem., 5 sorties, hypertrophie × 2",
+"Marathon, avancé, 5 sorties, hypertrophie 2",
+9,
+"Bon",
+"Plan d'avancé exemplaire : 5 sorties, 2 qualités, sortie longue de 31 km, 86 % de facile, et la séance jambes placée après le seuil (P2)."
+],
+[
+"R22",
+"Marathon dans 20 sem., 3 sorties, pas de muscu",
+"Marathon, intermédiaire, 3 sorties, première fois",
+7,
+"À retoucher",
+"Premier marathon correct, mais avec 3 sorties la sortie longue de 2 h 45-3 h fait 58 % de la semaine."
+],
+[
+"R23",
+"Marathon dans 6 sem., 4 sorties, pas de muscu",
+"Marathon dans 6 semaines (C5), confirmé",
+8,
+"Bon",
+"« Plan court » marathon à 6 semaines : allure marathon chaque semaine, sortie longue jusqu'à 2 h 31, affûtage."
+],
+[
+"R24",
+"Marathon dans 32 sem., 4 sorties, tonification × 2",
+"Marathon dans 32 semaines (C13), débutant",
+8,
+"Bon",
+"Débutant qui prépare un marathon en 32 semaines : préparation variée, hausse à +5 %, sortie longue limitée au bas de la fourchette (2 h 45, C14 v8)."
+],
+[
+"R25",
+"Marathon dans 20 sem., 2 sorties, force × 2",
+"Marathon avec 2 sorties (C9 : refus)",
+8,
+"Bon",
+"Refus juste (2 sorties pour un marathon)."
+],
+[
+"R26",
+"Marathon dans 20 sem., 3 sorties, hypertrophie × 2",
+"Marathon avec 30 min en semaine (E10)",
+6,
+"À retoucher",
+"Avec 45 min proposées en semaine (E10), c'est mieux qu'avant, mais un marathon sur 3 sorties dont une sortie longue de 2 h 42 (63 %) reste déséquilibré."
+],
+[
+"R27",
+"Marathon dans 24 sem., 4 sorties, pas de muscu",
+"Marathon depuis un petit volume (140 min) : C9 en fin de préparation",
+8,
+"Bon",
+"Refus défendable : 140 min par semaine ne donnent que 162 min en fin de préparation, sous les 3 h du minimum marathon."
+],
+[
+"R28",
+"Marathon dans 16 sem., 6 sorties, force × 2",
+"Marathon, expert, 6 sorties, refus du repos, force 2",
+8,
+"Bon",
+"Plan d'expert crédible (6 sorties, sortie longue de 36 km, 90 % de facile)."
+],
+[
+"R29",
+"Pas de course (garder la forme), 2 sorties, tonification × 2",
+"Garder la forme, débutant, 2 sorties, tonification 2",
+8,
+"Bon",
+"« Garder la forme » d'un débutant au poids du corps : une qualité douce, 2 full body de 30 min."
+],
+[
+"R30",
+"Pas de course (garder la forme), 4 sorties, hypertrophie × 3",
+"Garder la forme, confirmé, 4 sorties, hypertrophie 3",
+9,
+"Bon",
+"Très bon plan d'entretien : 1 qualité en rotation, 96 % de facile, push / pull / jambes complets (6-7 séries par groupe), jambes le lendemain de la sortie longue."
+],
+[
+"R31",
+"Pas de course (garder la forme), 1 sortie, hypertrophie × 3",
+"Garder la forme, 1 sortie, muscu prioritaire 3 séances",
+8,
+"Bon",
+"Muscu prioritaire bien servie : pecs et dos à 15 séries, push / pull / haut."
+],
+[
+"R32",
+"Pas de course (garder la forme), 2 sorties, tonification × 2",
+"Garder la forme, 3 sorties très courtes (E11)",
+8,
+"Bon",
+"E11 regroupe 3 sorties de 20 min en 2 sorties de 30 min : c'est mieux."
+],
+[
+"R33",
+"Pas de course (garder la forme), 3 sorties, hypertrophie × 1",
+"Garder la forme, sans chrono, « je ne sais pas » partout",
+8,
+"Bon",
+"Avec « je ne sais pas » partout et sans chrono : test en semaine 1, 3 sorties proposées puis regroupées (E11), une séance de muscu."
+],
+[
+"R34",
+"Pas de course (courir plus), 3 sorties, pas de muscu",
+"Courir plus, débutant, 3 sorties, sans muscu",
+8,
+"Bon",
+"Débutant qui veut courir plus : +5 % par semaine (90 → 115 min) et une seule qualité, c'est prudent et juste."
+],
+[
+"R35",
+"Pas de course (courir plus), 4 sorties, hypertrophie × 2",
+"Courir plus, intermédiaire, 4 sorties, hypertrophie 2",
+7,
+"À retoucher",
+"Une seule qualité maintenant, bien."
+],
+[
+"R36",
+"Pas de course (courir plus), 2 sorties, tonification × 1",
+"Courir plus avec une sortie unique de 1 h 45 (E11)",
+8,
+"Bon",
+"La sortie unique d'1 h 45 est répartie en 2 sorties (E11) : bonne décision."
+],
+[
+"R37",
+"Pas de course (courir plus), 4 sorties, force × 2",
+"Courir plus, débutant, 4 sorties + force 3 (E12 charge totale)",
+8,
+"Bon",
+"E12 retire une séance de force (7 → 6 séances pour un débutant) et la hausse reste à +5 % : la charge totale est enfin raisonnable."
+],
+[
+"R38",
+"Pas de course (courir plus), 4 sorties, pas de muscu",
+"Courir plus, avancé, plafond de volume fixé (E6)",
+8,
+"Bon",
+"Plafond de volume atteint en 3 semaines puis tenu, une qualité en rotation : plan d'entretien solide pour un avancé."
+],
+[
+"R39",
+"Pas de course (courir plus vite), 3 sorties, hypertrophie × 2",
+"Courir plus vite, intermédiaire, 3 sorties",
+8,
+"Bon",
+"« Plus vite » bien construit : rotation VMA courte, seuil, VMA longue, côtes ; muscu prioritaire haut / bas complète."
+],
+[
+"R40",
+"Pas de course (courir plus vite), 5 sorties, pas de muscu",
+"Courir plus vite, expert, 5 sorties (2 qualités)",
+9,
+"Bon",
+"Plan d'expert pour progresser : 2 qualités, sortie longue d'1 h 44, 86 % de facile."
+],
+[
+"R41",
+"Pas de course (courir plus vite), 1 sortie, hypertrophie × 1",
+"Courir plus vite avec 1 sortie et 1 seul jour (C8, E4)",
+7,
+"À retoucher",
+"Un seul jour : une sortie facile et un full body au poids du corps."
+],
+[
+"R42",
+"Pas de course (courir plus vite), 3 sorties, pas de muscu",
+"Courir plus vite, débutant, 30 min par jour",
+8,
+"Bon",
+"Débutant, 30 min par jour : qualités courtes et douces (seuil 2 × 6'), 87 % de facile."
+],
+[
+"R43",
+"Pas de course (courir plus vite), 4 sorties, force + esthétique × 2",
+"Courir plus vite, confirmé, 4 sorties, force + esthétique 2",
+8,
+"Bon",
+"« Plus vite » avec 4 sorties : rotation des qualités, volume stable ; force + esthétique en 2 séances complètes."
+],
+[
+"R44",
+"Pas de course (muscu seule), aucune course, hypertrophie × 3",
+"Muscu seule, débutant, 3 séances, salle",
+8,
+"Bon",
+"Débutant en muscu : 3 full body légers (10-13 séries, 30-38 min) au bas de la fourchette (M22 v8)."
+],
+[
+"R45",
+"Pas de course (muscu seule), aucune course, hypertrophie × 4",
+"Muscu seule, confirmé, force 4 séances, 45 min",
+8,
+"Bon",
+"La force en 45 min devient de l'hypertrophie (M23) et les séances alternent bas / haut / bas / haut (P13 v8) : bon plan."
+],
+[
+"R46",
+"Pas de course (muscu seule), aucune course, hypertrophie × 6",
+"Muscu seule, 6 séances, push / pull / jambes × 2",
+8,
+"Bon",
+"Push / pull / jambes × 2 bien espacés (jambes lundi et jeudi), épaules et fessiers prioritaires à 15-16 séries."
+],
+[
+"R47",
+"Pas de course (muscu seule), aucune course, hypertrophie × 3",
+"Muscu seule au poids du corps, force demandée (M16c)",
+7,
+"À retoucher",
+"La force au poids du corps devient de l'hypertrophie, c'est juste."
+],
+[
+"R48",
+"10 km dans 12 sem., 3 sorties, hypertrophie × 3",
+"10 km, maison avec haltères, fessiers et ischios prioritaires",
+7,
+"À retoucher",
+"Course propre."
+],
+[
+"R49",
+"Semi dans 12 sem., 3 sorties, tonification × 2",
+"Semi, exclusion du dos et des abdos (M11)",
+7,
+"À retoucher",
+"Plan de semi propre."
+],
+[
+"R50",
+"10 km dans 10 sem., 2 sorties, hypertrophie × 4",
+"10 km, muscu prioritaire 4 séances, 1 jour de course choisi = jour de sortie longue absent",
+7,
+"À retoucher",
+"La muscu prioritaire en 4 séances est riche (dos 12, pecs 11)."
+]
+]

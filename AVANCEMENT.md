@@ -391,5 +391,11 @@ Demandé par Max (« simplifier au maximum, rester cohérent, optimiser »). **F
 - **Commit `ddde9cd`** : état du 17 au 19/11 sauvegardé tel quel (v6 validée, v7, brouillon v8, `data/exercices.json`, plans A/B/C, tests 30 et 50 profils).
 - **REGLES.md v8 = version de référence** (Max : « la V8 est prête »). Le fichier ne contient plus que les règles en vigueur : tableau des changements et renvois aux copies retirés. Liste des changements v7 → v8 : ligne du 20/11/2026 dans `DECISIONS.md`.
 - **`REGLES-v6.md` et `REGLES-v7.md` supprimés** : un seul fichier de règles, anciennes versions dans l'historique Git. CLAUDE.md, MISSIONS.md, DECISIONS.md et `plans/test-50/README.md` alignés sur la v8.
-- **À faire ensuite** : nouvel examen des 50 programmes par le coach avec la v8 (script `moteur8.py`). Remarques du test v7 que la v8 ne couvre pas encore : Q13 (sortie longue de 2 h pour un débutant au semi), Q23 (VMA la veille de la sortie longue quand les jours se suivent), Q24 (séances de force de 1 h 30), Q31 et Q46 (exclusion des abdos ou du dos chez un coureur), Q09 (4 séances de muscu de 26 min).
-- Plans A, B, C : calculés en v6, à recalculer en v8.
+- **Fait le même jour (demande de Max : corriger les règles d'après les remarques du coach, refaire examiner, A/B/C d'abord, 50 nouveaux profils notés sur 10, rapport par mail)** :
+  - REGLES.md v8 complétée (6 remarques v7 restantes + 10 défauts trouvés par le nouveau test) ; ligne datée dans DECISIONS.md.
+  - `plans/test-v8/` : `BILAN.md`, `README.md`, `A.md`, `B.md`, `C.md`, `R01.md` à `R50.md` (50 profils construits pour couvrir tous les cas), `outils/` (`moteur8.py`, `rendu8.py`, `profils_v8.py`, `avis_v8.py`).
+  - Verdict : A 9/10, B 7/10, C 8/10 ; 50 profils : 37 bons, 13 à retoucher, 0 à refuser, moyenne 7,8/10. Les anciens 50 profils (test v7) relancés en v8 pour vérifier que leurs remarques sont traitées.
+  - **À trancher par Max** : 6 points ouverts (`plans/test-v8/BILAN.md` §5), dont E13 qui réduit les prioritaires de B, et les principaux de A et C différents des plans v6.
+  - Rapport envoyé par mail à Max (PDF hors dépôt). Rien n'est commité depuis `7536923`.
+- Plans papier A, B, C (`plans/plan-*.md`) : encore en v6 ; les versions v8 sont dans `plans/test-v8/`, à valider par Max.
+- **21/11/2026 : les 6 points ouverts sont tranchés** (Max : « selon l'avis d'un coach expert, applique-les ») : C14 (EF ≤ 75 % de la sortie longue), J8, C8 (+30 % par cycle de 8 semaines), E10 (semi et marathon à tout niveau), C9 (4 sorties conseillées pour un marathon), E13 gardée, M6 (A : développé militaire ; C : rowing barre). Détail : `DECISIONS.md` (21/11). Les programmes de `plans/test-v8/` datent d'avant ces décisions : à recalculer si Max le demande.

@@ -1,0 +1,134 @@
+[
+ {
+  "sous_objectif": null,
+  "semaines": 14,
+  "chrono": {
+   "d": 10,
+   "t": 2520
+  },
+  "regulier": true,
+  "hyp_test_m": null,
+  "nb_sorties": 3,
+  "vol_unite": "km",
+  "vol": 30,
+  "pls": {
+   "v": 15,
+   "u": "km"
+  },
+  "objectif_muscu": "hypertrophie",
+  "nb_muscu": 3,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo": true,
+  "tractions": 8,
+  "jours": [
+   "lun",
+   "mer",
+   "ven",
+   "sam",
+   "dim"
+  ],
+  "jour_sl": "dim",
+  "tj": 60,
+  "tsl": 90,
+  "prioritaire": "course",
+  "refus_repos": false,
+  "objectif_course": "10km",
+  "jours_doubles": [
+   "lun"
+  ],
+  "id": "A",
+  "cas": "profil A (10 km prioritaire, hypertrophie 3 séances)"
+ },
+ {
+  "sous_objectif": null,
+  "semaines": 14,
+  "chrono": {
+   "d": 10,
+   "t": 3600
+  },
+  "regulier": true,
+  "hyp_test_m": null,
+  "nb_sorties": 2,
+  "vol_unite": "km",
+  "vol": 15,
+  "pls": {
+   "v": 10,
+   "u": "km"
+  },
+  "objectif_muscu": "hypertrophie",
+  "nb_muscu": 2,
+  "niveau_muscu": "debutant",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [
+   "quadriceps",
+   "ischios",
+   "fessiers",
+   "dos"
+  ],
+  "exclus": [],
+  "renfo": true,
+  "tractions": 2,
+  "jours": [
+   "lun",
+   "mer",
+   "sam",
+   "dim"
+  ],
+  "jour_sl": "dim",
+  "tj": 60,
+  "tsl": 90,
+  "prioritaire": "course",
+  "refus_repos": false,
+  "objectif_course": "10km",
+  "id": "B",
+  "cas": "profil B (10 km débutant, jambes et dos prioritaires)"
+ },
+ {
+  "sous_objectif": null,
+  "semaines": 27,
+  "chrono": {
+   "d": 10,
+   "t": 2640
+  },
+  "regulier": true,
+  "hyp_test_m": null,
+  "nb_sorties": 3,
+  "vol_unite": "min",
+  "vol": 180,
+  "pls": {
+   "v": 8,
+   "u": "km"
+  },
+  "objectif_muscu": "tonification",
+  "nb_muscu": 3,
+  "niveau_muscu": "confirme",
+  "equipement": "salle",
+  "organisation": "je_ne_sais_pas",
+  "prioritaires": [],
+  "exclus": [],
+  "renfo": true,
+  "tractions": 0,
+  "jours": [
+   "lun",
+   "mar",
+   "jeu",
+   "ven",
+   "sam",
+   "dim"
+  ],
+  "jour_sl": "dim",
+  "tj": 60,
+  "tsl": 180,
+  "prioritaire": "course",
+  "refus_repos": false,
+  "objectif_course": "marathon",
+  "tm": 45,
+  "id": "C",
+  "cas": "profil C (marathon, tonification 3 séances)"
+ }
+]
