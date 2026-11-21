@@ -1,127 +1,84 @@
 # Plan papier — Profil C
 
-Version 3 du 18/11/2026 : version 2 (REGLES.md v6 revue le 18/11) + réponses de Max (C3 affûtage 2 semaines, C11 semaine de course, P11). Conventions : `plans/README.md`.
+**Version v8 du 21/11/2026, validée par Max.** Calculé depuis `REGLES.md` v8 et `data/exercices.json` v2 par l'outil de test `plans/test-v8/outils/moteur8.py` (copie de `plans/test-v8/C.md`). Remplace la version 3 du 18/11 (règles v6), conservée dans l'historique Git. Conventions : `plans/README.md`.
 
-## 1. Entrées (AVANCEMENT §12)
+*Profil C (marathon, tonification 3 séances).*
 
-| Champ | Valeur |
-|---|---|
-| Objectif course | Marathon le 01/06/2027 (mardi) ; course prioritaire |
-| Chrono 10 km | 44'00 |
-| Course | 3 sorties d'1 h = **180 min / sem.** (déclaré en minutes), plus longue sortie récente 8 km, régulier depuis 6 mois ; sortie longue au-delà d'1 h permise |
-| Jour de sortie longue | dimanche (P10) |
-| Muscu | 3 séances, tonification (M4) + renfo coureur, confirmé, salle → full body ×3 (M26, jambes en léger) |
-| Mouvements principaux | développé couché barre, rowing barre, développé épaules haltères |
-| Jours | lundi, mardi, jeudi, vendredi, samedi, dimanche (mercredi libre) |
-| Temps | 45 min par séance de muscu ; 1 h par sortie, sortie longue au-delà |
-
-## 2. Paramètres calculés
-
-| Paramètre | Valeur | Règles |
+| | Profil | Proposition |
 |---|---|---|
-| C9 | 180 min et 3 sorties → **accepté** | C9 v6 |
-| Niveau course | Confirmé (table N : 2) → **1 qualité** + 1 EF + 1 sortie longue ; 2e qualité proposée dès le développement | N, N8 |
-| Sortie longue de départ | 8 km ≈ 48 min < 60 → **aucune** déclarée ; elle naît en W1 (la plus longue sortie atteint 65 min) | N3b, U9 |
-| Sortie longue max | C3 : 2 h 45-3 h → cible **165 min** | C3, S3 |
-| Volume de pic | 165 + 55 (qualité) + 60 (EF) = **280 min**, atteint fin de développement (W19 ; W20 est allégée) | C14 |
-| Hausse | (280 − 180) ÷ 14 semaines normales = **+7 min / sem.** (≈ +4 %), portée par la sortie longue | C14, S1, S8 (≤ +15) |
-| Muscu | Tonification : 12-20 reps, repos 45 s-1'30, **aucun RPE visé** | M4, M20b |
+| **Course** | Marathon dans 27 semaines. 10 km en 44'00, régulier. Sorties : 3, 180 min/sem., plus longue sortie 8 km. | Niveau confirmé. Qualités / sem. : 1 (N8). Départ **180 min**. Sortie longue cible 165 min. Pic 284 min. Phases 7 / 7 / 6 / 5 / 2 (prépa / fond. / dév. / spé. / aff.). |
+| **Muscu** | Tonification, 3 séance(s), confirmé, salle, « je ne sais pas ». Renfo coureur coché. 0 traction(s) stricte(s). | 3 séance(s), haut / jambes / full body (M26). 12-20 reps, ~1,75 min par série (M23). |
+| **Semaine** | Lundi, mardi, jeudi, vendredi, samedi, dimanche. 60 min par jour (muscu : 45 min), 180 min pour la sortie longue (dimanche). Course prioritaire. | 3 course(s) + 3 muscu sur 6 jours. |
 
-**Allures** (A1) : VMA courte 4'06"/km · VMA longue 4'13"/km · allure 10 km 4'24"/km · seuil 4'31"/km · allure semi 4'36"/km · **allure marathon 4'56"/km** · EF jamais affichée (interne 5'56"/km).
+**Allures** (A1) : VMA courte 4'06 · VMA longue 4'13 · allure 10 km 4'24 · seuil 4'31 · allure semi 4'36 · allure marathon 4'56 · EF interne 5'56.
 
-## 3. Calendrier
+**Calendrier** (minutes ; SL = sortie longue)
 
-C13 (marathon > 20 semaines) : préparation **W1-W7**, puis C3 sur 20 semaines. C16 : fondation 7 (W8-W14), développement 6 (W15-W20), spécifique 7 (W21-W27, dont affûtage **2** semaines, C3).
+| Sem. | Lundi | Phase | Type | Volume | SL | Qualité(s) |
+|---|---|---|---|---|---|---|
+| W1 | 23/11 | Préparation | normale, calibrage muscu | 180 | 83 | côtes |
+| W2 | 30/11 | Préparation | normale | 187 | 93 | fartlek |
+| W3 | 07/12 | Préparation | normale | 195 | 93 | seuil |
+| W4 | 14/12 | Préparation | allégée | 114 | — | côtes |
+| W5 | 21/12 | Préparation | normale | 202 | 105 | fartlek |
+| W6 | 28/12 | Préparation | normale | 210 | 105 | seuil |
+| W7 | 04/01 | Préparation | normale | 217 | 114 | côtes |
+| W8 | 11/01 | Fondation | allégée | 134 | 68 | côtes |
+| W9 | 18/01 | Fondation | normale | 225 | 129 | côtes |
+| W10 | 25/01 | Fondation | normale | 232 | 130 | côtes |
+| W11 | 01/02 | Fondation | normale | 239 | 139 | côtes |
+| W12 | 08/02 | Fondation | allégée | 153 | 83 | côtes |
+| W13 | 15/02 | Fondation | normale | 247 | 143 | côtes |
+| W14 | 22/02 | Fondation | normale | 254 | 144 | test 5 km (T4) |
+| W15 | 01/03 | Développement | normale | 262 | 159 | seuil |
+| W16 | 08/03 | Développement | allégée | 168 | 96 | seuil |
+| W17 | 15/03 | Développement | normale | 269 | 162 | seuil |
+| W18 | 22/03 | Développement | normale | 277 | 164 | seuil |
+| W19 | 29/03 | Développement | normale | 284 | 165 | seuil |
+| W20 | 05/04 | Développement | allégée | 172 | 99 | seuil |
+| W21 | 12/04 | Spécifique | normale | 284 | 179 | allure marathon |
+| W22 | 19/04 | Spécifique | normale | 284 | 179 | allure marathon |
+| W23 | 26/04 | Spécifique | normale | 284 | 179 | allure marathon |
+| W24 | 03/05 | Spécifique | allégée | 172 | 107 | allure marathon |
+| W25 | 10/05 | Spécifique | normale | 284 | 179 | allure marathon |
+| W26 | 17/05 | Affûtage | affûtage | 202 | 125 | allure marathon |
+| W27 | 24/05 | Affûtage | affûtage | 158 | 90 | allure marathon |
+| W28 | 31/05 | **Course** | récupération 1 | course + EF ≤ 30 min | | |
 
-| Sem. | Phase | Type | Volume | Qualité (C15) | Sortie longue |
-|---|---|---|---|---|---|
-| W1 | Préparation | calibrage muscu | **180** | côtes | 65 min (≈ 11 km) |
-| W2-W3 | Préparation | normales | 187, 194 | côtes | 72, 79 min |
-| W4 | Préparation | **allégée** | 117 | côtes raccourcies | EF |
-| W5-W7 | Préparation | normales | 201, 209, 216 | côtes | 86, 94, 101 min |
-| W8 | Fondation | **allégée** | 129 | côtes raccourcies | 61 min |
-| W9-W11 | Fondation | normales | 223, 230, 237 | côtes | 108, 115, 122 min, facile |
-| W12 | Fondation | **allégée** | 142 | | 73 min |
-| W13-W14 | Fondation | normales | 244, 251 | côtes ; **test 5 km** en W14 | 129, 136 min |
-| W15 | Développement | normale | 259 | seuil (+ VMA longue si 2e qualité) | 144 min, progressive |
-| W16 | Développement | **allégée** | 155 | seuil raccourci | 86 min |
-| W17-W19 | Développement | normales | 266, 273, **280** (pic) | seuil | 151, 158, **165 min** |
-| W20 | Développement | **allégée** | 168 | seuil raccourci | 99 min |
-| W21-W23 | Spécifique | normales | 280 | allure marathon (test proposé en W21, T4) | **165 min** (≈ 28 km), facile (N8) |
-| W24 | Spécifique | **allégée** | 168 | allure marathon raccourcie | 99 min |
-| W25 | Spécifique | normale | 280 | allure marathon | 165 min |
-| W26 | Affûtage 1/2 | | 196 (−30 %) | allure marathon raccourcie | 115 min |
-| W27 | Affûtage 2/2 | | 140 (−50 %) | allure marathon raccourcie | 83 min |
-| W28 | **Marathon** (mardi) = récupération 1/3 (C11) | non normale | course ≈ 208 min + EF ≤ 30 | — | — |
-| W29-W30 | Récupération 2/3, 3/3 | non normales | 140 (−50 %), 196 (−30 %) | aucune | — |
-
-Contrôles : S8 ✔ (+7 min / sem.) ; S3 : sortie longue 165 / 280 = 59 % → **conseil** affiché (> 50 %), sans blocage ; C3 ✔ (cible 2 h 45 atteinte en W19, 3 h jamais dépassées).
-⚠ Sortie longue à blocs allure marathon (C15, spécifique) : elle compterait comme intense ; avec 1 qualité (N8), **elle reste facile**, sauf si C passe à 4 sorties.
-
-## 4. Semaine détaillée : W22 (spécifique, normale)
-
-### Placement
-
-Sortie longue **dimanche** (P10) → qualité du mardi au vendredi → **mardi**. EF : jeudi (P11 : écart 2 avec la qualité et la sortie longue, comme vendredi ; à égalité, le plus tôt). Muscu : lundi, vendredi, samedi. Repos : mercredi (P5).
+### Semaine détaillée : W18 (développement, normale)
 
 | Jour | Course | Muscu |
 |---|---|---|
-| Lundi | | **FB1** |
-| Mardi | **Allure marathon** | |
-| Mercredi | repos | |
-| Jeudi | **EF 10 km** | |
-| Vendredi | | **FB2** |
-| Samedi | | **FB3** |
-| Dimanche | **Sortie longue 28 km** | |
-
-### Course
+| Lundi |  | **Jambes** |
+| Mardi | **EF 10 km** |  |
+| Jeudi | **Seuil** |  |
+| Vendredi |  | **Haut** |
+| Samedi |  | **FB3** |
+| Dimanche | **Sortie longue 28 km** |  |
 
 | Séance | Contenu | Durée | RPE |
 |---|---|---|---|
-| Allure marathon | 20 min EF ; **2 × 12' à 4'56"/km**, récup 3' trot ; 12 min retour au calme | ≈ 59 min | 6 |
-| EF | **10 km**, sans allure | ≈ 59 min | 3-4 |
-| Sortie longue | **28 km** facile | ≈ 2 h 46 | 4-5 |
+| EF | 10 km | ≈ 59 min | 3-4 |
+| Seuil | 15 min EF + gammes ; **3 × 8' à 4'31/km, récup 2' trot** ; 10 min retour au calme | ≈ 53 min | 7 |
+| Sortie longue | 28 km progressive | ≈ 166 min | 4-5 |
 
-Total ≈ 284 min ; 24 min rapides → **92 % facile** (S4 ✔).
+Total ≈ 278 min ; 24 min rapides → **91 % facile** (S4 ✔). Sortie longue = 59 % du volume → conseil S3.
 
-### Muscu (tonification : 12-20 reps, repos 45 s-1'30, sans RPE)
-
-| Séance | Exercice | Rôle | Séries | Muscle |
-|---|---|---|---|---|
-| **FB1** lundi | Développé couché barre | principal | 4 × 12-20 | pectoraux |
-| | Développé couché haltères | assistance | 3 × 12-20 | pectoraux |
-| | Goblet squat | poly | 3 × 12-20 | quadriceps |
-| | Curl barre | iso | 3 × 12-20 | biceps |
-| | Barre au front | iso | 3 × 12-20 | triceps |
-| | Nordic curl | renfo coureur | 3 × 6-8 | ischios |
-| | Dead bug | renfo coureur | 3 × 12 | abdos |
-| **FB2** vendredi | Rowing barre | principal | 4 × 12-20 | dos |
-| | Tirage vertical poulie | poly | 3 × 12-20 | dos |
-| | Pont fessier | poly | 3 × 15 | fessiers |
-| | Extension triceps poulie | iso | 3 × 12-20 | triceps |
-| | Mollets debout machine | iso | 3 × 15-20 | mollets |
-| | Montées sur banc | renfo coureur | 3 × 12 | quadriceps |
-| | Mollets excentriques | renfo coureur | 3 × 12 | mollets |
-| **FB3** samedi | Développé épaules haltères | principal | 4 × 12-20 | épaules |
-| | Élévations latérales haltères | iso | 3 × 12-20 | épaules |
-| | Leg curl | iso | 3 × 12-20 | ischios |
-| | Curl haltères | iso | 3 × 12-20 | biceps |
-| | Gainage planche | iso | 3 × 30-45 s | abdos |
-| | Pont fessier sur une jambe | renfo coureur | 3 × 12 | fessiers |
-
-Durées (~1'50 par série + montée en charge) : FB1 22 séries ≈ 44 min · FB2 22 ≈ 44 min · FB3 19 ≈ 39 min (≤ 45 ✔). M23 donnait 4 exercices au départ ; le temps en permet 6-7 (M23 v6).
+| Séance | Exercices (séries ; RPE visé) | Durée |
+|---|---|---|
+| **Jambes** lundi | **Squat à la barre** principal 4 × 12-20 · Soulevé de terre roumain à la barre 3 · Hip thrust à la barre 3 · Gainage planche 3 · Leg curl à la machine 3 · Mollets debout aux haltères 3 · Goblet squat 2 · Montées sur banc (renfo) 2 | 23 séries ≈ 45 min |
+| **Haut** vendredi | **Développé couché à la barre** principal 4 × 12-20 · Développé militaire à la barre 3 · Extension des triceps à la poulie 3 · Élévations latérales aux haltères 3 · Curl aux haltères 3 · Gainage latéral 3 · Tractions assistées à la machine 2 · Soulevé de terre sur une jambe (renfo) 2 | 23 séries ≈ 45 min |
+| **FB3** samedi | **Rowing à la barre** principal 4 × 12-20 · Curl à la barre 3 · Mollets debout à la machine 3 · Barre au front 3 · Pont fessier 3 · Développé couché aux haltères 2 · Pont fessier sur une jambe (renfo) 2 | 20 séries ≈ 40 min |
 
 | Pecs | Dos | Épaules | Biceps | Triceps | Quadri | Ischios | Fessiers | Mollets | Abdos |
 |---|---|---|---|---|---|---|---|---|---|
-| 7 | 7 | 7 | 6 | 6 | 6 | 6 | 6 | 6 | 6 |
+| 6 | 6 | 6 | 6 | 6 | 8 | 8 | 8 | 6 | 6 |
 
-**M22 ✔ pour les 10 groupes.**
+Cible M22 (3 séance(s)) : prioritaire 12-16, secondaire 6-8.
 
-## 5. Questions tranchées (Max, 18/11/2026)
+**Ce que les règles ont décidé ou signalé**
+- **C13** : préparation de 7 semaines (+5 %/sem. max, 1 qualité)
+- **J8** (proposé) : sortie longue jusqu'à 63 % du volume (> 55 %) → une sortie de plus est proposée
+- **C9** (conseil) : marathon sur 3 sorties : 4 sorties conseillées
 
-| # | Point | Décision |
-|---|---|---|
-| Q2 | Affûtage marathon. | **2 semaines**, toujours (C3 ; ligne « 3 semaines » retirée de C6). Inchangé dans ce plan. |
-| C7 | Semaine de la course et récupération. | La semaine de course **est** la semaine 1 de la récupération : course + au plus 30 min d'EF (C11). Inchangé dans ce plan. |
-
-Aucune question restante.
+**Avis de coach** — **8/10 — Bon.** Préparation marathon sérieuse et identique à ton plan v6 au pic (≈ 284 min, sortie longue de 28 km puis 3 h) : 7 semaines de préparation en rotation (côtes, fartlek, seuil), seuil puis allure marathon, affûtage de 2 semaines. Le rowing barre redevient le principal « pull » (M6 du 21/11), avec les tractions assistées dans la séance haut : tirage horizontal et vertical dans la semaine. Avec 3 sorties, la sortie longue pèse 59 % de la semaine : l'appli conseille maintenant 4 sorties (C9).

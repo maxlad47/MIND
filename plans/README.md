@@ -1,10 +1,9 @@
 # Plans papier — V0-M6
 
-Plans calculés **à la main** depuis `REGLES.md` v6 et `data/exercices.json` v1, pour les profils A, B, C (AVANCEMENT §12).
+Plans des profils A, B, C (AVANCEMENT §12), calculés depuis `REGLES.md` **v8** et `data/exercices.json` v2 par l'outil de test `plans/test-v8/outils/moteur8.py`.
 Ils serviront de **résultats attendus** aux tests du moteur. Rien n'y est choisi librement : chaque décision cite ses règles (U8).
-Quand une règle manque, le plan applique un **choix provisoire**, marqué ⚠ et numéroté ci-dessous. Une fois tranché par Max, il devient une règle ou une ligne de DECISIONS.md.
 
-État : **version 3 du 18/11/2026, validée par Max** : version 2 (tous les choix G1-G13 tranchés) + réponses de Max aux questions A-Q1, Q4, Q5, B4, C-Q2, C7 (règles C3, C6, C11, C14, J6, P11, M6). B5 tranchée (tractions assistées, M6 ; `data/exercices.json` v2). À relire par Max.
+État : **version v8 du 21/11/2026, validée par Max** (A 9/10, B 7/10, C 8/10 ; détail dans `plans/test-v8/BILAN.md`). Elle remplace la version 3 du 18/11 (règles v6), conservée dans l'historique Git. Les choix provisoires G1-G13 ci-dessous sont tous tranchés (historique).
 
 ## Conventions communes
 

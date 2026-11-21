@@ -159,5 +159,5 @@ Constats d'origine (20/11) :
 
 ## 6. Ce qui reste à faire
 
-- Ta relecture des programmes relancés (A, B, C en premier).
-- Ensuite : recalcul définitif des plans papier A, B, C ; formulaire (E1-E14) ; `MODELE_DONNEES` (RPE par exercice) ; les programmes de ce test serviront de résultats attendus pour les tests du moteur.
+- ~~Ta relecture des programmes relancés~~ : A, B, C validés par Max le 21/11 et copiés dans `plans/plan-*.md`.
+- Ensuite : formulaire (E1-E14) ; `MODELE_DONNEES` (RPE par exercice) ; les programmes de ce test serviront de résultats attendus pour les tests du moteur.

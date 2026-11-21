@@ -1,113 +1,69 @@
 # Plan papier — Profil B
 
-Version 3 du 18/11/2026 : version 2 (REGLES.md v6 revue le 18/11) + réponses de Max sur B4 et B5 (M6 : principal dos le samedi, tractions assistées). Conventions : `plans/README.md`.
+**Version v8 du 21/11/2026, validée par Max.** Calculé depuis `REGLES.md` v8 et `data/exercices.json` v2 par l'outil de test `plans/test-v8/outils/moteur8.py` (copie de `plans/test-v8/B.md`). Remplace la version 3 du 18/11 (règles v6), conservée dans l'historique Git. Conventions : `plans/README.md`.
 
-## 1. Entrées (AVANCEMENT §12)
+*Profil B (10 km débutant, jambes et dos prioritaires).*
 
-| Champ | Valeur |
-|---|---|
-| Objectif course | 10 km le 01/03/2027 ; course prioritaire (comme A) |
-| Chrono 10 km | 60'00 |
-| Course | 2 sorties / sem., 15 km / sem. (10 + 5), plus longue sortie récente 10 km, régulière depuis 6 mois |
-| Jour de sortie longue | dimanche (P10) |
-| Muscu | 2 séances, hypertrophie (M3), débutante (< 6 mois), salle, « je ne sais pas » → full body ×2 (M26) |
-| Mouvements principaux | squat barre (lundi) ; **tractions** (samedi, veille de la sortie longue : pas de principal jambes, M6) ; **strictes** (2 tractions strictes déclarées) ; soulevé de terre roumain en polyarticulaire léger |
-| Groupes | prioritaires : quadriceps, ischios, fessiers, dos ; renfo coureur coché, jambes lourdes conservées (M12) |
-| Jours | lundi, mercredi, samedi, dimanche |
-| Temps | 60 min par séance ; sortie longue jusqu'à 1 h 30 |
-
-## 2. Paramètres calculés
-
-| Paramètre | Valeur | Règles |
+| | Profil | Proposition |
 |---|---|---|
-| Niveau course | Débutante → **1 qualité** + 1 sortie longue | N, N8 |
-| Volume de départ | 15 km × 7'44"/km = **116 min** | N3, U2 |
-| Sortie longue de départ | 10 km ≈ **77 min** | N3b, U9 |
-| Sortie longue max | C1 75-90 min → reste à **10 km (77 min)** | C1, S3, Q1 de A |
-| Volume de pic | 77 + 60 (qualité) = **137 min** en W10 | C14 |
-| Hausse | (137 − 116) ÷ 7 = **+3 min / sem.** : la qualité s'allonge, la sortie longue reste stable | C14 |
-| Muscu | 2 séances → **prioritaire 8-10, secondaire 4-6** séries / sem. | M22 |
+| **Course** | 10 km dans 14 semaines. 10 km en 60'00, régulier. Sorties : 2, 15 km/sem., plus longue sortie 10 km. | Niveau débutant. Qualités / sem. : 1 (N8). Départ **116 min**. Sortie longue de départ 77 min. Sortie longue cible 77 min. Pic 127 min. Phases 2 / 4 / 4 / 3 / 1 (prépa / fond. / dév. / spé. / aff.). |
+| **Muscu** | Hypertrophie, 2 séance(s), débutant, salle, « je ne sais pas ». Prioritaires : quadri, ischios. Renfo coureur coché. 2 traction(s) stricte(s). | 2 séance(s), full body (M26). 8-12 reps, ~2,5 min par série (M23). |
+| **Semaine** | Lundi, mercredi, samedi, dimanche. 60 min par jour, 90 min pour la sortie longue (dimanche). Course prioritaire. | 2 course(s) + 2 muscu sur 4 jours. |
 
-**Allures** (A1) : VMA courte 5'35"/km (400 m en 2'14") · VMA longue 5'45"/km (1000 m en 5'45") · allure 10 km 6'00"/km · seuil 6'09"/km · EF jamais affichée (interne 7'44"/km).
+**Allures** (A1) : VMA courte 5'35 · VMA longue 5'45 · allure 10 km 6'00 · seuil 6'09 · allure semi 6'16 · allure marathon 6'44 · EF interne 7'44.
 
-## 3. Calendrier
+**Calendrier** (minutes ; SL = sortie longue)
 
-Même découpage que A (C13, C16). Sortie longue de 10 km tout le plan ; en semaine allégée elle passe sous 60 min et devient une EF (U9).
+| Sem. | Lundi | Phase | Type | Volume | SL | Qualité(s) |
+|---|---|---|---|---|---|---|
+| W1 | 23/11 | Préparation | normale, calibrage muscu | 108 | 77 | côtes |
+| W2 | 30/11 | Préparation | normale | 110 | 77 | fartlek |
+| W3 | 07/12 | Fondation | normale | 108* | 77 | côtes |
+| W4 | 14/12 | Fondation | allégée | 73 | — | côtes |
+| W5 | 21/12 | Fondation | normale | 108* | 77 | fartlek |
+| W6 | 28/12 | Fondation | normale | 113 | 77 | test 5 km (T4) |
+| W7 | 04/01 | Développement | normale | 104* | 77 | fartlek |
+| W8 | 11/01 | Développement | allégée | 69 | — | fartlek |
+| W9 | 18/01 | Développement | normale | 110 | 77 | VMA longue |
+| W10 | 25/01 | Développement | normale | 110* | 77 | fartlek |
+| W11 | 01/02 | Spécifique | normale | 106* | 77 | allure 10 km |
+| W12 | 08/02 | Spécifique | allégée | 69 | — | fartlek |
+| W13 | 15/02 | Spécifique | normale | 110 | 77 | fartlek |
+| W14 | 22/02 | Affûtage | affûtage | 71 | — | fartlek |
+| W15 | 01/03 | **Course** | récupération 1 | 55 (course comprise) | | |
 
-| Sem. | Phase | Type | Volume | Qualité (C15) | Sortie longue |
-|---|---|---|---|---|---|
-| W1 | Préparation | normale, calibrage muscu | **116** | côtes (≈ 39 min) | 10 km |
-| W2 | Préparation | normale | 119 | côtes | 10 km |
-| W3 | Fondation | normale | 122 | côtes | 10 km |
-| W4 | Fondation | **allégée** | 73 | côtes, moins de fractions | EF 6 km |
-| W5 | Fondation | normale | 125 | côtes | 10 km |
-| W6 | Fondation | normale | 128 | **test 5 km** | 10 km |
-| W7 | Développement | normale | 131 | VMA longue | 10 km, progressive |
-| W8 | Développement | **allégée** | 79 | VMA longue, moins de fractions | EF |
-| W9 | Développement | normale | 134 | VMA longue | 10 km — **§4** |
-| W10 | Développement | normale | **137** (pic) | VMA longue (60 min) | 10 km |
-| W11 | Spécifique | normale | 137 | allure 10 km | 10 km (facile, N8) |
-| W12 | Spécifique | **allégée** | 82 | allure 10 km raccourcie | EF |
-| W13 | Spécifique | normale | 137 | allure 10 km (ou test proposé) | 10 km |
-| W14 | Affûtage | 1 sem. | 82 | allure 10 km raccourcie | EF |
-| W15 | Course + récupération | non normale | 69 (−50 %) | course (≈ 60 min) | — |
+### Semaine détaillée : W9 (développement, normale)
 
-⚠ W15 : la course remplit presque toute la semaine de récupération (C11) ; il reste ~9 min d'EF, donc en pratique aucune.
-
-## 4. Semaine détaillée : W9
-
-### Placement
-
-Sortie longue **dimanche** (P10) → qualité du mardi au vendredi → **mercredi**. Muscu : lundi, samedi (4 séances, 4 jours : pas de jour doublé).
-**P2** : pas de jambes lourdes la veille de la qualité (mardi) ni de la sortie longue (**samedi**).
-
-| Jour | Course | Muscu | Règles |
-|---|---|---|---|
-| Lundi | | **FB1**, jambes lourdes permises | P2 |
-| Mercredi | **VMA longue** | | P7 |
-| Samedi | | **FB2**, principal dos, jambes en léger | **P2**, U5, M6 |
-| Dimanche | **Sortie longue 10 km** | | P10 |
-
-### Course
+| Jour | Course | Muscu |
+|---|---|---|
+| Lundi |  | **FB2** |
+| Mercredi | **VMA longue** |  |
+| Samedi |  | **FB1** |
+| Dimanche | **Sortie longue 10 km** |  |
 
 | Séance | Contenu | Durée | RPE |
 |---|---|---|---|
-| VMA longue | 15 min EF + gammes ; **4 × 1000 m en 5'45"**, récup 2'30 trot ; 10 min retour au calme | ≈ 56 min | 8 |
-| Sortie longue | **10 km** facile, progressive | ≈ 77 min | 4-5 |
+| VMA longue | 10 min EF + gammes ; **3 × 800 m en 4'36, récup 2'18 trot** ; 5 min retour au calme | ≈ 33 min | 8 |
+| Sortie longue | 10 km progressive | ≈ 77 min | 4-5 |
 
-Total ≈ 133 min ; 23 min rapides → **83 % facile** (S4 ✔).
+Total ≈ 110 min ; 14 min rapides → **87 % facile** (S4 ✔). Sortie longue = 70 % du volume → conseil S3.
 
-### Muscu (hypertrophie : 8-12 reps ; RPE visé W9 = 6)
-
-| Séance | Exercice | Rôle | Séries | RPE | Muscle |
-|---|---|---|---|---|---|
-| **FB1** lundi | Squat barre | principal | 5 × 8-12 | 6 | quadriceps |
-| | Hip thrust barre | poly | 3 × 8-12 | 6 | fessiers |
-| | Tirage vertical poulie | poly | 3 × 8-12 | 6 | dos |
-| | Leg curl | iso | 3 × 8-12 | — | ischios |
-| | Leg extension | iso | 3 × 8-12 | — | quadriceps |
-| | Développé couché haltères | poly | 2 × 8-12 | 6 | pectoraux |
-| | Dead bug | renfo coureur | 2 × 12 | — | abdos |
-| **FB2** samedi | Tractions strictes | principal (M6 : 2 tractions strictes < 5) | 4 × max | — | dos |
-| | Tirage horizontal poulie | poly (M22 : dos ≥ 8) | 2 × 8-12 | 6 | dos |
-| | Soulevé de terre roumain barre | poly, **léger** (P2) | 5 × 8-12 | ≤ 6 | ischios |
-| | Pont fessier | poly, léger | 3 × 12 | ≤ 6 | fessiers |
-| | Élévations latérales haltères | iso | 2 × 12 | — | épaules |
-| | Curl haltères | iso | 2 × 12 | — | biceps |
-| | Pont fessier sur une jambe | renfo coureur | 2 × 12 | — | fessiers |
-
-Durées : FB1 21 séries ≈ 56 min · FB2 20 ≈ 53 min ✔. Aucun exercice répété (M32 ✔).
-
-| Quadri | Ischios | Fessiers | Dos | Pecs | Épaules | Biceps | Triceps | Mollets | Abdos |
-|---|---|---|---|---|---|---|---|---|---|
-| **8** ✔ | **8** ✔ | **8** ✔ | **9** ✔ | 2 | 2 | 2 | 0 | 0 | 2 |
-
-Prioritaires (8-10) ✔ : **pas de M13**. Secondaires sous 4 → **conseil** affiché (M22, U7), sans blocage.
-
-## 5. Questions
-
-| # | Point | Décision ou proposition |
+| Séance | Exercices (séries ; RPE visé) | Durée |
 |---|---|---|
-| B4 | Principal du samedi jamais lourd (veille de la sortie longue, P2). | **Tranché (Max, 18/11/2026)** : principal **dos** le samedi ; règle générale ajoutée à M6. |
-| B5 | Tractions strictes comme principal d'une débutante. | **Tranché (Max, 18/11/2026)** : tractions assistées « principal possible » ; tractions au poids du corps seulement au-delà de 4 tractions strictes (M6). Précisé ensuite : assistées **seulement si aucune traction stricte** ; schéma propre aux strictes (M6). |
-| B6 | Nombre de tractions strictes de B. | **Tranché (Max, 18/11/2026)** : **2** → tractions strictes, 4 séries au maximum (4 plutôt que 3 pour M22) ; + 2 séries de tirage horizontal poulie pour tenir le minimum prioritaire du dos (8, M22). Passage à 4 × 5 quand une série atteint 5. |
+| **FB2** lundi | **Squat à la barre** principal 4 × 8-12 (RPE 6) · Soulevé de terre roumain à la barre 4 (RPE 6) · Leg curl à la machine 4 · Développé militaire à la barre 3 (RPE 6) · Extension des triceps à la poulie 3 · Dead bug (renfo) 2 · Montées sur banc (renfo) 2 | 22 séries ≈ 56 min |
+| **FB1** samedi | **Développé couché à la barre** principal 4 × 8-12 (RPE 6) · Goblet squat 4 (RPE ≤ 6) · Tractions 3 (RPE 6) · Curl à la barre 3 · Hip thrust à la barre 3 (RPE ≤ 6) · Mollets debout à la machine 2 · Soulevé de terre sur une jambe (renfo) 2 | 21 séries ≈ 56 min |
+
+| Pecs | Dos | Épaules | Biceps | Triceps | Quadri (P) | Ischios (P) | Fessiers | Mollets | Abdos |
+|---|---|---|---|---|---|---|---|---|---|
+| 4 | 3 | 3 | 3 | 3 | 10 | 10 | 3 | 2 | 2 |
+
+Cible M22 (2 séance(s)) : prioritaire 8-10, secondaire 3-3 (débutant).
+
+**Ce que les règles ont décidé ou signalé**
+- **E13** (bloquant) : 4 muscles prioritaires pour 2 séance(s) : le formulaire garde les 2 premiers (quadri, ischios)
+- **C13** : préparation de 2 semaines (+5 %/sem. max, 1 qualité)
+- **J8** (proposé) : sortie longue jusqu'à 74 % du volume (> 55 %) → une sortie de plus est proposée
+- **J8** (proposé) : 33 min de hausse perdues faute de place dans les séances → une sortie de plus est proposée
+- **M22** (conseil) : secondaires sous leur cible : mollets 2, abdos 2
+
+**Avis de coach** — **7/10 — À retoucher.** Base saine pour un débutant : VMA courte (3 × 800 m) une semaine sur deux, fartlek l'autre semaine, sortie longue de 10 km. Mais avec 2 sorties, la sortie longue fait 70 % du volume et le volume reste plat (~110 min) : la 3e sortie que propose l'appli (J8) est la vraie amélioration. En muscu, E13 (gardée le 21/11) donne la priorité aux quadriceps et aux ischios, ce qui est juste pour un coureur ; le dos et les fessiers sont en secondaires.
