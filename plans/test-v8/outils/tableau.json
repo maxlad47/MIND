@@ -51,8 +51,8 @@
 "R04",
 "10 km dans 10 sem., 5 sorties, pas de muscu",
 "10 km, délai normal, expert, 5 sorties, sans muscu",
-7,
-"À retoucher",
+8,
+"Bon",
 "Les 2 qualités d'un expert sont justes (5 × 1000 m, 7 × 400 m)."
 ],
 [
@@ -163,8 +163,8 @@
 "R18",
 "Semi dans 10 sem., 6 sorties, force × 1",
 "Semi, expert, 6 sorties, 7 jours sur 7, musculation 1",
-7,
-"À retoucher",
+8,
+"Bon",
 "Plan d'expert solide (seuil 3 × 10', 7 × 1000 m, 89 % de facile) et le jour de repos est gardé (P5)."
 ],
 [
@@ -229,7 +229,7 @@
 "Marathon avec 30 min en semaine (E10)",
 6,
 "À retoucher",
-"Avec 45 min proposées en semaine (E10), c'est mieux qu'avant, mais un marathon sur 3 sorties dont une sortie longue de 2 h 42 (63 %) reste déséquilibré."
+"Avec 45 min proposées en semaine (E10) et 4 sorties conseillées (C9), l'appli dit ce qu'il faut, mais un marathon sur 3 sorties dont une sortie longue de 2 h 42 (63 %) reste déséquilibré."
 ],
 [
 "R27",
@@ -299,9 +299,9 @@
 "R35",
 "Pas de course (courir plus), 4 sorties, hypertrophie × 2",
 "Courir plus, intermédiaire, 4 sorties, hypertrophie 2",
-7,
-"À retoucher",
-"Une seule qualité maintenant, bien."
+8,
+"Bon",
+"Une seule qualité, et la hausse est maintenant plafonnée à +30 % sur le cycle (150 → 195 min, C8) au lieu de +60 % : c'est le rythme que je donnerais à un intermédiaire."
 ],
 [
 "R36",

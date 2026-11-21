@@ -34,9 +34,9 @@
 
 | Jour | Course | Muscu |
 |---|---|---|
-| Lundi | **EF 10 km** | **FB2** |
+| Lundi | **EF 10 km** | **FB1** |
 | Mercredi | **VMA longue** |  |
-| Vendredi |  | **FB1** |
+| Vendredi |  | **FB2** |
 | Samedi |  | **FB3** |
 | Dimanche | **Sortie longue 15 km** |  |
 
@@ -50,19 +50,20 @@ Total ≈ 190 min ; 16 min rapides → **92 % facile** (S4 ✔). Sortie longue =
 
 | Séance | Exercices (séries ; RPE visé) | Durée |
 |---|---|---|
-| **FB2** lundi | **Squat à la barre (en léger)** principal 4 × 8-12 (RPE ≤ 6) · Développé militaire à la barre 3 (RPE 6) · Soulevé de terre roumain à la barre 3 (RPE ≤ 6) · Gainage planche 3 · Barre au front 3 · Mollets debout aux haltères 3 · Montées sur banc (renfo) 2 | 21 séries ≈ 56 min |
-| **FB1** vendredi | **Développé couché à la barre** principal 4 × 8-12 (RPE 6) · Curl à la barre 3 · Hip thrust à la barre 3 (RPE ≤ 6) · Développé épaules aux haltères 3 (RPE 6) · Soulevé de terre roumain aux haltères 3 (RPE ≤ 6) · Gainage latéral 3 · Fentes arrière au poids du corps (renfo) 2 | 21 séries ≈ 56 min |
-| **FB3** samedi | **Tractions** principal 4 × 5 (+1 rep si RPE < 7) · Extension des triceps à la poulie 3 · Mollets debout à la machine 3 · Curl aux haltères 3 · Pont fessier 3 (RPE ≤ 6) · Développé couché aux haltères 2 (RPE 6) · Tirage vertical à la poulie 2 (RPE 6) · Soulevé de terre sur une jambe (renfo) 2 | 22 séries ≈ 58 min |
+| **FB1** lundi | **Développé couché à la barre** principal 4 × 8-12 (RPE 6) · Curl à la barre 3 · Soulevé de terre roumain à la barre 3 (RPE ≤ 6) · Gainage planche 3 · Goblet squat 3 (RPE ≤ 6) · Mollets debout aux haltères 3 · Montées sur banc (renfo) 2 | 21 séries ≈ 56 min |
+| **FB2** vendredi | **Tractions** principal 4 × 5 (+1 rep si RPE < 7) · Extension des triceps à la poulie 3 · Hip thrust à la barre 3 (RPE ≤ 6) · Curl aux haltères 3 · Soulevé de terre roumain aux haltères 3 (RPE ≤ 6) · Gainage latéral 3 · Soulevé de terre sur une jambe (renfo) 2 | 21 séries ≈ 56 min |
+| **FB3** samedi | **Développé militaire à la barre** principal 4 × 8-12 (RPE 6) · Squat à la barre 3 (RPE ≤ 6) · Mollets debout à la machine 3 · Barre au front 3 · Pont fessier 3 (RPE ≤ 6) · Développé couché aux haltères 2 (RPE 6) · Tirage vertical à la poulie 2 (RPE 6) · Pont fessier sur une jambe (renfo) 2 | 22 séries ≈ 58 min |
 
 | Pecs | Dos | Épaules | Biceps | Triceps | Quadri | Ischios | Fessiers | Mollets | Abdos |
 |---|---|---|---|---|---|---|---|---|---|
-| 6 | 6 | 6 | 6 | 6 | 8 | 8 | 6 | 6 | 6 |
+| 6 | 6 | 4 | 6 | 6 | 8 | 8 | 8 | 6 | 6 |
 
 Cible M22 (3 séance(s)) : prioritaire 12-16, secondaire 6-8.
 
 **Ce que les règles ont décidé ou signalé**
 - **C13** : préparation de 2 semaines (+5 %/sem. max, 1 qualité)
 - **J6** : jour(s) doublé(s) choisi(s) par l'utilisateur : lundi
+- **M22** (conseil) : secondaires sous leur cible : épaules 4
 - **M12** : renfo coureur sans jambes prioritaires → polyarticulaires jambes en léger (RPE ≤ 6)
 
-**Avis de coach** — **9/10 — Bon.** Très bon plan de 10 km : 2 semaines de préparation, une VMA longue qui monte (4 × 1000 m en 4'02), une sortie longue stable à 15 km et un volume de +20 % sans à-coup. Le lundi doublé que tu as choisi reçoit bien l'EF (P11). La muscu full body × 3 est complète (6 à 8 séries par groupe, jambes en léger). Seul point : le principal du 2e full body est maintenant un squat léger (M6 v7) au lieu du développé militaire de ton plan v6.
+**Avis de coach** — **9/10 — Bon.** Très bon plan de 10 km : 2 semaines de préparation, une VMA longue qui monte (4 × 1000 m en 4'02), une sortie longue stable à 15 km et un volume de +20 % sans à-coup. Le lundi doublé que tu as choisi reçoit bien l'EF (P11). La muscu full body × 3 retrouve tes principaux v6 : développé couché, tractions, développé militaire (M6 du 21/11), jambes en léger. Seul point : les épaules restent à 4 séries (cible 6, conseil M22).

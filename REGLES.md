@@ -35,7 +35,7 @@
 | E7 | **Muscu seule** : objectif « pas de course » + 0 sortie. Aucune règle de course ne s'applique (ni N7, ni test). |
 | E8 | **Course seule** : objectif muscu « aucun ». Si le renfo coureur reste coché, M12 s'applique sans séance de muscu. |
 | E9 | **Réponses surprenantes** (conseil) : plus de 2 h en moyenne par sortie, ou plus de 4 h par semaine en niveau débutant, ou « pas régulier » avec un volume stable → l'appli demande confirmation, sans bloquer. |
-| E10 | **Qualité trop courte** (proposée) : temps du jour < 45 min et au moins une qualité → l'appli propose 45 min le jour de la qualité, si le niveau est intermédiaire ou plus et le volume ≥ 120 min ; **semi ou marathon : à tout niveau**. **Marathon** : 45 min pour toutes les sorties de semaine. |
+| E10 | **Qualité trop courte** (proposée) : temps du jour < 45 min, niveau intermédiaire ou plus, au moins une qualité, volume ≥ 120 min → l'appli propose 45 min le jour de la qualité ; **marathon** : 45 min pour toutes les sorties de semaine. |
 | E11 | **Répartition des sorties** (proposée) : moins de 25 min en moyenne par sortie → moins de sorties (30 min au moins chacune, minimum C9 respecté) ; sortie unique de plus de 1 h 30 → 2 sorties si un jour le permet. |
 | E12 | **Charge totale** (proposée) : au plus **6** séances par semaine en niveau débutant, **7** en intermédiaire, **8** au-delà (course + muscu). Au-delà, l'appli propose de retirer des séances de l'objectif secondaire (muscu si la course est prioritaire, sorties sinon, sans passer sous le minimum C9). |
 | E13 | **Muscles prioritaires** : au plus un par séance de muscu ; le formulaire bloque au-delà (on garde les premiers choisis). |
@@ -118,7 +118,7 @@
 | Sous-objectif | Volume | Qualité (N8) |
 |---|---|---|
 | Garder la forme | stable | **1 au plus** ; rotation : fartlek, côtes, seuil, VMA longue |
-| Courir plus | +10 %/sem. (S1), **+5 % pour un débutant**, **au plus +30 % par cycle de 8 semaines**, jusqu'au plafond (E6) | **1 au plus** ; même rotation |
+| Courir plus | +10 %/sem. (S1), **+5 % pour un débutant**, **au plus +30 % par cycle de 8 semaines (ou +30 min si c'est plus)**, jusqu'au plafond (E6) | **1 au plus** ; même rotation |
 | Courir plus vite | stable | rotation : VMA courte, seuil, VMA longue, côtes ; test toutes les 8 semaines (T4) |
 | Muscu seule | 0 sortie (E7) | — |
 
@@ -250,7 +250,7 @@
 | Haut / push | développé couché barre → développé couché haltères → pompes |
 | Pull | tractions strictes (≥ 1) → rowing barre → rowing haltère → tractions assistées (machine) → rowing inversé |
 | Jambes / bas | squat barre → goblet squat → fentes bulgares haltères → fentes bulgares au poids du corps |
-| Full body | séance 1 : haut ; séance 2 : jambes, ou **épaules** si les jambes sont en léger (M12) : développé militaire barre → développé épaules haltères → jambes en léger ; séance 3 : pull ; séance 4 : haut |
+| Full body | séance 1 : haut ; séance 2 : jambes ; séance 3 : pull ; séance 4 : haut. **Jambes en léger (M12)** : séance 1 : haut ; séance 2 : pull ; séance 3 : épaules (développé militaire barre → développé épaules haltères) ; séance 4 : haut |
 
   - Un **muscle prioritaire** de la zone de la séance qui a un exercice « principal possible » passe en premier (ex. fessiers → hip thrust, ischios → soulevé de terre roumain, épaules → développé militaire).
   - **Sans traction stricte**, les tractions assistées (machine) sont le premier exercice de dos de la semaine après le principal, quand le matériel le permet.

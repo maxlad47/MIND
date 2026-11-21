@@ -45,7 +45,8 @@ ZONE = {'haut': ['pectoraux', 'dos', 'epaules', 'biceps', 'triceps', 'abdos'], '
         'pull': ['dos', 'biceps', 'epaules', 'abdos'], 'jambes': ['quadriceps', 'ischios', 'fessiers', 'mollets', 'abdos'],
         'fb': GROUPES}
 CHAINE = {'haut': ['developpe_couche_barre', 'developpe_couche_halteres', 'pompes'],
-          'pull': ['tractions', 'tractions_assistees', 'rowing_barre', 'rowing_haltere_un_bras', 'rowing_inverse'],
+          'pull': ['tractions', 'rowing_barre', 'rowing_haltere_un_bras', 'tractions_assistees', 'rowing_inverse'],  # M6 21/11
+          'epaules': ['developpe_militaire_barre', 'developpe_epaules_halteres'],  # M6 21/11 : full body, jambes en léger
           'jambes': ['squat_barre', 'goblet_squat', 'fentes_bulgares_halteres', 'fentes_bulgares_poids_du_corps']}
 
 
@@ -251,12 +252,12 @@ def niveau(P):
         P.m('E11', f"sortie unique de {v} min → 2 sorties proposées (acceptées)", 'prop')
         p['s'] = 2
     # E10 : qualité trop courte (volume ≥ 120 min, sinon V7 la limite déjà)
-    if P.niv and P.niv != 'debutant' and p['tj'] < 45 and p['s'] >= 2 and v >= 120:
+    if P.niv and P.niv != 'debutant' and p['tj'] < 45 and p['s'] >= 2 and v >= 120:  # E10 (extension aux débutants testée le 21/11, retirée)
         if p['objectif_course'] == 'marathon':
             P.m('E10', f"marathon avec {p['tj']} min par sortie en semaine → 45 min pour toutes les sorties de semaine proposées (acceptées)", 'prop')
             p['tm'] = p.get('tm') or p['tj']; p['tj'] = 45
         else:
-            P.m('E10', f"qualités en {p['tj']} min pour un coureur {NIVL[P.niv]} → 45 min le jour de la qualité proposées (acceptées)", 'prop')
+            P.m('E10', f"qualités en {p['tj']} min pour un coureur {NIVL.get(P.niv, 'débutant')} → 45 min le jour de la qualité proposées (acceptées)", 'prop')
             p['tq'] = 45
     recalc(P)
     cap = p['capacite']
@@ -411,6 +412,7 @@ def calendrier(P, mode):
     fin_dev = max([w for w in range(1, n + 1) if ph[w - 1] in ('preparation', 'fondation', 'developpement')] or [0])
     plafond = p.get('plafond') or p['capacite']
     nn = 0  # C15 v8 : compteur des semaines normales (débutant)
+    efcap = lambda x: min(tj, max(30, 0.75 * x)) if x >= 60 else min(tj, x)  # C14 21/11
     for w in range(1, n + 1):
         phase, typ = ph[w - 1], types[w - 1]
         row = dict(w=w, lundi=(W1 + timedelta(weeks=w - 1)).strftime('%d/%m'), phase=phase, type=typ)
@@ -424,7 +426,7 @@ def calendrier(P, mode):
                 cap = 0.05 if (phase == 'preparation' or P.court or deb) else 0.10  # C14 v8 : débutant +5 %
                 V = min(V, last['V'] * (1 + cap))
             elif mode == 'c8' and p.get('sous_objectif') == 'courir_plus':
-                V = min(last['V'] * (1.05 if deb else 1.10), plafond)  # C8 v8 : débutant +5 %
+                V = min(last['V'] * (1.05 if deb else 1.10), plafond, max(1.30 * P.v0, P.v0 + 30))  # C8 v8 : débutant +5 % ; 21/11 : +30 % par cycle (ou +30 min)
             elif mode == 'finir':
                 V = last['V'] + min(15, max(0, cible - last['SL']), 0.10 * last['V'])
             elif mode == 'c8':
@@ -467,6 +469,10 @@ def calendrier(P, mode):
             qs.append(qualite(P, fam, pos.get(w, 0.0), qtyp, tq, deb, vref))
         Q = sum(q['duree'] for q in qs)
         n_ef = s - 1 - len(qs) if s >= 2 else 0
+        est_sl = (last['SL'] if last else (P.sl0 or 0)) if typ == 'normale' else 0
+        if qs and tq > tj and n_ef and est_sl and V - Q - est_sl < 30 * n_ef:  # E10 : la qualité ne grandit pas aux dépens des EF (30 min au moins, C14)
+            tq2 = max(tj, min(tq, V - est_sl - 30 * n_ef - (Q - qs[0]['duree'])))
+            qs[0] = qualite(P, qs[0]['fam'], pos.get(w, 0.0), qtyp, tq2, deb, vref); Q = sum(q['duree'] for q in qs)
         # sortie longue + EF (C14 répartition)
         if s == 1:
             sl = min(V, tsl); efs = []
@@ -474,7 +480,8 @@ def calendrier(P, mode):
             rest = V - Q
             if P.sl0:
                 sl = min(P.sl0, rest, cible if mode != 'c8' else tsl); e = (rest - sl) / n_ef if n_ef else 0
-                e = min(e, tj); efs = [e] * n_ef
+                e = min(e, efcap(sl)); efs = [e] * n_ef
+                if n_ef and rest - sl - e * n_ef > 1 and efcap(sl) < tj: row['ef75'] = round(rest - sl - e * n_ef)
             else:
                 e = rest / (n_ef + 1.5)
                 e = min(e, tj); sl = min(rest - e * n_ef, tsl); efs = [e] * n_ef
@@ -498,7 +505,7 @@ def calendrier(P, mode):
                 room_sl = max(0, min(sl + 15, max(cible, sl) if mode != 'c8' else tsl, tsl) - sl) if sl >= 60 or mode != 'c8' else max(0, min(tsl, sl + 15) - sl)
                 cmin = COURSES[obj]['ctsl'] if mode in ('course', 'finir') else 0
                 a = min(r if sl < cmin else r / 2, room_sl)  # C14 v8 : sortie longue d'abord sous le minimum C9
-                capef = min(tj, sl + a) if sl >= 60 else tj
+                capef = efcap(sl + a) if sl >= 60 else tj  # C14 21/11 : EF ≤ 75 % de la sortie longue
                 room_ef = sum(max(0, capef - e) for e in efs)
                 b = min(r - a, room_ef)
                 extra = r - a - b
@@ -507,6 +514,7 @@ def calendrier(P, mode):
                     haut = min(COURSES[obj]['sl'][1], tsl)
                     a3 = min(extra - a2, max(0, min(sl + 15, haut) - (sl + a))); a += a3
                 lost = r - a - b
+                if lost > 1 and capef < tj - 0.5 and efs: row['ef75'] = round(lost)
                 sl += a
                 if efs and b > 0:
                     for _ in range(100):
@@ -532,7 +540,7 @@ def calendrier(P, mode):
                 if over > 0 and len(qs) > 1:  # C14 v8 : la 2e qualité saute plutôt que la sortie longue
                     qs = qs[:1]; Q = qs[0]['duree']; n_ef += 1
                     rest = last['V'] * 1.10 - Q - sl
-                    efs = [max(0, min(tj, sl, rest / n_ef))] * n_ef
+                    efs = [max(0, min(efcap(sl), rest / n_ef))] * n_ef
                 elif over > 0:
                     sl -= over
         elif typ == 'allégée':
@@ -591,8 +599,18 @@ def calendrier(P, mode):
     parts = [w['SL'] / w['V'] for w in weeks if w['type'] == 'normale' and w['V'] and w['SL'] >= 60]
     if parts and max(parts) > 0.55:
         P.m('J8', f"sortie longue jusqu'à {round(100 * max(parts))} % du volume (> 55 %) → une sortie de plus est proposée", 'prop')
+    ef75 = [w for w in weeks if w.get('ef75')]
+    if ef75:
+        slx = max(w['SL'] for w in weeks); hautc = COURSES[obj]['sl'][1] if mode in ('course', 'finir') else 90
+        bloque = 'le temps de sortie longue choisi' if (slx >= tsl - 1 and tsl < hautc) else 'la sortie longue max de la course' if mode != 'c8' else 'la sortie longue max (C8)'
+        P.m('C14', f"EF limitées à 75 % de la sortie longue ({len(ef75)} semaine(s), {sum(w['ef75'] for w in ef75)} min non placées en tout, sortie longue bloquée par {bloque})")
+        P.m('J8', "EF limitées à 75 % de la sortie longue → " + ("plus de temps de sortie longue ou une sortie de plus proposés" if bloque.startswith('le temps') else "une sortie de plus proposée"), 'prop')
+    if mode == 'c8' and p.get('sous_objectif') == 'courir_plus' and max(w['V'] for w in weeks) >= max(1.30 * P.v0, P.v0 + 30) - 1 and plafond > max(1.30 * P.v0, P.v0 + 30) + 1:
+        P.m('C8', f"hausse du cycle plafonnée à +30 % ou +30 min ({P.v0} → {round(max(1.30 * P.v0, P.v0 + 30))} min) ; le cycle suivant repart de là")
+    if mode in ('course', 'finir') and obj == 'marathon' and s == 3:
+        P.m('C9', "marathon sur 3 sorties : 4 sorties conseillées", 'conseil')
     perdu = sum(w.get('perdu', 0) for w in weeks)
-    if perdu > 15:
+    if perdu > 15 and not ef75:
         P.m('J8', f"{perdu} min de hausse perdues faute de place dans les séances → une sortie de plus est proposée", 'prop')
     if mode == 'course':
         dev_end = [w for w in weeks if w['phase'] in ('developpement', 'fondation', 'preparation')]
@@ -746,6 +764,8 @@ def organisation(P):
            'ppj': [('push', 'haut'), ('pull', 'pull'), ('jambes', 'jambes')] * 3,
            'pph': [('push', 'haut'), ('pull', 'pull'), ('haut', 'haut')],
            'ppjfb': [('push', 'haut'), ('pull', 'pull'), ('jambes', 'jambes'), ('fb', 'haut')]}[org]
+    if org == 'full_body' and jambes_legeres(P):  # M6 21/11 : jambes en léger → haut, pull, épaules, haut
+        seq = [('fb', 'haut'), ('fb', 'pull'), ('fb', 'epaules'), ('fb', 'haut')]
     out = []
     for i in range(mu):
         zone, typ = seq[i % len(seq)]
@@ -814,7 +834,7 @@ def muscu(P, sessions, week_no):
     # principal (M6)
     for s in sessions:
         typ = s['type']
-        order = {'jambes': ['jambes', 'pull', 'haut'], 'pull': ['pull', 'haut', 'jambes'], 'haut': ['haut', 'pull', 'jambes']}[typ]
+        order = {'jambes': ['jambes', 'pull', 'haut'], 'pull': ['pull', 'haut', 'jambes'], 'haut': ['haut', 'pull', 'jambes'], 'epaules': ['epaules', 'haut', 'pull']}[typ]
         if s['zone'] == 'push': order = ['haut', 'pull', 'jambes']
         if s['zone'] == 'pull': order = ['pull', 'haut', 'jambes']
         no_legs = jl or not s.get('lourd_ok', True)
@@ -822,7 +842,7 @@ def muscu(P, sessions, week_no):
             no_legs = not s.get('lourd_ok', True)
         chosen = None
         for t in order:
-            zone_m = {'haut': ['pectoraux', 'epaules'], 'pull': ['dos'], 'jambes': JAMBES}[t]
+            zone_m = {'haut': ['pectoraux', 'epaules'], 'pull': ['dos'], 'jambes': JAMBES, 'epaules': ['epaules']}[t]
             cand = []
             for g in prio:
                 if g in zone_m:
@@ -900,7 +920,8 @@ def muscu(P, sessions, week_no):
                 if not cl:
                     continue
                 fam = [e for e in cl if pr and e['famille'] == pr['famille']]
-                e = (fam or sorted(cl, key=lambda e: 0 if e['type'] == 'polyarticulaire' else 1))[0]
+                ta = [e for e in cl if e['id'] == 'tractions_assistees' and p.get('tractions', 0) < 1]  # M6 21/11 : vers la 1re traction stricte
+                e = (ta or fam or sorted(cl, key=lambda e: 0 if e['type'] == 'polyarticulaire' else 1))[0]
                 role = 'assistance' if (pr and e['famille'] == pr['famille']) else ('poly' if e['type'] == 'polyarticulaire' else 'iso')
                 maxs = 4 if g in prio else 3
                 ser = 3 if role == 'assistance' else (min(maxs, max(2, tgt[g][0] - cnt[g])) if tgt[g][0] - cnt[g] > 0 else 2)

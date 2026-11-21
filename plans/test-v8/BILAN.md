@@ -1,13 +1,14 @@
 # MIND — Règles v8 : corrections et nouveau test
 
-Document de travail du 20/11/2026, hors mission. Règles appliquées : `REGLES.md` **v8** (version de référence) et `data/exercices.json` v2. Rien n'est commité depuis `7536923`.
+Document de travail du 20/11/2026, **relancé le 21/11/2026** après les décisions sur les points ouverts (§5), hors mission. Règles appliquées : `REGLES.md` **v8** (version de référence, complétée le 21/11) et `data/exercices.json` v2.
 
 ## 1. En bref
 
 - **Les remarques du coach du test v7** (50 profils, `plans/test-50/`) sont toutes traitées. La plupart l'étaient déjà dans la v8 du 19/11 ; 6 ne l'étaient pas (Q09, Q13, Q23, Q24, Q31, Q46) et sont maintenant dans les règles. Vérification faite en relançant ces 50 profils avec le script v8.
 - **Le nouveau test a trouvé 10 autres défauts de règles**, corrigés aussitôt (§2.2). Exemple : un marathon accepté alors que la sortie longue ne dépassait pas 1 h 52.
-- **A, B, C recalculés en v8** : A 9/10, B 7/10, C 8/10 (§3).
-- **50 nouveaux profils, construits pour couvrir tous les cas** (§4) : **37 bons, 13 à retoucher, 0 à refuser, note moyenne 7,8/10**. Les 13 « à retoucher » sont sûrs ; 10 sont limités par les choix du profil (2 sorties, 30 min par jour, 1 seul jour, matériel, exclusions), et l'appli le signale. 3 posent une vraie question de règle (§5).
+- **A, B, C recalculés en v8** : A 9/10, B 7/10, C 8/10 (§3). A et C retrouvent tes principaux v6.
+- **50 nouveaux profils, construits pour couvrir tous les cas** (§4) : **40 bons, 10 à retoucher, 0 à refuser, note moyenne 7,9/10** (le 20/11 : 37, 13, 7,8). Les 10 « à retoucher » sont sûrs et limités par les choix du profil (2 ou 3 sorties, 30 min par jour, 1 seul jour, matériel, exclusions) ; l'appli le signale.
+- **Relance du 21/11** (§5) : R04, R18 et R35 passent à « bon » ; R13 montre que l'extension de E10 aux débutants n'aide pas : elle est retirée.
 
 ## 2. Changements de règles
 
@@ -64,9 +65,9 @@ Programmes complets : `A.md`, `B.md`, `C.md`. Ils remplaceront les plans papier 
 | C | Profil C (marathon, tonification 3 séances) | **8/10** | Bon | Préparation marathon sérieuse et identique à ton plan v6 au pic (≈ 284 min, sortie longue de 28 km puis 3 h) : 7 semaines de préparation en rotation (côtes, fartlek, seuil), seuil puis allure marathon, affûtage de 2 semaines. |
 
 **Ce qui change par rapport à tes plans v6 validés :**
-- **A** : même semaine (EF + muscu le lundi doublé, VMA longue le mercredi, sortie longue de 15 km le dimanche). Le principal du 2e full body est un **squat léger** au lieu du développé militaire (M6 v7 : un principal selon le type de séance).
-- **B** : la qualité alterne VMA et fartlek (C15 débutant). En muscu, **E13 ne garde que 2 prioritaires** (quadriceps, ischios) au lieu de 4 : dos et fessiers passent en secondaires. **À trancher** : garder E13, ou permettre 2 prioritaires par séance quand ce sont des muscles de la même zone ?
-- **C** : même pic (≈ 284 min, sortie longue de 28 km puis 3 h). Le principal « pull » est la traction assistée (chaîne M6) au lieu du rowing barre.
+- **A** : même semaine (EF + muscu le lundi doublé, VMA longue le mercredi, sortie longue de 15 km le dimanche). Principaux : développé couché, tractions, développé militaire, comme ton plan v6 (M6 du 21/11).
+- **B** : la qualité alterne VMA et fartlek (C15 débutant). En muscu, **E13 garde 2 prioritaires** (quadriceps, ischios) au lieu de 4 : dos et fessiers passent en secondaires (gardée le 21/11).
+- **C** : même pic (≈ 284 min, sortie longue de 28 km puis 3 h). Le principal « pull » est le rowing barre, comme ton plan v6 ; les tractions assistées restent dans la séance haut.
 
 ## 4. Les 50 nouveaux profils
 
@@ -74,17 +75,17 @@ Construits à la main pour couvrir tous les cas : 10 km (12), semi (10), maratho
 
 | Verdict | v7 (anciens 50) | **v8 (nouveaux 50)** |
 |---|---|---|
-| Bon (8-10) | 31 | **37** |
-| À retoucher (6-7) | 19 | **13** |
+| Bon (8-10) | 31 | **40** |
+| À retoucher (6-7) | 19 | **10** |
 | À refuser (5 ou moins) | 0 | **0** |
-| Note moyenne | — | **7,8 / 10** |
+| Note moyenne | — | **7,9 / 10** |
 
 | Profil | Cas testé | Note | Verdict | Pourquoi (en une phrase) |
 |---|---|---|---|---|
 | R01 | 10 km, délai normal, débutant, 3 sorties, sans muscu | **8/10** | Bon | Bon plan pour un débutant : fartlek une semaine sur deux, VMA courte (3 × 800 m), hausse limitée à +5 % par semaine (100 → 134 min). |
 | R02 | 10 km, délai normal, intermédiaire, 3 sorties, tonification 1 | **8/10** | Bon | Course propre : VMA longue en 3 × 800 m (assez de fractions), sortie longue qui finit à 1 h 18. |
 | R03 | 10 km, délai normal, confirmé, 4 sorties, force 2 | **8/10** | Bon | Bon plan de 10 km pour un confirmé : 2 qualités (VMA longue et courte, 48 h d'écart), sortie longue de 1 h 25, 89 % de facile. |
-| R04 | 10 km, délai normal, expert, 5 sorties, sans muscu | **7/10** | À retoucher | Les 2 qualités d'un expert sont justes (5 × 1000 m, 7 × 400 m). |
+| R04 | 10 km, délai normal, expert, 5 sorties, sans muscu | **8/10** | Bon | Les 2 qualités d'un expert sont justes (5 × 1000 m, 7 × 400 m). |
 | R05 | 10 km dans 3 semaines (C5 « finir »), intermédiaire | **8/10** | Bon | À 3 semaines du 10 km, le plan « finir » est exactement ce qu'il faut : allure 10 km deux fois, une sortie longue d'1 h 03, puis l'affûtage. |
 | R06 | 10 km dans 6 semaines (C4 compressé), avancé | **8/10** | Bon | Délai court bien géré (C4) : hausse limitée à +5 %, test en semaine 2, 2 qualités puis l'allure 10 km. |
 | R07 | 10 km dans 26 semaines (C13 préparation), débutant sans chrono | **8/10** | Bon | Débutant sans chrono, 26 semaines : test 6 min, 14 semaines de préparation en rotation à +5 %, et la sortie la plus longue devient une vraie sortie longue (1 h) avant le plan 10 km. |
@@ -98,7 +99,7 @@ Construits à la main pour couvrir tous les cas : 10 km (12), semi (10), maratho
 | R15 | Semi dans 30 semaines (C13 longue préparation), confirmé, 4 sorties | **8/10** | Bon | Très longue préparation (16 semaines) enfin variée (côtes, fartlek, seuil en rotation) puis 2 qualités. |
 | R16 | Semi avec 2 sorties, 45 min par jour et 1 h 30 de sortie longue | **6/10** | À retoucher | Le semi passe le minimum C9, mais avec 2 sorties et une sortie longue plafonnée à 1 h 30 (sous la cible d'1 h 45), le plan est juste : 65 % du volume dans la sortie longue. |
 | R17 | Semi avec sortie longue limitée à 1 h (C9 : refus) | **8/10** | Bon | Refus juste : 1 h de sortie longue ne prépare pas un semi. |
-| R18 | Semi, expert, 6 sorties, 7 jours sur 7, musculation 1 | **7/10** | À retoucher | Plan d'expert solide (seuil 3 × 10', 7 × 1000 m, 89 % de facile) et le jour de repos est gardé (P5). |
+| R18 | Semi, expert, 6 sorties, 7 jours sur 7, musculation 1 | **8/10** | Bon | Plan d'expert solide (seuil 3 × 10', 7 × 1000 m, 89 % de facile) et le jour de repos est gardé (P5). |
 | R19 | Semi, volume déclaré trop grand pour le temps (E3) | **8/10** | Bon | E3 fait son travail : 330 min déclarées, 210 possibles, départ à la capacité. |
 | R20 | Marathon, délai normal, confirmé, 4 sorties | **9/10** | Bon | Très bon plan de marathon : seuil + allure marathon, sortie longue de 3 h en spécifique, +27 % de volume, affûtage de 2 semaines. |
 | R21 | Marathon, avancé, 5 sorties, hypertrophie 2 | **9/10** | Bon | Plan d'avancé exemplaire : 5 sorties, 2 qualités, sortie longue de 31 km, 86 % de facile, et la séance jambes placée après le seuil (P2). |
@@ -106,7 +107,7 @@ Construits à la main pour couvrir tous les cas : 10 km (12), semi (10), maratho
 | R23 | Marathon dans 6 semaines (C5), confirmé | **8/10** | Bon | « Plan court » marathon à 6 semaines : allure marathon chaque semaine, sortie longue jusqu'à 2 h 31, affûtage. |
 | R24 | Marathon dans 32 semaines (C13), débutant | **8/10** | Bon | Débutant qui prépare un marathon en 32 semaines : préparation variée, hausse à +5 %, sortie longue limitée au bas de la fourchette (2 h 45, C14 v8). |
 | R25 | Marathon avec 2 sorties (C9 : refus) | **8/10** | Bon | Refus juste (2 sorties pour un marathon). |
-| R26 | Marathon avec 30 min en semaine (E10) | **6/10** | À retoucher | Avec 45 min proposées en semaine (E10), c'est mieux qu'avant, mais un marathon sur 3 sorties dont une sortie longue de 2 h 42 (63 %) reste déséquilibré. |
+| R26 | Marathon avec 30 min en semaine (E10) | **6/10** | À retoucher | Avec 45 min proposées en semaine (E10) et 4 sorties conseillées (C9), l'appli dit ce qu'il faut, mais un marathon sur 3 sorties dont une sortie longue de 2 h 42 (63 %) reste déséquilibré. |
 | R27 | Marathon depuis un petit volume (140 min) : C9 en fin de préparation | **8/10** | Bon | Refus défendable : 140 min par semaine ne donnent que 162 min en fin de préparation, sous les 3 h du minimum marathon. |
 | R28 | Marathon, expert, 6 sorties, refus du repos, force 2 | **8/10** | Bon | Plan d'expert crédible (6 sorties, sortie longue de 36 km, 90 % de facile). |
 | R29 | Garder la forme, débutant, 2 sorties, tonification 2 | **8/10** | Bon | « Garder la forme » d'un débutant au poids du corps : une qualité douce, 2 full body de 30 min. |
@@ -115,7 +116,7 @@ Construits à la main pour couvrir tous les cas : 10 km (12), semi (10), maratho
 | R32 | Garder la forme, 3 sorties très courtes (E11) | **8/10** | Bon | E11 regroupe 3 sorties de 20 min en 2 sorties de 30 min : c'est mieux. |
 | R33 | Garder la forme, sans chrono, « je ne sais pas » partout | **8/10** | Bon | Avec « je ne sais pas » partout et sans chrono : test en semaine 1, 3 sorties proposées puis regroupées (E11), une séance de muscu. |
 | R34 | Courir plus, débutant, 3 sorties, sans muscu | **8/10** | Bon | Débutant qui veut courir plus : +5 % par semaine (90 → 115 min) et une seule qualité, c'est prudent et juste. |
-| R35 | Courir plus, intermédiaire, 4 sorties, hypertrophie 2 | **7/10** | À retoucher | Une seule qualité maintenant, bien. |
+| R35 | Courir plus, intermédiaire, 4 sorties, hypertrophie 2 | **8/10** | Bon | Une seule qualité, et la hausse est maintenant plafonnée à +30 % sur le cycle (150 → 195 min, C8) au lieu de +60 % : c'est le rythme que je donnerais à un intermédiaire. |
 | R36 | Courir plus avec une sortie unique de 1 h 45 (E11) | **8/10** | Bon | La sortie unique d'1 h 45 est répartie en 2 sorties (E11) : bonne décision. |
 | R37 | Courir plus, débutant, 4 sorties + force 3 (E12 charge totale) | **8/10** | Bon | E12 retire une séance de force (7 → 6 séances pour un débutant) et la hausse reste à +5 % : la charge totale est enfin raisonnable. |
 | R38 | Courir plus, avancé, plafond de volume fixé (E6) | **8/10** | Bon | Plafond de volume atteint en 3 semaines puis tenu, une qualité en rotation : plan d'entretien solide pour un avancé. |
@@ -132,9 +133,20 @@ Construits à la main pour couvrir tous les cas : 10 km (12), semi (10), maratho
 | R49 | Semi, exclusion du dos et des abdos (M11) | **7/10** | À retoucher | Plan de semi propre. |
 | R50 | 10 km, muscu prioritaire 4 séances, 1 jour de course choisi = jour de sortie longue absent | **7/10** | À retoucher | La muscu prioritaire en 4 séances est riche (dos 12, pecs 11). |
 
-## 5. Points ouverts (à trancher par toi)
+## 5. Points ouverts du 20/11, tranchés le 21/11
 
-**Tranchés le 21/11/2026** (avis de coach, appliqué dans `REGLES.md`, détail dans `DECISIONS.md`) : 1 oui, 2 oui (+30 %), 3 oui, 4 oui (4 conseillées), 5 E13 gardée, 6 retour aux principaux v6. Les programmes ci-dessous datent d'avant.
+Décisions prises avec l'avis d'un coach (demande de Max), appliquées dans `REGLES.md`, détail dans `DECISIONS.md`, puis vérifiées en relançant le test. Les programmes de ce dossier sont ceux de la relance.
+
+| # | Décision | Résultat de la relance |
+|---|---|---|
+| 1 | **C14** : une EF dure au plus 75 % de la sortie longue (30 min au moins) ; **J8** propose plus de temps de sortie longue ou une sortie de plus | R04 : EF de 18 à 14 km, la sortie longue redevient la plus longue (7 → 8). R18 : EF à la limite, crédible pour un expert (7 → 8) |
+| 2 | **C8** « courir plus » : au plus +30 % par cycle de 8 semaines, **ou +30 min si c'est plus** (ajouté à la relance : sans ce plancher, R10 restait sous le minimum de son 10 km) | R35 : 150 → 195 min au lieu de 242 (7 → 8). R27 : 196 min, au-dessus du minimum marathon |
+| 3 | **E10 pour les débutants (semi, marathon) : essayé puis retiré** | R13 : la qualité de 45 min prenait la hausse à la sortie longue (1 h 30 au lieu de 1 h 40). Ce coureur est limité par +5 % par semaine, pas par le temps |
+| 4 | **C9** marathon : 4 sorties conseillées (3 restent le minimum) | Conseil affiché pour C, R22, R26 |
+| 5 | **E13** gardée : un prioritaire par séance | B inchangé |
+| 6 | **M6** : full body avec jambes en léger → haut, pull, épaules ; pull sans traction stricte → rowing barre, tractions assistées en 1er exercice de dos | A : développé couché, tractions, développé militaire (= v6). C : rowing barre (= v6). 2 full body (R08, R12, R15, R25…) : un principal de poussée et un de tirage au lieu d'un squat léger |
+
+Constats d'origine (20/11) :
 
 | # | Constat | Profils | Proposition |
 |---|---|---|---|
@@ -147,5 +159,5 @@ Construits à la main pour couvrir tous les cas : 10 km (12), semi (10), maratho
 
 ## 6. Ce qui reste à faire
 
-- Ta relecture de la v8 et des points ouverts.
+- Ta relecture des programmes relancés (A, B, C en premier).
 - Ensuite : recalcul définitif des plans papier A, B, C ; formulaire (E1-E14) ; `MODELE_DONNEES` (RPE par exercice) ; les programmes de ce test serviront de résultats attendus pour les tests du moteur.

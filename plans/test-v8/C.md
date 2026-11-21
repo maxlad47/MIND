@@ -65,8 +65,8 @@ Total ≈ 278 min ; 24 min rapides → **91 % facile** (S4 ✔). Sortie longue =
 | Séance | Exercices (séries ; RPE visé) | Durée |
 |---|---|---|
 | **Jambes** lundi | **Squat à la barre** principal 4 × 12-20 · Soulevé de terre roumain à la barre 3 · Hip thrust à la barre 3 · Gainage planche 3 · Leg curl à la machine 3 · Mollets debout aux haltères 3 · Goblet squat 2 · Montées sur banc (renfo) 2 | 23 séries ≈ 45 min |
-| **Haut** vendredi | **Développé couché à la barre** principal 4 × 12-20 · Développé militaire à la barre 3 · Extension des triceps à la poulie 3 · Élévations latérales aux haltères 3 · Curl aux haltères 3 · Gainage latéral 3 · Tirage vertical à la poulie 2 · Soulevé de terre sur une jambe (renfo) 2 | 23 séries ≈ 45 min |
-| **FB3** samedi | **Tractions assistées à la machine** principal 4 × 12-20 · Curl à la barre 3 · Mollets debout à la machine 3 · Barre au front 3 · Pont fessier 3 · Développé couché aux haltères 2 · Pont fessier sur une jambe (renfo) 2 | 20 séries ≈ 40 min |
+| **Haut** vendredi | **Développé couché à la barre** principal 4 × 12-20 · Développé militaire à la barre 3 · Extension des triceps à la poulie 3 · Élévations latérales aux haltères 3 · Curl aux haltères 3 · Gainage latéral 3 · Tractions assistées à la machine 2 · Soulevé de terre sur une jambe (renfo) 2 | 23 séries ≈ 45 min |
+| **FB3** samedi | **Rowing à la barre** principal 4 × 12-20 · Curl à la barre 3 · Mollets debout à la machine 3 · Barre au front 3 · Pont fessier 3 · Développé couché aux haltères 2 · Pont fessier sur une jambe (renfo) 2 | 20 séries ≈ 40 min |
 
 | Pecs | Dos | Épaules | Biceps | Triceps | Quadri | Ischios | Fessiers | Mollets | Abdos |
 |---|---|---|---|---|---|---|---|---|---|
@@ -77,5 +77,6 @@ Cible M22 (3 séance(s)) : prioritaire 12-16, secondaire 6-8.
 **Ce que les règles ont décidé ou signalé**
 - **C13** : préparation de 7 semaines (+5 %/sem. max, 1 qualité)
 - **J8** (proposé) : sortie longue jusqu'à 63 % du volume (> 55 %) → une sortie de plus est proposée
+- **C9** (conseil) : marathon sur 3 sorties : 4 sorties conseillées
 
-**Avis de coach** — **8/10 — Bon.** Préparation marathon sérieuse et identique à ton plan v6 au pic (≈ 284 min, sortie longue de 28 km puis 3 h) : 7 semaines de préparation en rotation (côtes, fartlek, seuil), seuil puis allure marathon, affûtage de 2 semaines. Avec 3 sorties, la sortie longue pèse 59 % de la semaine ; une 4e sortie courte serait mieux. La tonification en 45 min est complète.
+**Avis de coach** — **8/10 — Bon.** Préparation marathon sérieuse et identique à ton plan v6 au pic (≈ 284 min, sortie longue de 28 km puis 3 h) : 7 semaines de préparation en rotation (côtes, fartlek, seuil), seuil puis allure marathon, affûtage de 2 semaines. Le rowing barre redevient le principal « pull » (M6 du 21/11), avec les tractions assistées dans la séance haut : tirage horizontal et vertical dans la semaine. Avec 3 sorties, la sortie longue pèse 59 % de la semaine : l'appli conseille maintenant 4 sorties (C9).
