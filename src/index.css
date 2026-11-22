@@ -1,0 +1,324 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   MIND — design system
+   Tokens : couleurs, rayons, ombres, espacements, typographie.
+   Sombre = référence. Le clair suit l'iPhone (prefers-color-scheme) ou le choix du Profil.
+   ========================================================================== */
+
+@theme inline {
+  --font-sans: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, "Helvetica Neue", sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface2);
+  --color-surface3: var(--surface3);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-sep: var(--sep);
+  --color-accent: var(--accent);
+  --color-muscu: var(--muscu);
+  --color-course: #FF9F0A;
+  --color-ok: #30D158;
+  --color-bad: #FF453A;
+  --radius-card: 20px;
+  --radius-cover: 24px;
+  --radius-sheet: 28px;
+}
+
+:root {
+  /* palette sport / système */
+  --accent: #FF375F;
+  --muscu: #D9317F; /* défaut = féminin ; surchargé par look ci-dessous */
+  --course: #FF9F0A;
+  --ok: #30D158;
+  --bad: #FF453A;
+
+  /* rayons */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-xl: 26px;
+  --r-sheet: 28px;
+
+  /* espacements (grille de 4) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-8: 32px;
+
+  /* mouvement */
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-ios: cubic-bezier(.3, .7, .4, 1);
+
+  /* sombre (référence) */
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --surface2: #2c2c2e;
+  --surface3: #3a3a3c;
+  --text: #ffffff;
+  --muted: #98989f;
+  --faint: #636366;
+  --sep: rgba(84, 84, 88, 0.5);
+  --glass: rgba(24, 24, 26, 0.72);
+  --glass-strong: rgba(28, 28, 30, 0.86);
+  --scrim: rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.5);
+  --shadow-cover: 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f2f2f7;
+    --surface: #ffffff;
+    --surface2: #ececf1;
+    --surface3: #e0e0e6;
+    --text: #000000;
+    --muted: #6c6c72;
+    --faint: #aeaeb2;
+    --sep: rgba(60, 60, 67, 0.16);
+    --glass: rgba(246, 246, 250, 0.74);
+    --glass-strong: rgba(250, 250, 253, 0.9);
+    --scrim: rgba(0, 0, 0, 0.32);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.18);
+    --shadow-cover: 0 12px 26px rgba(40, 20, 80, 0.22);
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface2: #ececf1;
+  --surface3: #e0e0e6;
+  --text: #000000;
+  --muted: #6c6c72;
+  --faint: #aeaeb2;
+  --sep: rgba(60, 60, 67, 0.16);
+  --glass: rgba(246, 246, 250, 0.74);
+  --glass-strong: rgba(250, 250, 253, 0.9);
+  --scrim: rgba(0, 0, 0, 0.32);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.18);
+  --shadow-cover: 0 12px 26px rgba(40, 20, 80, 0.22);
+}
+
+@layer base {
+* { -webkit-tap-highlight-color: transparent; }
+html, body, #root { height: 100%; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-text-size-adjust: 100%;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; }
+input, textarea, select { font: inherit; color: inherit; }
+input, textarea { font-size: 16px; } /* évite le zoom auto d'iOS */
+input[type="date"], input[type="time"] { min-height: 44px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+}
+
+@layer components {
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+}
+.glass-strong {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: saturate(180%) blur(32px);
+  backdrop-filter: saturate(180%) blur(32px);
+}
+/* pastille translucide posée sur une pochette (toujours sombre, quel que soit le thème) */
+.glass-dark {
+  background: rgba(0, 0, 0, 0.32);
+  -webkit-backdrop-filter: saturate(160%) blur(16px);
+  backdrop-filter: saturate(160%) blur(16px);
+}
+.glass-light {
+  background: rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: saturate(160%) blur(16px);
+  backdrop-filter: saturate(160%) blur(16px);
+}
+}
+
+/* ---------- typographie ---------- */
+.t-large, .t-title1, .t-onb { text-wrap: balance; }
+.t-onb { font-size: 32px; line-height: 1.1; font-weight: 800; letter-spacing: -0.022em; }
+.t-large { font-size: 34px; line-height: 1.08; font-weight: 800; letter-spacing: -0.022em; }
+.t-title1 { font-size: 28px; line-height: 1.14; font-weight: 800; letter-spacing: -0.02em; }
+.t-title2 { font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -0.016em; }
+.t-title3 { font-size: 19px; line-height: 1.25; font-weight: 700; letter-spacing: -0.012em; }
+.t-body { font-size: 16px; line-height: 1.4; }
+.t-sub { font-size: 14px; line-height: 1.35; }
+.t-caption { font-size: 12.5px; line-height: 1.3; }
+.t-over { font-size: 12px; line-height: 1.2; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ---------- utilitaires ---------- */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.hide-scroll { scrollbar-width: none; }
+.hide-scroll::-webkit-scrollbar { display: none; }
+.num { font-variant-numeric: tabular-nums; }
+.cap-first::first-letter { text-transform: uppercase; }
+.recharts-wrapper * { outline: none; }
+.recharts-surface:focus { outline: none; }
+
+/* retour visuel au tap : léger rétrécissement */
+.tap { transition: transform .22s var(--ease-ios), opacity .22s, filter .22s; }
+.tap:active { transform: scale(.965); opacity: .86; transition-duration: .08s; }
+.tap-soft:active { transform: scale(.985); opacity: .9; }
+
+/* zone tactile élargie à 44 px sans changer l'aspect */
+.hit { position: relative; }
+.hit::after { content: ''; position: absolute; inset: -6px; }
+
+/* cartes */
+.card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
+
+/* squelettes de chargement */
+.skeleton {
+  background: linear-gradient(100deg, var(--surface) 30%, var(--surface2) 50%, var(--surface) 70%);
+  background-size: 250% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+@keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+
+/* grain très léger sur les pochettes (effet « papier / pochette d'album ») */
+.grain {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+  opacity: .5;
+  pointer-events: none;
+}
+
+/* le bouton d'action principal respire doucement quand rien d'autre ne bouge */
+@keyframes float-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.float-in { animation: float-in .45s var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+  .float-in { animation: none; }
+  .tap, .tap:active { transition: none; }
+}
+
+/* petits écrans (iPhone SE…) : on masque le superflu pour que l'écran tienne sans défilement */
+@media (max-height: 720px) { .hide-short { display: none !important; } }
+
+/* ==========================================================================
+   Style masculin : bleu électrique, angles plus francs, titres en capitales,
+   surfaces plus plates et plus contrastées. (Le style féminin est le défaut.)
+   ========================================================================== */
+:root[data-look="feminin"] {
+  --accent: #EF3F73;
+  --muscu: #D9317F;
+  --bg: #0E0E22;
+  --surface: #1A1A34;
+  --surface2: #26264A;
+  --surface3: #353560;
+  --muted: #9C9CC0;
+  --faint: #66668F;
+  --sep: rgba(125,125,200,0.34);
+  --glass: rgba(22,22,46,0.72);
+  --glass-strong: rgba(26,26,54,0.88);
+  --shadow-card: 0 0 0 1px rgba(160,160,255,0.06) inset;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-look="feminin"]:not([data-theme="dark"]) {
+    --bg: #F4EEE5;
+    --surface: #FFFFFF;
+    --surface2: #EDE6DB;
+    --surface3: #E0D7C9;
+    --muted: #7A6E62;
+    --faint: #BDB2A3;
+    --sep: rgba(110,80,40,0.16);
+    --glass: rgba(250,244,235,0.76);
+    --glass-strong: rgba(253,249,242,0.92);
+    --shadow-card: 0 1px 2px rgba(110,70,20,0.07);
+  }
+}
+:root[data-look="feminin"][data-theme="light"] {
+  --bg: #F4EEE5;
+  --surface: #FFFFFF;
+  --surface2: #EDE6DB;
+  --surface3: #E0D7C9;
+  --muted: #7A6E62;
+  --faint: #BDB2A3;
+  --sep: rgba(110,80,40,0.16);
+  --glass: rgba(250,244,235,0.76);
+  --glass-strong: rgba(253,249,242,0.92);
+  --shadow-card: 0 1px 2px rgba(110,70,20,0.07);
+}
+
+:root[data-look="masculin"] {
+  --accent: #E5671F;
+  --muscu: #C8402F;
+  --r-sheet: 20px;
+  --bg: #0D0506;
+  --surface: #1A0E10;
+  --surface2: #2A1A1D;
+  --surface3: #3B282C;
+  --muted: #A89494;
+  --faint: #76625F;
+  --sep: rgba(160,110,100,0.30);
+  --glass: rgba(28,12,14,0.74);
+  --glass-strong: rgba(32,16,18,0.88);
+  --shadow-card: 0 0 0 1px rgba(255,200,170,0.06) inset;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-look="masculin"]:not([data-theme="dark"]) {
+    --bg: #F4EEE5;
+    --surface: #FFFFFF;
+    --surface2: #EBE2D8;
+    --surface3: #E0D7C9;
+    --muted: #7A6E62;
+    --faint: #BDB2A3;
+    --sep: rgba(100,60,30,0.17);
+    --glass: rgba(250,244,235,0.76);
+    --glass-strong: rgba(253,249,242,0.92);
+    --shadow-card: 0 1px 2px rgba(110,70,20,0.07);
+  }
+}
+:root[data-look="masculin"][data-theme="light"] {
+  --bg: #F4EEE5;
+  --surface: #FFFFFF;
+  --surface2: #EBE2D8;
+  --surface3: #E0D7C9;
+  --muted: #7A6E62;
+  --faint: #BDB2A3;
+  --sep: rgba(100,60,30,0.17);
+  --glass: rgba(250,244,235,0.76);
+  --glass-strong: rgba(253,249,242,0.92);
+  --shadow-card: 0 1px 2px rgba(110,70,20,0.07);
+}
+[data-look="masculin"] .card { border-radius: 14px; }
+[data-look="masculin"] .btn { border-radius: 14px; }
+[data-look="masculin"] .rounded-\[28px\] { border-radius: 18px; }
+[data-look="masculin"] .rounded-b-\[28px\] { border-radius: 0 0 16px 16px; }
+[data-look="masculin"] .rounded-\[26px\] { border-radius: 17px; }
+[data-look="masculin"] .rounded-\[22px\] { border-radius: 15px; }
+[data-look="masculin"] .rounded-\[20px\] { border-radius: 14px; }
+[data-look="masculin"] .rounded-\[18px\] { border-radius: 13px; }
+[data-look="masculin"] .rounded-\[16px\], [data-look="masculin"] .rounded-2xl { border-radius: 12px; }
+[data-look="masculin"] .rounded-\[14px\], [data-look="masculin"] .rounded-xl { border-radius: 10px; }
+[data-look="masculin"] .t-large, [data-look="masculin"] .t-display { text-transform: uppercase; font-weight: 900; letter-spacing: -0.012em; }
+[data-look="masculin"] .t-onb { font-weight: 900; letter-spacing: -0.03em; }
+[data-look="masculin"] .t-large { font-size: 31px; }
+[data-look="masculin"] .t-display { font-size: 30px !important; line-height: 1.02 !important; }
+[data-look="masculin"] .t-title2 { text-transform: uppercase; font-size: 19px; font-weight: 800; letter-spacing: 0.012em; }
+[data-look="masculin"] .t-over { letter-spacing: 0.1em; }
+
+/* Filtre beige très clair en mode clair : réchauffe tous les fonds blancs */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"])::after { content: ''; position: fixed; inset: 0; z-index: 90; pointer-events: none; background: #FFEBD0; opacity: .5; mix-blend-mode: multiply; }
+}
+:root[data-theme="light"]::after { content: ''; position: fixed; inset: 0; z-index: 90; pointer-events: none; background: #FFEBD0; opacity: .5; mix-blend-mode: multiply; }

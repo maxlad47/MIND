@@ -1,0 +1,50 @@
+import { useEffect } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { currentUser, runDailyJobs, useDB } from './lib/store'
+import { useLook } from './ui/look'
+import { Toaster } from './ui/kit'
+import { PagePush, Splash } from './ui/motion'
+import Auth from './pages/Auth'
+import Onboarding from './pages/Onboarding'
+import { ClientShell, CoachShell } from './pages/Shell'
+import SessionPage from './pages/SessionPage'
+import ClientDetail from './pages/ClientDetail'
+import { scheduleLocalReminder } from './lib/push'
+import { useBoot } from './lib/remote'
+
+export default function App() {
+  const db = useDB()
+  const me = currentUser(db)
+  const loc = useLocation()
+  useLook() // re-rend l'app quand le style change
+  const boot = useBoot()
+
+  useEffect(() => {
+    const t = me?.theme
+    document.documentElement.dataset.theme = t === 'clair' ? 'light' : t === 'sombre' ? 'dark' : ''
+    if (!t || t === 'auto') delete document.documentElement.dataset.theme
+  }, [me?.theme])
+
+  useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
+  useEffect(() => { if (me) runDailyJobs() }, [me?.id])
+  useEffect(() => { if (me?.notifications) scheduleLocalReminder(me.id, me.reminderTime) }, [me?.id, me?.notifications, me?.reminderTime])
+
+  if (boot === 'booting') return (<><div className="min-h-[100dvh] bg-bg" /><Splash /></>)
+  if (!me) return (<><Routes><Route path="*" element={<Auth />} /></Routes><Toaster /><Splash /></>)
+
+  const home = me.role === 'coach' ? '/coach' : me.onboarded ? '/app/today' : '/onboarding'
+  return (
+    <>
+      <Routes>
+        <Route path="/onboarding" element={<PagePush><Onboarding /></PagePush>} />
+        <Route path="/app/*" element={me.role === 'client' ? (me.onboarded ? <ClientShell /> : <Navigate to="/onboarding" replace />) : <Navigate to="/coach" replace />} />
+        <Route path="/coach/client/:id" element={me.role === 'coach' ? <PagePush><ClientDetail /></PagePush> : <Navigate to="/app/today" replace />} />
+        <Route path="/coach/*" element={me.role === 'coach' ? <CoachShell /> : <Navigate to="/app/today" replace />} />
+        <Route path="/session/:id" element={<PagePush><SessionPage /></PagePush>} />
+        <Route path="*" element={<Navigate to={home} replace />} />
+      </Routes>
+      <Toaster />
+      <Splash />
+    </>
+  )
+}
