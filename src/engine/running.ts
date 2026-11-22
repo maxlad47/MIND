@@ -98,11 +98,33 @@ const TAPER: Record<RaceDistance, (n: number) => number> = {
 
 export interface PhasePlan { phase: Phase; n: number }
 
-/** Découpe N semaines en phases Base → Développement → Spécifique → Affûtage. */
-export function phasePlan(distance: RaceDistance, weeks: number): Phase[] {
+export type StartMode = 'direct' | 'progressif'
+
+/** Avis de MIND : reprise ou débutant → démarrage progressif ; coureur régulier → démarrage direct. */
+export function recommendedStartMode(q: Questionnaire['run']): StartMode {
+  return q.level === 'debutant' || (q.weeklyKm || 0) < 15 || (q.longestKm || 0) < 8 ? 'progressif' : 'direct'
+}
+export function startModeOf(q: Questionnaire['run']): StartMode {
+  return q.startMode ?? recommendedStartMode(q)
+}
+
+/**
+ * Démarrage progressif : nombre de semaines d'introduction (endurance d'abord, puis côtes / fartlek) et, parmi elles,
+ * nombre de semaines sans aucune séance de qualité. Toujours 0 en démarrage direct.
+ */
+export function leadIn(q: Questionnaire['run'], weeks: number): { weeks: number; noQuality: number } {
+  if (startModeOf(q) !== 'progressif') return { weeks: 0, noQuality: 0 }
+  const taper = Math.min(TAPER[q.distance](weeks), Math.max(1, weeks - 1))
+  const wanted = q.level === 'debutant' || (q.weeklyKm || 0) < 15 ? 6 : 4
+  const n = Math.max(0, Math.min(wanted, Math.floor((weeks - taper) / 3)))
+  return { weeks: n, noQuality: n >= 6 ? 3 : n >= 3 ? 2 : n >= 1 ? 1 : 0 }
+}
+
+/** Découpe N semaines en phases Base → Développement → Spécifique → Affûtage (`leadInWeeks` : Base minimale du démarrage progressif). */
+export function phasePlan(distance: RaceDistance, weeks: number, leadInWeeks = 0): Phase[] {
   const p = PREP[distance]
   const taper = Math.min(TAPER[distance](weeks), Math.max(1, weeks - 1))
-  const base = weeks > p.idealMax ? weeks - p.idealMax : 0
+  const base = Math.min(Math.max(weeks > p.idealMax ? weeks - p.idealMax : 0, leadInWeeks), Math.max(0, weeks - taper - 2))
   const core = weeks - base - taper
   const dev = Math.round(core * 0.5)
   const spec = core - dev
@@ -215,18 +237,76 @@ export function longRunCap(distance: RaceDistance, level: Level, efPace: number)
   return Math.min(byDist, byTime)
 }
 
+/** Km minimum par sortie pour qu'une séance ait du sens : sous ce seuil, on réduit le nombre de sorties de la semaine. */
+export const MIN_KM_PER_SESSION = 5.5
+
+/** Nombre de sorties d'une semaine : `maxSessions` est un plafond, atteint seulement quand le volume le permet. */
+export function sessionsForVolume(maxSessions: number, km: number): number {
+  return clamp(Math.floor(km / MIN_KM_PER_SESSION), 2, Math.max(2, maxSessions))
+}
+
+export interface VolumeOutlook {
+  /** volume de départ (km/sem) */
+  from: number
+  /** pic visé (km/sem) */
+  target: number
+  /** pic réellement atteignable en respectant la hausse maximale par semaine */
+  reachable: number
+  /** nombre de semaines de charge (hors semaines allégées et affûtage) */
+  loadedWeeks: number
+  /** hausse par semaine de charge (1,05 = +5 %) */
+  rate: number
+  /** true si le pic visé est utilisable tel quel */
+  ok: boolean
+  /** true si le client a fixé lui-même son pic */
+  explicit: boolean
+}
+
+/** Pic visé : celui demandé par le client, sinon la valeur par défaut selon distance, niveau et nombre de sorties. */
+export function targetPeakKm(q: Questionnaire['run'], runSessions: number, priorityFactor = 1): number {
+  return q.peakKm && q.peakKm > 0 ? q.peakKm : peakKm(q.distance, q.level, runSessions, priorityFactor)
+}
+
+/**
+ * Montée en volume : du volume actuel au pic visé, répartie sur toutes les semaines de charge (hausse régulière,
+ * jamais plus de +10 % par semaine). Le pic tombe sur la dernière semaine de charge, juste avant l'affûtage.
+ */
+export function volumeOutlook(
+  q: Questionnaire['run'], phases: Phase[], runSessions: number, priorityFactor = 1,
+): VolumeOutlook {
+  const explicit = !!(q.peakKm && q.peakKm > 0)
+  const peak = targetPeakKm(q, runSessions, priorityFactor)
+  const start = Math.max(q.weeklyKm || 0, Math.min(runSessions, 3) * 4, 8)
+  const from = explicit ? start : Math.min(start, peak)
+  let loaded = 0
+  let count = 0
+  phases.forEach((ph, i) => {
+    if (ph === 'Affûtage') return
+    const light = (count + 1) % 4 === 0 && i > 0
+    count += 1
+    if (!light) loaded += 1
+  })
+  // sans pic fixé par le client, MIND recommande le pic par défaut, plafonné à ce que la montée progressive permet
+  const reachCap = from * Math.pow(MAX_RUN_VOLUME_JUMP, Math.max(0, loaded - 1))
+  const target = explicit ? Math.max(peak, start) : Math.max(from, Math.min(peak, reachCap))
+  const wanted = loaded > 1 && target > from ? Math.pow(target / from, 1 / (loaded - 1)) : 1
+  const rate = clamp(wanted, 1, MAX_RUN_VOLUME_JUMP)
+  const reachable = Math.min(target, from * Math.pow(rate, Math.max(0, loaded - 1)))
+  return { from, target, reachable, loadedWeeks: loaded, rate, ok: reachable >= target - 0.5, explicit }
+}
+
 export function weeklyVolumes(
   q: Questionnaire['run'], phases: Phase[], runSessions: number, paces: Paces, priorityFactor = 1,
 ): WeekVolume[] {
   const n = phases.length
-  const peak = peakKm(q.distance, q.level, runSessions, priorityFactor)
-  const start = Math.max(q.weeklyKm || 0, runSessions * 4, 8)
+  const outlook = volumeOutlook(q, phases, runSessions, priorityFactor)
   const cap = longRunCap(q.distance, q.level, paces.ef)
   const taperF = TAPER_FACTORS[q.distance]
   const out: WeekVolume[] = []
-  let lastLoaded = Math.min(start, peak)
-  let lastLong = Math.min(Math.max(q.longestKm || 0, start * 0.3), cap)
-  let loadedCount = 0
+  let lastLoaded = outlook.from
+  let lastLong = Math.min(Math.max(q.longestKm || 0, outlook.from * 0.3), cap)
+  let loadedCount = 0 // semaines de charge déjà posées
+  let weekCount = 0 // semaines hors affûtage déjà posées
   let peakReached = lastLoaded
   const taperStart = phases.findIndex((p) => p === 'Affûtage')
   const share = runSessions === 2 ? 0.55 : runSessions === 3 ? 0.42 : 0.34
@@ -241,15 +321,18 @@ export function weeklyVolumes(
       continue
     }
     // une semaine allégée toutes les 4 semaines (3 semaines de charge + 1 allégée)
-    const light = (loadedCount + 1) % 4 === 0 && i > 0
+    const light = (weekCount + 1) % 4 === 0 && i > 0
+    weekCount += 1
     if (light) {
       const km = lastLoaded * 0.75
       out.push({ week: i + 1, phase, light: true, km, longKm: Math.min(lastLong * 0.75, km * (share + 0.08)) })
-      loadedCount += 1
       continue
     }
-    const km = i === 0 ? lastLoaded : Math.min(lastLoaded * MAX_RUN_VOLUME_JUMP, peak)
-    const maxRatio = Math.max(share + 0.08, q.distance === 'marathon' ? 0.5 : q.distance === 'semi' ? 0.46 : 0.42)
+    const km = Math.min(outlook.target, outlook.from * Math.pow(outlook.rate, loadedCount))
+    // part de la sortie longue dans la semaine : modeste au début, elle grandit avec la préparation (4 sorties et +)
+    const prog = outlook.loadedWeeks > 1 ? Math.min(1, loadedCount / (outlook.loadedWeeks - 1)) : 1
+    const [lo, hi] = q.distance === 'marathon' ? [0.4, 0.5] : q.distance === 'semi' ? [0.38, 0.46] : [0.36, 0.42]
+    const maxRatio = runSessions >= 4 ? lo + (hi - lo) * prog : Math.max(share + 0.08, hi)
     const idealLong = Math.min(cap, lastLong + 2)
     const longKm = Math.min(idealLong, km * maxRatio, cap)
     lastLoaded = km
@@ -399,20 +482,25 @@ export interface RunWeekCtx {
   sessions: number
   maxMinutes: number
   withTest: boolean
+  /** semaine où la séance test remplace la première séance de qualité */
   isFirstWeek: boolean
+  /** nombre maximum de séances de qualité cette semaine (0 = que de l'endurance) ; 2 par défaut */
+  maxQuality?: number
 }
 
 export function buildRunWeek(c: RunWeekCtx): Session[] {
   const { sessions: n, paces, phase, volume } = c
   const km = volume.km
   const slots: string[] = []
-  const wantQ2 = n >= 4 && !(c.level === 'debutant' && n < 5) && phase !== 'Affûtage' && !volume.light
+  // une seconde séance de qualité n'arrive qu'avec un volume qui la supporte (≥ 40 km/sem)
+  const wantQ2 = n >= 4 && !(c.level === 'debutant' && n < 5) && phase !== 'Affûtage' && !volume.light && km >= 40 && (c.maxQuality ?? 2) >= 2
   if (n <= 2) slots.push('qual1', 'longue')
   else if (n === 3) slots.push('ef', 'qual1', 'longue')
   else if (n === 4) slots.push('ef', 'qual1', wantQ2 ? 'qual2' : 'ef', 'longue')
   else if (n === 5) slots.push('recup', 'qual1', 'ef', wantQ2 ? 'qual2' : 'ef', 'longue')
   else slots.push('recup', 'qual1', 'ef', wantQ2 ? 'qual2' : 'ef', 'ef', 'longue')
 
+  if ((c.maxQuality ?? 2) < 1) for (let i = 0; i < slots.length; i++) if (slots[i] === 'qual1') slots[i] = 'ef'
   const cap = (min: number) => (min * 60) / paces.ef
   const longCapKm = phase === 'Affûtage' ? Infinity : cap(c.distance === '10k' ? Math.max(c.maxMinutes, 90) : 180)
   const weights: number[] = slots.map((x) => (x === 'longue' ? 0 : x === 'recup' ? 0.6 : x.startsWith('qual') ? 1.15 : 1))

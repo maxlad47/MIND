@@ -2,8 +2,9 @@
 
 import type { Phase, PlanWarning, Program, ProgramType, Questionnaire, Session, Week } from './types'
 import { LOWER_MUSCLES, MUSCLE_LABEL } from './types'
+import { MAX_RUN_VOLUME_JUMP } from './guardrails'
 import {
-  assessTarget, buildRunWeek, DIST_KM, DIST_LABEL, pacesFromQuestionnaire, phasePlan, prepWarnings, weeklyVolumes,
+  assessTarget, buildRunWeek, DIST_KM, DIST_LABEL, leadIn as leadInOf, pacesFromQuestionnaire, phasePlan, prepWarnings, startModeOf, sessionsForVolume, volumeOutlook, weeklyVolumes,
 } from './running'
 import { buildStrengthWeek, cyclePosition, isUpperOnly, makeStrengthCtx, SPLIT_LABEL } from './strength'
 import { placeWeek, runClass } from './combine'
@@ -23,7 +24,7 @@ function legFactorFor(q: Questionnaire): { legFactor: number; minLegRir: number 
 }
 
 /** Texte court du coach pour une semaine (remplacé par l'IA quand elle est disponible). */
-export function defaultWeekNote(phase: Phase, light: boolean, n: number, q: Questionnaire, isRaceWeek: boolean): string {
+export function defaultWeekNote(phase: Phase, light: boolean, n: number, q: Questionnaire, isRaceWeek: boolean, lead?: 'endurance' | 'intro'): string {
   if (isRaceWeek) return 'Semaine de course : fais confiance à ta préparation, dors bien et mange simplement.'
   if (phase === 'Affûtage') return 'On réduit le volume pour arriver frais. Garde un peu d\'intensité, mais court.'
   if (phase === 'Musculation') {
@@ -33,6 +34,8 @@ export function defaultWeekNote(phase: Phase, light: boolean, n: number, q: Ques
     if (pos >= 6) return 'Fin de cycle : on pousse plus près de l\'échec, avec des charges qui doivent monter.'
     return 'Progression par paliers : quand toutes les séries atteignent le haut de la fourchette, on monte la charge.'
   }
+  if (lead === 'endurance' && !light) return 'On reprend en douceur : que de l\'endurance facile, à allure confortable. Le fractionné viendra plus tard, une fois ton corps réhabitué.'
+  if (lead === 'intro' && !light) return 'On introduit un peu de rythme avec une seule séance légère (côtes ou fartlek). La VMA et le seuil arriveront ensuite.'
   if (light) return 'Semaine allégée : −25 % de volume pour absorber la charge. Profite-en pour bien récupérer.'
   if (phase === 'Base') return 'On construit la base : beaucoup de facile, des éducatifs et des côtes pour le foncier.'
   if (phase === 'Développement') return 'On développe VMA et seuil. La séance de qualité doit être exigeante mais tenue.'
@@ -68,9 +71,11 @@ export function generateProgram(q: Questionnaire, opts: GenerateOptions = {}): P
   }
   const paces = hasRun ? pacesFromQuestionnaire(q.run) : undefined
 
+  const lead = hasRun ? leadInOf(q.run, N) : { weeks: 0, noQuality: 0 }
+  const progressive = hasRun && startModeOf(q.run) === 'progressif'
   let phases: Phase[]
   if (hasRun) {
-    phases = phasePlan(q.run.distance, N)
+    phases = phasePlan(q.run.distance, N, lead.weeks)
     if (paces) {
       warnings.push(...prepWarnings(q.run, N, paces))
       // chrono réaliste : les allures spécifiques suivent l'objectif
@@ -139,7 +144,9 @@ export function generateProgram(q: Questionnaire, opts: GenerateOptions = {}): P
       const vol = volumes[w - 1]
       const runs = buildRunWeek({
         distance: q.run.distance, level: q.run.level, paces, phase, weekInPhase, volume: vol,
-        sessions: runSessions, maxMinutes: q.maxMinutes, withTest: paces.source === 'niveau', isFirstWeek: w === 1,
+        sessions: sessionsForVolume(runSessions, vol.km), maxMinutes: q.maxMinutes, withTest: paces.source === 'niveau', isFirstWeek: w === lead.noQuality + 1,
+        // démarrage progressif : d'abord que de l'endurance, puis une seule séance de qualité, la seconde seulement ensuite
+        maxQuality: !progressive ? 2 : w <= lead.noQuality ? 0 : w <= lead.weeks + 3 ? 1 : 2,
       })
       list.push(...(isRaceWeek ? runs.filter((s) => s.kind !== 'longue') : runs))
     }
@@ -197,8 +204,28 @@ export function generateProgram(q: Questionnaire, opts: GenerateOptions = {}): P
 
     weeks.push({
       n: w, startDate: weekStart, phase, light, sessions: placed.sessions,
-      note: defaultWeekNote(phase, light, w, q, isRaceWeek),
+      note: defaultWeekNote(phase, light, w, q, isRaceWeek, progressive ? (w <= lead.noQuality ? 'endurance' : w <= lead.weeks ? 'intro' : undefined) : undefined),
     })
+  }
+
+  if (hasRun && paces && q.run.peakKm && q.run.peakKm > 0) {
+    const o = volumeOutlook(q.run, phases, runSessions, priorityFactor)
+    const fmt = (x: number) => String(Math.round(x)).replace('.', ',')
+    const real = Math.max(0, ...weeks.filter((w) => w.phase !== 'Affûtage').map((w) => w.sessions.reduce((a, s) => a + (s.run?.totalKm ?? 0), 0)))
+    if (!o.ok) {
+      const need = Math.ceil(Math.log(o.target / o.from) / Math.log(MAX_RUN_VOLUME_JUMP)) + 1
+      warnings.push({
+        code: 'pic_non_atteint',
+        message: `Pic visé : ${fmt(o.target)} km/semaine, mais tu en fais ${fmt(o.from)} aujourd'hui. Monter de plus de 10 % par semaine expose à la blessure : en ${N} semaines, ton pic sera d'environ ${fmt(o.reachable)} km.`,
+        suggestion: `Il faudrait environ ${need + Math.floor(need / 3) + 3} semaines de préparation pour atteindre ${fmt(o.target)} km, ou viser ${fmt(o.reachable)} km.`,
+      })
+    } else if (real < o.target * 0.9) {
+      warnings.push({
+        code: 'pic_non_atteint',
+        message: `Pic visé : ${fmt(o.target)} km/semaine, mais avec ${runSessions} sorties de ${q.maxMinutes} minutes maximum, le plan plafonne autour de ${fmt(real)} km.`,
+        suggestion: 'Ajouter une sortie par semaine ou allonger la durée maximale par séance permettrait de l\'atteindre.',
+      })
+    }
   }
 
   const goal = q.strength.goal

@@ -7,6 +7,7 @@ import { weeklyMuscleSets } from './strength'
 import { computePaces, predictRaceSeconds, riegel, vmaFromRecent } from './running'
 import { P_10K_COURT, P_DEBUTANT, P_FORCE_EPAULE, P_MARATHON, P_MIXTE } from './fixtures'
 import { diffDays, weekday } from './utils'
+import type { Questionnaire } from './types'
 
 const gen = (q: Parameters<typeof generateProgram>[0]) => generateProgram(q, { now: '2026-01-05', clientId: 'c1' })
 
@@ -178,9 +179,11 @@ describe('profil : 10 km dans 5 semaines (cas trop court)', () => {
     expect(w).toBeDefined()
     expect(w!.suggestion).toMatch(/Finir/)
   })
-  it('séance test en semaine 1 (aucune donnée)', () => {
+  it('séance test dès la première semaine avec du travail de qualité (aucune donnée)', () => {
     expect(p.paces!.source).toBe('niveau')
-    expect(p.weeks[0].sessions.some((s) => s.kind === 'test')).toBe(true)
+    const first = p.weeks.findIndex((w) => w.sessions.some((s) => s.kind === 'test'))
+    expect(first).toBeGreaterThanOrEqual(0)
+    expect(first).toBeLessThanOrEqual(1)
   })
   it('1 semaine d\'affûtage et course en dernier', () => {
     expect(p.weeks[4].phase).toBe('Affûtage')
@@ -413,5 +416,101 @@ describe('jours choisis par sport et sortie longue', () => {
       if (s.sport === 'muscu') expect([1, 3, 5]).toContain(weekday(s.date))
       else if (s.kind !== 'course') expect([0, 2, 4]).toContain(weekday(s.date))
     })
+  })
+})
+
+describe('retour client : montée progressive vers le pic, séances max, EF jamais collée à la longue', () => {
+  // « Olivier » : 20 km/sem aujourd'hui, marathon dans 18 semaines, pic visé 60 km, 4 séances max
+  const Q_OLIVIER: Questionnaire = {
+    ...P_MARATHON, runSessions: 4, maxMinutes: 90, availableDays: [0, 1, 2, 3, 4, 5, 6],
+    dayPrefs: { run: [0, 1, 2, 3, 4, 5, 6], longRun: 6 },
+    run: { distance: 'marathon', raceDate: '2026-05-10', objective: 'finir', level: 'intermediaire', weeklyKm: 20, longestKm: 10, peakKm: 60, vma: 15 },
+  }
+  const kmOf = (w: { sessions: { run?: { totalKm: number } }[] }) => w.sessions.reduce((a, s) => a + (s.run?.totalKm ?? 0), 0)
+  const p = gen(Q_OLIVIER)
+
+  it('démarre au volume actuel et monte de façon régulière (≤ +10 % + marge d\'arrondi) jusqu\'au pic, sans paliers brusques', () => {
+    expect(p.weeks).toHaveLength(18)
+    const loaded = p.weeks.filter((w) => !w.light && w.phase !== 'Affûtage')
+    expect(kmOf(loaded[0])).toBeLessThanOrEqual(23)
+    for (let i = 1; i < loaded.length; i++) expect(kmOf(loaded[i])).toBeLessThanOrEqual(kmOf(loaded[i - 1]) * 1.1 + 2.5)
+    expect(kmOf(loaded[loaded.length - 1])).toBeGreaterThan(kmOf(loaded[0]) * 1.8)
+  })
+  it('le pic tombe juste avant l\'affûtage, pas au milieu de la préparation', () => {
+    const loaded = p.weeks.filter((w) => !w.light && w.phase !== 'Affûtage')
+    const best = Math.max(...loaded.map(kmOf))
+    expect(kmOf(loaded[loaded.length - 1])).toBeGreaterThanOrEqual(best - 0.5)
+  })
+  it('le nombre de séances est un maximum : moins de séances quand le volume est bas, jamais plus que le maximum', () => {
+    const n = p.weeks.map((w) => w.sessions.filter((s) => s.sport === 'course' && s.kind !== 'course').length)
+    expect(Math.max(...n)).toBeLessThanOrEqual(4)
+    expect(n[0]).toBeLessThan(4)
+    expect(n[10]).toBe(4)
+  })
+  it('jamais d\'EF la veille ou le lendemain de la sortie longue quand les jours le permettent', () => {
+    for (const w of p.weeks) {
+      const long = w.sessions.find((s) => s.kind === 'longue')
+      if (!long) continue
+      for (const s of w.sessions.filter((x) => x.kind === 'ef')) expect(Math.abs(weekday(s.date) - weekday(long.date))).toBeGreaterThan(1)
+    }
+  })
+  it('sans assez de jours, l\'EF collée à la longue est signalée au lieu d\'être cachée', () => {
+    const tight = gen({ ...Q_OLIVIER, availableDays: [1, 3, 5, 6], dayPrefs: { run: [1, 3, 5, 6], longRun: 6 } })
+    expect(tight.warnings.some((w) => w.code === 'conflit_placement' && /Endurance fondamentale et sortie longue/.test(w.message))).toBe(true)
+  })
+  it('pic irréaliste pour le délai : alerte avec le pic réellement atteignable', () => {
+    const short = gen({ ...Q_OLIVIER, run: { ...Q_OLIVIER.run, weeklyKm: 15, peakKm: 90, raceDate: '2026-03-29' } })
+    const w = short.warnings.find((x) => x.code === 'pic_non_atteint')
+    expect(w).toBeTruthy()
+    const best = Math.max(...short.weeks.filter((x) => x.phase !== 'Affûtage').map(kmOf))
+    expect(best).toBeLessThan(90)
+  })
+  it('pic réaliste : aucune alerte de pic', () => {
+    const ok = gen({ ...Q_OLIVIER, run: { ...Q_OLIVIER.run, weeklyKm: 40, peakKm: 55 } })
+    expect(ok.warnings.some((x) => x.code === 'pic_non_atteint')).toBe(false)
+  })
+  it('aucun garde-fou violé', () => {
+    expect(checkProgram(p, [])).toEqual([])
+  })
+})
+
+describe('démarrage : progressif (reprise) ou direct', () => {
+  const base: Questionnaire = {
+    ...P_MARATHON, runSessions: 4, maxMinutes: 90, availableDays: [0, 1, 2, 3, 4, 5, 6],
+    run: { distance: 'marathon', raceDate: '2026-05-10', objective: 'finir', level: 'intermediaire', weeklyKm: 25, longestKm: 12, vma: 15 },
+  }
+  const quality = (w: { sessions: { kind: string }[] }) => w.sessions.filter((s) => ['vma', 'seuil', 'specifique', 'cotes', 'fartlek', 'test'].includes(s.kind))
+  const prog = gen({ ...base, run: { ...base.run, startMode: 'progressif' } })
+  const direct = gen({ ...base, run: { ...base.run, startMode: 'direct' } })
+
+  it('progressif : les premières semaines sont de l\'endurance pure, puis une seule séance de qualité légère', () => {
+    expect(quality(prog.weeks[0])).toHaveLength(0)
+    expect(quality(prog.weeks[1])).toHaveLength(0)
+    const intro = prog.weeks.slice(2, 4).flatMap((w) => quality(w).map((s) => s.kind))
+    expect(intro.length).toBeGreaterThan(0)
+    for (const k of intro) expect(['cotes', 'fartlek']).toContain(k)
+  })
+  it('progressif : jamais deux séances de qualité dans la même semaine avant la fin de l\'introduction', () => {
+    for (const w of prog.weeks.slice(0, 7)) expect(quality(w).length).toBeLessThanOrEqual(1)
+  })
+  it('progressif : VMA et seuil n\'arrivent qu\'après l\'introduction', () => {
+    const firstHard = prog.weeks.findIndex((w) => quality(w).some((s) => s.kind === 'vma' || s.kind === 'seuil'))
+    expect(firstHard).toBeGreaterThanOrEqual(4)
+  })
+  it('direct : du travail de qualité dès la semaine 1', () => {
+    expect(quality(direct.weeks[0]).length).toBeGreaterThan(0)
+  })
+  it('sans choix, MIND conseille : progressif pour un débutant / une reprise, direct pour un coureur régulier', async () => {
+    const { recommendedStartMode } = await import('./running')
+    expect(recommendedStartMode({ ...base.run, level: 'debutant', weeklyKm: 10, longestKm: 5 })).toBe('progressif')
+    expect(recommendedStartMode({ ...base.run, weeklyKm: 35, longestKm: 16 })).toBe('direct')
+  })
+  it('sans pic saisi, MIND recommande un pic atteignable : aucune alerte de pic', () => {
+    const p = gen({ ...base, run: { ...base.run, weeklyKm: 15, peakKm: undefined } })
+    expect(p.warnings.some((w) => w.code === 'pic_non_atteint')).toBe(false)
+  })
+  it('aucun garde-fou violé', () => {
+    expect(checkProgram(prog, [])).toEqual([])
+    expect(checkProgram(direct, [])).toEqual([])
   })
 })

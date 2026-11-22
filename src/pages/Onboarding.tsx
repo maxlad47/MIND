@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { DIST_KM, DIST_LABEL, PREP, assessTarget, pacesFromQuestionnaire, predictRaceSeconds, prepWarnings, referencesOf } from '@/engine/running'
+import { DIST_KM, DIST_LABEL, PREP, assessTarget, pacesFromQuestionnaire, leadIn, phasePlan, predictRaceSeconds, prepWarnings, recommendedStartMode, referencesOf, startModeOf, volumeOutlook } from '@/engine/running'
 import { SPLIT_DESC, SPLIT_LABEL, isUpperOnly, recommendedSplit, splitOptions } from '@/engine/strength'
 import { ZONES, type Goal, type Level, type Muscle, type Priority, type ProgramType, type Questionnaire, type RaceDistance, type RecentDistance, type SplitKey, type Zone } from '@/engine/types'
 import { DAY_NAMES, DAY_SHORT, diffDays, fmtPace, fmtTime, mondayOf, todayISO, addDays } from '@/engine/utils'
@@ -181,7 +181,7 @@ export default function Onboarding() {
           {[1, 2, 3, 4, 5, 6].map((n) => <button key={n} onClick={() => set({ muscuSessions: n })} className="tap h-24 rounded-[22px] text-[36px] font-extrabold num"
             style={{ background: m.muscuSessions === n ? 'color-mix(in srgb, var(--muscu) 18%, var(--surface))' : 'var(--surface)', boxShadow: `inset 0 0 0 2px ${m.muscuSessions === n ? 'var(--muscu)' : 'transparent'}`, color: m.muscuSessions === n ? 'var(--muscu)' : undefined }}>{n}</button>)}
         </div>) },
-    { id: 'rsess', title: 'Combien de sorties de course par semaine ?', when: () => hasR,
+    { id: 'rsess', title: 'Combien de séances maximum par semaine sur ta préparation ?', sub: 'C\'est un plafond : MIND monte progressivement, tu n\'atteins ce nombre que quand ton volume le permet.', when: () => hasR,
       render: () => (
         <div className="grid grid-cols-3 gap-3">
           {[2, 3, 4, 5, 6].map((n) => <button key={n} onClick={() => set({ runSessions: n })} className="tap h-24 rounded-[22px] text-[36px] font-extrabold num"
@@ -202,6 +202,7 @@ export default function Onboarding() {
           <DayPicker days={runDays} color="#FF9F0A" onChange={(d) => setDays('run', d)} />
           <p className="text-[14px] text-muted px-1">{m.runSessions} sortie{m.runSessions > 1 ? 's' : ''} par semaine sur {runDays.length} jour{runDays.length > 1 ? 's' : ''}.
             {m.runSessions > runDays.length ? ' Choisis-en davantage pour éviter deux sorties le même jour.' : ''}
+            {m.runSessions >= 3 && runDays.length < m.runSessions + 2 ? ' Garde un jour d\'écart entre une endurance et ta sortie longue : avec peu de jours, elles risquent de se suivre.' : ''}
             {hasM && hasR && (m.muscuSessions + m.runSessions) > allDays.length ? ' Certains jours auront deux séances (course le matin, muscu le soir).' : ''}</p>
         </div>) },
     { id: 'longday', title: 'Quel jour pour ta sortie longue ?', sub: 'La plus longue sortie de la semaine, toujours placée ce jour-là. Les autres séances s\'organisent autour.', when: () => hasR && m.runSessions >= 2,
@@ -346,6 +347,49 @@ export default function Onboarding() {
           <Field label="Kilomètres par semaine"><NumberInput value={m.run.weeklyKm} onChange={(v) => setR({ weeklyKm: v ?? 0 })} max={200} suffix="km" /></Field>
           <Field label="Sortie la plus longue"><NumberInput value={m.run.longestKm} onChange={(v) => setR({ longestKm: v ?? 0 })} max={60} step={0.5} suffix="km" /></Field>
         </div>) },
+    { id: 'startmode', title: 'Comment veux-tu démarrer ?', sub: 'Si tu reprends la course ou que tu débutes, mieux vaut y aller par étapes.', when: () => hasR,
+      render: () => {
+        const rec = recommendedStartMode(m.run)
+        const cur = startModeOf(m.run)
+        const lead = leadIn({ ...m.run, startMode: 'progressif' }, Math.max(1, raceWeeks))
+        return (
+          <Big>
+            <Option accent="#FF9F0A" active={cur === 'progressif'} title="Progressivement" sub={`Beaucoup d'endurance au début, puis on intègre peu à peu les côtes, le fractionné, la VMA et le seuil${lead.weeks ? ` (${lead.weeks} semaines d'introduction)` : ''}.${rec === 'progressif' ? ' · conseillé pour toi' : ''}`} onClick={() => setR({ startMode: 'progressif' })} />
+            <Option accent="#FF9F0A" active={cur === 'direct'} title="Tout de suite" sub={`Je cours régulièrement : on intègre le travail de qualité dès les premières semaines.${rec === 'direct' ? ' · conseillé pour toi' : ''}`} onClick={() => setR({ startMode: 'direct' })} />
+          </Big>)
+      } },
+    { id: 'peak', title: 'Ton volume de course au pic', sub: 'La semaine la plus chargée, juste avant l\'affûtage. MIND calcule ce qui est raisonnable pour toi : tu peux le modifier si besoin.', when: () => hasR,
+      render: () => {
+        const weeks = Math.max(1, raceWeeks)
+        const phases = phasePlan(m.run.distance, weeks, leadIn(m.run, weeks).weeks)
+        const pf = m.programType === 'mixte' && m.priority === 'muscu' ? 0.75 : 1
+        const rec = volumeOutlook({ ...m.run, peakKm: undefined }, phases, m.runSessions, pf)
+        const custom = m.run.peakKm !== undefined
+        const o = custom ? volumeOutlook(m.run, phases, m.runSessions, pf) : rec
+        const f = (x: number) => String(Math.round(x))
+        const pct = ((rec.rate - 1) * 100).toFixed(0)
+        return (
+          <div className="flex flex-col gap-4 pt-2">
+            <div className="rounded-2xl p-5" style={{ background: 'color-mix(in srgb, #FF9F0A 14%, var(--surface))' }}>
+              <div className="text-[13px] text-muted font-semibold uppercase tracking-wide">L'avis de MIND</div>
+              <div className="text-[34px] font-extrabold num leading-tight mt-1">{f(rec.target)} km <span className="text-[17px] text-muted font-semibold">par semaine au pic</span></div>
+              <p className="text-[14.5px] mt-2 leading-snug">
+                {rec.target > rec.from + 0.5
+                  ? `Tu cours ${f(rec.from)} km par semaine aujourd'hui. En ${weeks} semaines, tu peux monter jusqu'à ${f(rec.target)} km (environ +${pct} % par semaine de charge, avec une semaine allégée toutes les 4 semaines) sans t'exposer à la blessure.`
+                  : `Tu cours déjà ${f(rec.from)} km par semaine : on garde ce volume et on travaille la qualité, avec une semaine allégée toutes les 4 semaines.`}
+              </p>
+              {!custom && <div className="mt-3"><Button small variant="secondary" onClick={() => setR({ peakKm: Math.round(rec.target) })}>Personnaliser</Button></div>}
+            </div>
+            {custom && (
+              <div className="bg-surface rounded-2xl p-4 flex flex-col gap-3 items-center">
+                <Field label="Ton pic (km par semaine)"><NumberInput value={m.run.peakKm} onChange={(v) => setR({ peakKm: v })} max={200} suffix="km" /></Field>
+                {o.ok
+                  ? <div className="text-[14px] text-muted text-center">{o.target > o.from + 0.5 ? `De ${f(o.from)} à ${f(o.target)} km : environ +${((o.rate - 1) * 100).toFixed(0)} % par semaine de charge.` : 'Tu gardes ton volume actuel.'}</div>
+                  : <div className="text-[14px] text-center" style={{ color: '#FF9F0A' }}>Trop rapide pour {weeks} semaines : monter de plus de 10 % par semaine expose à la blessure. Ton pic serait d'environ {f(o.reachable)} km.</div>}
+                <Button small variant="secondary" onClick={() => setR({ peakKm: undefined })}>Revenir à l'avis de MIND</Button>
+              </div>)}
+          </div>)
+      } },
   ]
 
   const active = steps.filter((s) => !s.when || s.when(q))
@@ -370,7 +414,7 @@ export default function Onboarding() {
   const progress = (idx + 1) / (active.length + 1)
   const hasProgram = !!programOf(db, me.id)
   const MUSCU_STEPS = ['mdays', 'excl', 'msess', 'goal', 'mlevel', 'lifts', 'split']
-  const RUN_STEPS = ['rdays', 'longday', 'rsess', 'dist', 'date', 'rlevel', 'refs', 'obj', 'vol']
+  const RUN_STEPS = ['rdays', 'longday', 'rsess', 'dist', 'date', 'rlevel', 'refs', 'obj', 'vol', 'startmode', 'peak']
   const glowSports: ('muscu' | 'course')[] = MUSCU_STEPS.includes(cur.id) ? ['muscu'] : RUN_STEPS.includes(cur.id) ? ['course'] : ['muscu', 'course']
 
   return (

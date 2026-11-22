@@ -43,7 +43,7 @@ export function SessionTile({ s, onClick, width = 168 }: { s: Session; onClick: 
 }
 
 export function WarningBanner({ program, onFinish, onChangeGoal }: { program: Program; onFinish?: () => void; onChangeGoal?: () => void }) {
-  const list = program.warnings.filter((w) => ['prepa_trop_courte', 'chrono_irrealiste', 'muscu_prioritaire_course', 'conflit_placement'].includes(w.code))
+  const list = program.warnings.filter((w) => ['prepa_trop_courte', 'chrono_irrealiste', 'muscu_prioritaire_course', 'conflit_placement', 'pic_non_atteint'].includes(w.code))
   if (!list.length) return null
   return (
     <div className="flex flex-col gap-3 mb-4">

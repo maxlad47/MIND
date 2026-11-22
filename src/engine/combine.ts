@@ -71,6 +71,15 @@ export function evaluate(items: Item[], carry: Carry = {}): Evaluation {
       }
       if (runClass(s) === 'quality' && has(d + 1, (x) => runClass(x) === 'long')) { cost += 400 }
       if (runClass(s) === 'long' && has(d + 1, (x) => runClass(x) === 'quality')) { cost += 400 }
+      // pas d'endurance fondamentale collée à la sortie longue (la veille ou le lendemain) : on garde de la fraîcheur pour la longue
+      if (runClass(s) === 'long') {
+        for (const nd of [d - 1, d + 1]) {
+          if (has(nd, (x) => x.kind === 'ef')) {
+            cost += 350
+            msgs.push(`Endurance fondamentale et sortie longue sur deux jours consécutifs (${DAY_NAMES[Math.min(d, nd)]} et ${DAY_NAMES[Math.max(d, nd)]}).`)
+          } else if (has(nd, (x) => x.kind === 'recup')) cost += 60
+        }
+      }
       if (s.sport === 'muscu' && has(d + 1, (x) => x.sport === 'muscu' && x.kind === s.kind && x.id !== s.id)) cost += 40
       if (runClass(s) === 'long' && d < 5 && !carry.longDayChosen) cost += (5 - d) * 8
     }

@@ -103,6 +103,7 @@ export default function ClientDetail() {
             <Row><span className="flex-1 text-muted">Course</span><span className="font-semibold">{DIST_LABEL[q.run.distance]} · {prettyDate(q.run.raceDate)}</span></Row>
             <Row><span className="flex-1 text-muted">Objectif</span><span className="font-semibold">{q.run.objective === 'chrono' && q.run.targetSeconds ? fmtTime(q.run.targetSeconds) : 'Finir'}</span></Row>
             <Row><span className="flex-1 text-muted">Volume actuel</span><span className="font-semibold">{q.run.weeklyKm} km/sem · sortie longue {q.run.longestKm} km</span></Row>
+            {q.run.peakKm ? <Row><span className="flex-1 text-muted">Pic visé</span><span className="font-semibold">{q.run.peakKm} km/sem · {q.runSessions} séances max</span></Row> : null}
             {referencesOf(q.run).map((r) => <Row key={r.distance}><span className="flex-1 text-muted">Chrono {{ '5k': '5 km', '10k': '10 km', semi: 'semi', marathon: 'marathon' }[r.distance]}</span><span className="font-semibold">{fmtTime(r.seconds)}</span></Row>)}
             {program?.paces && <Row><span className="flex-1 text-muted">VMA</span><span className="font-semibold">{program.paces.vma.toFixed(1).replace('.', ',')} km/h</span></Row>}
           </Group>

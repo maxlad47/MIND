@@ -101,6 +101,10 @@ export interface Questionnaire {
     recents?: { distance: RecentDistance; seconds: number; date: string }[]
     weeklyKm: number
     longestKm: number
+    /** Volume hebdomadaire visé au pic de la préparation (km). Absent = valeur par défaut selon distance/niveau. */
+    peakKm?: number
+    /** Démarrage : tout de suite (fractionné dès le début) ou progressif (endurance d'abord). Absent = avis de MIND. */
+    startMode?: 'direct' | 'progressif'
   }
   startDate: string
 }
@@ -201,7 +205,7 @@ export interface Paces {
 
 export type WarningCode =
   | 'prepa_trop_courte' | 'chrono_irrealiste' | 'prepa_longue' | 'muscu_prioritaire_course'
-  | 'conflit_placement' | 'blessure' | 'jours_insuffisants' | 'duree_courte' | 'chrono_a_confirmer' | 'muscles_exclus'
+  | 'conflit_placement' | 'blessure' | 'jours_insuffisants' | 'duree_courte' | 'chrono_a_confirmer' | 'muscles_exclus' | 'pic_non_atteint'
 
 export interface PlanWarning {
   code: WarningCode
