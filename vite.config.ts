@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
           orientation: 'portrait',
           background_color: '#000000',
           theme_color: '#000000',
+          id: 'mind-coaching',
           start_url: './',
           scope: './',
           icons: [
