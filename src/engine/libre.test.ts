@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { allSessions } from './adapt'
+import { allSessions, handleMissed } from './adapt'
 import { EXERCISE_BY_ID, exerciseOf, makeCustomExercise, registerCustomExercises } from './exercises'
 import { BASE_Q, P_DEBUTANT, P_MIXTE } from './fixtures'
 import {
-  diffSessionTemplate, emptyPlanning, estimateLiftsFromHistory, isFreeRun, libreFromProgram, newLibreProgram, newTemplate, newTemplateExercise,
+  applyRunPlan, diffSessionTemplate, emptyPlanning, estimateLiftsFromHistory, isFreeRun, libreFromProgram, newLibreProgram, newTemplate, newTemplateExercise,
   syncFree, templateFromSession, withExtraSession, WEEKS_AHEAD,
 } from './libre'
 import { generateProgram } from './program'
@@ -350,5 +350,70 @@ describe('passage Libre → MIND', () => {
     expect(lifts.squat?.kg).toBe(100)
     expect(lifts.deadlift).toBeUndefined()
     expect(lifts.press).toBeUndefined()
+  })
+})
+
+describe('muscu libre + course MIND', () => {
+  const RUN_Q = { ...P_MIXTE, mode: 'libre' as const, programType: 'mixte' as const, startDate: MON, dayPrefs: { run: [1, 3, 5], longRun: 5 }, availableDays: [1, 3, 5] }
+  const hybrid = () => newLibreProgram(RUN_Q, { clientId: 'c1', now: MON, templates: [PUSH, PULL], planning: fixed({ 0: PUSH, 2: PULL }) })
+
+  it('le plan de course est généré par MIND jusqu\'à la course, la muscu libre reste sur sa fenêtre de 4 semaines', () => {
+    const p = hybrid()
+    expect(p.mode).toBe('libre')
+    expect(p.type).toBe('mixte')
+    expect(p.paces).toBeTruthy()
+    expect(p.raceDate).toBe(RUN_Q.run.raceDate)
+    const runs = allSessions(p).filter((s) => s.sport === 'course')
+    expect(runs.length).toBeGreaterThanOrEqual(8)
+    expect(runs.some((s) => s.kind === 'longue')).toBe(true)
+    // les sorties sont sur les jours choisis pour la course
+    expect(runs.filter((s) => s.kind !== 'course').every((s) => [1, 3, 5].includes(weekday(s.date)))).toBe(true)
+    // la muscu libre ne dépasse pas la fenêtre glissante
+    const muscu = allSessions(p).filter((s) => s.sport === 'muscu')
+    expect(muscu.every((s) => s.date <= addDays(MON, 7 * (WEEKS_AHEAD + 1) - 1))).toBe(true)
+    expect(muscu.every((s) => s.templateId)).toBe(true)
+    // les semaines du carnet portent les phases du plan de course
+    expect(p.weeks.some((w) => w.phase !== 'Musculation')).toBe(true)
+  })
+
+  it('syncFree ne touche pas aux séances de course (elles restent à handleMissed), la muscu manquée est simplement « manquée »', () => {
+    const p = hybrid()
+    const later = syncFree(p, addDays(MON, 4))
+    const pastRuns = allSessions(later).filter((s) => s.sport === 'course' && s.date < addDays(MON, 4))
+    expect(pastRuns.length).toBeGreaterThan(0)
+    expect(pastRuns.every((s) => s.status === 'prevue')).toBe(true)
+    expect(allSessions(later).filter((s) => s.sport === 'muscu' && s.date < addDays(MON, 4)).every((s) => s.status === 'manquee')).toBe(true)
+    // handleMissed ne déplace que la course
+    const res = handleMissed(later, addDays(MON, 4), RUN_Q.dayPrefs.run)
+    expect(allSessions(res.program).filter((s) => s.sport === 'muscu').every((s) => !s.movedFrom)).toBe(true)
+    expect(allSessions(res.program).filter((s) => s.sport === 'course' && s.date < addDays(MON, 4)).every((s) => s.status !== 'prevue' || s.movedFrom)).toBe(true)
+  })
+
+  it('modifier un modèle ne touche pas au plan de course ; applyRunPlan régénère seulement la course future', () => {
+    const p = hybrid()
+    const runsBefore = JSON.stringify(allSessions(p).filter((s) => s.sport === 'course').map((s) => [s.date, s.title, s.run!.totalKm]))
+    p.libre!.templates = [{ ...PUSH, name: 'Push lourd' }, PULL]
+    const after = syncFree(p, MON)
+    expect(JSON.stringify(allSessions(after).filter((s) => s.sport === 'course').map((s) => [s.date, s.title, s.run!.totalKm]))).toBe(runsBefore)
+    // objectif chrono → finir : la course est régénérée, la muscu libre reste identique
+    const q2 = { ...after.q, run: { ...after.q.run, objective: 'finir' as const, targetSeconds: undefined } }
+    const regen = syncFree(applyRunPlan(after, q2, MON), MON)
+    expect(regen.objective).toBe('finir')
+    expect(JSON.stringify(allSessions(regen).filter((s) => s.sport === 'muscu').map((s) => [s.date, s.title]))).toBe(JSON.stringify(allSessions(after).filter((s) => s.sport === 'muscu').map((s) => [s.date, s.title])))
+  })
+
+  it('retirer le plan de course (formulaire sans course) retire les sorties futures et garde la muscu', () => {
+    const p = hybrid()
+    const done = allSessions(p).find((s) => s.sport === 'course')!
+    done.status = 'faite'
+    done.runLog = { km: 5, seconds: 1800, feeling: 5, comment: '', source: 'manuel', at: '' }
+    const without = syncFree(applyRunPlan(p, { ...p.q, programType: 'muscu' }, addDays(MON, 7)), addDays(MON, 7))
+    expect(without.type).toBe('muscu')
+    expect(without.paces).toBeUndefined()
+    const runs = allSessions(without).filter((s) => s.sport === 'course')
+    expect(runs.length).toBeGreaterThan(0)
+    expect(runs.every((s) => s.date < addDays(MON, 7))).toBe(true) // plus aucune sortie future ; l'historique (faites, passées) reste
+    expect(runs.some((s) => s.status === 'faite')).toBe(true)
+    expect(allSessions(without).filter((s) => s.sport === 'muscu' && s.status === 'prevue').length).toBeGreaterThan(0)
   })
 })

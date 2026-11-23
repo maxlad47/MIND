@@ -8,7 +8,7 @@ import {
 } from '@/engine/adapt'
 import { CUSTOM_PREFIX, exerciseOf, makeCustomExercise, registerCustomExercises } from '@/engine/exercises'
 import {
-  isLibre, libreFromProgram, newLibreProgram, syncFree, templateFromSession, withExtraSession, weekRecap, type ExtraSource,
+  applyRunPlan, isLibre, libreFromProgram, newLibreProgram, syncFree, templateFromSession, withExtraSession, weekRecap, type ExtraSource,
 } from '@/engine/libre'
 import { generateProgram, nextStrengthCycle, regenerateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
@@ -287,8 +287,11 @@ export function submitQuestionnaire(clientId: string, q: Questionnaire, today = 
     const existing = programOf(d, clientId)
     let changed = !!existing // « programme régénéré » seulement quand un programme est remplacé
     if (q.mode === 'libre' && existing && isLibre(existing)) {
-      // mode libre déjà en place : le formulaire (identité, blessures) se met à jour, les séances et le planning ne bougent pas
-      existing.q = { ...existing.q, ...q, mode: 'libre', programType: 'muscu' }
+      // mode libre déjà en place : le formulaire (identité, blessures, course) se met à jour ; les séances libres et le planning ne bougent pas,
+      // seul le plan de course MIND (s'il y en a un) est régénéré
+      existing.q = { ...existing.q, ...q, mode: 'libre' }
+      Object.assign(existing, applyRunPlan(existing, existing.q, today))
+      syncLibre(d, existing, today)
       program = existing
       changed = false
     } else if (q.mode === 'libre') {
@@ -517,8 +520,8 @@ export function addCheckin(c: Omit<Checkin, 'id'>, today = todayISO()): void {
     d.checkins.push(full)
     const p = programOf(d, c.clientId)
     if (!p || !c.sessionId) return
-    if (isLibre(p)) {
-      // mode libre : l'alerte au coach reste active, mais MIND ne remplace ni n'allège rien tout seul
+    if (isLibre(p) && findSession(p, c.sessionId)?.sport !== 'course') {
+      // mode libre : l'alerte au coach reste active, mais MIND ne remplace ni n'allège rien tout seul (la course MIND, elle, s'adapte)
       if (c.pain) {
         const name = nameOf(d, c.clientId)
         for (const id of coachIds(d)) if (id !== c.clientId) notify(d, id, 'Douleur signalée', `${name} signale une douleur (${c.painZone ?? '—'}).`, `/coach/client/${c.clientId}`)
@@ -542,7 +545,7 @@ export function acceptAdaptation(adId: string, today = todayISO()): void {
     const a = d.adaptations.find((x) => x.id === adId)
     const p = a && d.programs.find((x) => x.id === a.programId)
     if (!a || !p) return
-    if (isLibre(p)) { a.status = 'refuse'; return } // aucune réorganisation automatique en mode libre
+    if (isLibre(p) && a.kind !== 'allures') { a.status = 'refuse'; return } // aucune réorganisation automatique de la muscu libre
     if (a.kind === 'allures') {
       const vma = (a.payload as { vma: number }).vma
       const res = scalePaces(p, vma, today)
@@ -583,6 +586,11 @@ export function runDailyJobs(today = todayISO()): void {
       if (isLibre(p)) {
         // mode libre : séances manquées simplement « manquées », fenêtre glissante prolongée, bilan du dimanche sans suggestion
         syncLibre(d, p, today)
+        // muscu libre + course MIND : le plan de course garde ses adaptations (séances de qualité manquées déplacées) ; la muscu libre n'y touche pas
+        if (p.type === 'mixte') {
+          const res = handleMissed(p, today, p.q.dayPrefs?.run ?? [0, 1, 2, 3, 4, 5, 6])
+          if (res.adaptations.length) { Object.assign(p, res.program); d.adaptations.unshift(...res.adaptations) }
+        }
         const last = p.weeks.find((w) => w.startDate === addDays(mondayOf(today), -7))
         if (last && last.sessions.length && !d.analyses.some((a) => a.programId === p.id && a.weekN === last.n)) {
           d.analyses.unshift({ id: uid('an'), programId: p.id, clientId: p.clientId, weekN: last.n, summary: weekRecap(p, last.n), at: new Date().toISOString(), source: 'regles' })
@@ -696,7 +704,8 @@ export function addCustomExercise(programId: string, name: string, muscle: Muscl
 export function addExtraSession(programId: string, src: ExtraSource, today = todayISO()): string {
   let sessionId = ''
   mutate((d) => {
-    const p = libreOf(d, programId)
+    // programme MIND : seule la « sortie libre » (course) est possible
+    const p = src === 'course' ? d.programs.find((x) => x.id === programId) : libreOf(d, programId)
     if (!p) return
     const res = withExtraSession(p, today, src, historyOf(d, p))
     Object.assign(p, res.program)
@@ -726,9 +735,11 @@ export function switchToLibre(clientId: string, fromCurrent: boolean, today = to
   let created: Program | undefined
   mutate((d) => {
     const cur = programOf(d, clientId)
-    if (!cur || isLibre(cur)) return
+    if (!cur || isLibre(cur) || cur.type === 'course') return // pas de muscu à libérer dans un programme de course seule
     const conv = fromCurrent ? libreFromProgram(cur, today) : undefined
-    const q: Questionnaire = { ...cur.q, mode: 'libre', programType: 'muscu' }
+    // muscu libre + course MIND : le plan de course est conservé (régénéré à partir d'aujourd'hui) tant que la course n'est pas passée
+    const keepRun = cur.type === 'mixte' && cur.q.run.raceDate > today
+    const q: Questionnaire = { ...cur.q, mode: 'libre', programType: keepRun ? 'mixte' : 'muscu' }
     cur.status = 'archive'
     d.questionnaires.push({ id: uid('q'), clientId, version: d.questionnaires.filter((x) => x.clientId === clientId).length + 1, data: q, at: new Date().toISOString() })
     created = newLibreProgram(q, { clientId, now: today, templates: conv?.templates, planning: conv?.planning, customExercises: customExercisesOf(d, clientId) })

@@ -49,8 +49,10 @@ export function SessionTile({ s, onClick, width = 168 }: { s: Session; onClick: 
 }
 
 export function WarningBanner({ program, onFinish, onChangeGoal }: { program: Program; onFinish?: () => void; onChangeGoal?: () => void }) {
-  if (isLibre(program)) return null // mode libre : aucun avertissement de génération
-  const list = program.warnings.filter((w) => ['prepa_trop_courte', 'chrono_irrealiste', 'muscu_prioritaire_course', 'conflit_placement', 'pic_non_atteint'].includes(w.code))
+  if (isLibre(program) && program.type === 'muscu') return null // mode libre sans course : aucun avertissement de génération
+  // muscu libre + course MIND : seuls les avertissements du plan de course ont un sens
+  const codes = isLibre(program) ? ['prepa_trop_courte', 'chrono_irrealiste', 'pic_non_atteint'] : ['prepa_trop_courte', 'chrono_irrealiste', 'muscu_prioritaire_course', 'conflit_placement', 'pic_non_atteint']
+  const list = program.warnings.filter((w) => codes.includes(w.code))
   if (!list.length) return null
   return (
     <div className="flex flex-col gap-3 mb-4">

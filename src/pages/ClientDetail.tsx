@@ -44,7 +44,7 @@ export default function ClientDetail() {
               <div className="w-[72px] h-[72px] rounded-full glass-light border border-white/30 flex items-center justify-center text-[34px] font-extrabold shrink-0">{profile.firstName[0]}</div>
               <div className="min-w-0 pb-0.5">
                 <div className="t-display text-[34px] leading-[1.05] font-extrabold tracking-[-0.025em]" style={{ textShadow: '0 2px 14px rgba(0,0,0,.3)' }}>{profile.firstName}</div>
-                <div className="text-[15px] font-medium opacity-90 mt-0.5">{libre ? 'Mode libre' : program ? `${program.type === 'mixte' ? 'Muscu + course' : program.type === 'course' ? 'Course' : 'Musculation'}` : 'Sans programme'} · {sum.weekDone}/{sum.weekPlanned} cette semaine</div>
+                <div className="text-[15px] font-medium opacity-90 mt-0.5">{libre ? (program?.type === 'mixte' ? 'Muscu libre + course MIND' : 'Mode libre') : program ? `${program.type === 'mixte' ? 'Muscu + course' : program.type === 'course' ? 'Course' : 'Musculation'}` : 'Sans programme'} · {sum.weekDone}/{sum.weekPlanned} cette semaine</div>
               </div>
             </div>
             <div className="absolute top-[calc(env(safe-area-inset-top)+54px)] right-4"><span className="inline-flex items-center gap-1.5">{libre && <span className="inline-flex items-center rounded-full px-3 h-8 text-[13px] font-bold text-white glass-dark border border-white/20">Libre</span>}<span className="inline-flex items-center rounded-full px-3 h-8 text-[13px] font-bold text-white" style={{ background: st.color }}>{st.label}</span></span></div>
@@ -106,7 +106,7 @@ export default function ClientDetail() {
             ))}
           </Group>
         )}
-        {!libre && q.programType !== 'muscu' && (
+        {(!libre || program?.type === 'mixte') && q.programType !== 'muscu' && (
           <Group header="Course">
             <Row><span className="flex-1 text-muted">Course</span><span className="font-semibold">{DIST_LABEL[q.run.distance]} · {prettyDate(q.run.raceDate)}</span></Row>
             <Row><span className="flex-1 text-muted">Objectif</span><span className="font-semibold">{q.run.objective === 'chrono' && q.run.targetSeconds ? fmtTime(q.run.targetSeconds) : 'Finir'}</span></Row>
@@ -122,7 +122,7 @@ export default function ClientDetail() {
           <div className="mb-5">
             {libre
               ? <Button full variant="tinted" onClick={() => nav(`/onboarding?edit=1&switch=genere&client=${id}`)}>Passer en programme MIND</Button>
-              : <Button full variant="tinted" color="var(--muscu)" onClick={() => setSwitching(true)}>Passer en mode libre</Button>}
+              : program.type !== 'course' && <Button full variant="tinted" color="var(--muscu)" onClick={() => setSwitching(true)}>Passer en mode libre</Button>}
           </div>
         )}
         {edits.length > 0 && (<>
@@ -135,7 +135,7 @@ export default function ClientDetail() {
       </>)}
       <Sheet open={switching} onClose={() => setSwitching(false)} title="Passer en mode libre">
         <div className="flex flex-col gap-3">
-          <p className="text-[14.5px] text-muted leading-snug">{profile.firstName} suivra son propre programme et MIND ne génère plus rien. L'historique des séances et des charges est conservé.</p>
+          <p className="text-[14.5px] text-muted leading-snug">{profile.firstName} suivra son propre programme de musculation (MIND n'y touche plus). Un plan de course MIND éventuel est conservé, et l'historique des séances et des charges aussi.</p>
           <Button full color="var(--muscu)" onClick={() => { switchToLibre(id, true); setSwitching(false); toast('Mode libre activé') }}>Partir de son programme actuel</Button>
           <Button full variant="secondary" onClick={() => { switchToLibre(id, false); setSwitching(false); toast('Mode libre activé') }}>Partir de zéro</Button>
         </div>

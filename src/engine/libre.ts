@@ -3,6 +3,7 @@
 // Fonctions pures : elles renvoient un nouveau programme, sans toucher à l'original.
 
 import { nextLoad, weekStats } from './adapt'
+import { generateProgram } from './program'
 import { exerciseOf } from './exercises'
 import { epley, estimateSessionMinutes } from './strength'
 import type {
@@ -77,9 +78,10 @@ export function newLibreProgram(q: Questionnaire, o: {
   const p: Program = {
     id: uid('p'), clientId: o.clientId, mode: 'libre', libre, type: 'muscu', goal: q.strength.goal, priority: 'equilibre',
     startDate: o.now, status: 'actif', weeks: [], warnings: [], cycle: 1, createdAt: new Date().toISOString(),
-    q: { ...q, mode: 'libre', programType: 'muscu' },
+    q: { ...q, mode: 'libre', programType: q.programType === 'muscu' ? 'muscu' : 'mixte' },
   }
-  return syncFree(p, o.now)
+  // muscu libre + course MIND : le plan de course est généré par le moteur et inséré dans les mêmes semaines
+  return syncFree(hasRunPlan(q) ? applyRunPlan(p, p.q, o.now) : p, o.now)
 }
 
 function allOf(p: Program): Session[] {
@@ -87,8 +89,8 @@ function allOf(p: Program): Session[] {
 }
 
 /** Crée les semaines manquantes jusqu'à `ahead` semaines après la semaine en cours (les semaines passées restent vides). */
-function ensureWeeks(p: Program, today: string, ahead: number): void {
-  const last = mondayOf(addDays(today, 7 * ahead))
+function ensureWeeks(p: Program, today: string, ahead: number, minLast = ''): void {
+  const last = [mondayOf(addDays(today, 7 * ahead)), minLast].sort().pop()!
   let monday = p.weeks.length ? addDays(p.weeks[p.weeks.length - 1].startDate, 7) : mondayOf(p.startDate < today ? p.startDate : today)
   while (monday <= last) {
     p.weeks.push({ n: p.weeks.length + 1, startDate: monday, phase: 'Musculation', light: false, sessions: [] })
@@ -100,8 +102,44 @@ function ensureWeeks(p: Program, today: string, ahead: number): void {
 function settlePast(p: Program, today: string): void {
   for (const w of p.weeks) {
     w.sessions = w.sessions.filter((s) => !(s.extra && s.status === 'prevue' && s.date < today && !hasLogs(s)))
-    for (const s of w.sessions) if (s.status === 'prevue' && s.date < today) s.status = 'manquee'
+    // les séances de course d'un plan MIND restent à `handleMissed` (déplacement des séances clés) ; seule la muscu libre est simplement « manquée »
+    for (const s of w.sessions) if (s.status === 'prevue' && s.date < today && (s.sport === 'muscu' || s.extra)) s.status = 'manquee'
   }
+}
+
+// ------------------------------------------------------------------ course MIND dans un carnet libre
+
+export const hasRunPlan = (q: Pick<Questionnaire, 'programType'>): boolean => q.programType !== 'muscu'
+
+/**
+ * Muscu libre + course MIND : (re)génère le plan de course d'après le formulaire et l'insère dans les semaines du carnet.
+ * Les séances de course déjà faites, manquées ou en plus restent ; les séances de course futures prévues sont remplacées.
+ * Sans course dans le formulaire, le plan de course futur est simplement retiré.
+ */
+export function applyRunPlan(program: Program, q: Questionnaire, today: string): Program {
+  const p = structuredClone(program)
+  for (const w of p.weeks) w.sessions = w.sessions.filter((s) => !(s.sport === 'course' && !s.extra && s.status === 'prevue' && s.date >= today))
+  if (!hasRunPlan(q)) {
+    p.type = 'muscu'
+    p.paces = undefined; p.raceDate = undefined; p.raceDistance = undefined; p.targetSeconds = undefined; p.objective = undefined
+    p.warnings = []
+    p.q = { ...q, mode: 'libre', programType: 'muscu' }
+    return p
+  }
+  const run = generateProgram({ ...q, mode: 'genere', programType: 'course', availableDays: q.dayPrefs?.run ?? q.availableDays, startDate: today }, { clientId: p.clientId, now: today })
+  p.type = 'mixte'
+  p.paces = run.paces; p.raceDate = run.raceDate; p.raceDistance = run.raceDistance; p.targetSeconds = run.targetSeconds; p.objective = run.objective
+  p.warnings = run.warnings
+  p.q = { ...q, mode: 'libre', programType: 'mixte' }
+  ensureWeeks(p, today, WEEKS_AHEAD, run.weeks[run.weeks.length - 1].startDate)
+  for (const rw of run.weeks) {
+    const w = p.weeks.find((x) => x.startDate === rw.startDate)
+    if (!w) continue
+    w.sessions.push(...rw.sessions.map((s) => ({ ...s, weekN: w.n })))
+    w.sessions.sort((a, b) => a.date.localeCompare(b.date))
+    w.phase = rw.phase; w.light = rw.light; w.note = rw.note
+  }
+  return p
 }
 
 // ------------------------------------------------------------------ planning
@@ -191,8 +229,10 @@ export function syncFree(program: Program, today: string, o: { weeksAhead?: numb
   const p = structuredClone(program)
   const plan = p.libre!
   settlePast(p, today)
-  ensureWeeks(p, today, o.weeksAhead ?? WEEKS_AHEAD)
-  const horizon = addDays(p.weeks[p.weeks.length - 1].startDate, 6)
+  const ahead = o.weeksAhead ?? WEEKS_AHEAD
+  ensureWeeks(p, today, ahead)
+  // la fenêtre glissante ne concerne que la muscu libre (un plan de course MIND peut aller jusqu'à la date de course)
+  const horizon = addDays(mondayOf(addDays(today, 7 * ahead)), 6)
   const slots = slotsFor(plan, allOf(p), today, horizon)
   const wanted = new Map(slots.map((s) => [s.date, s.templateId]))
   const tpl = new Map(plan.templates.map((t) => [t.id, t]))
@@ -200,7 +240,7 @@ export function syncFree(program: Program, today: string, o: { weeksAhead?: numb
   const kept = new Set<string>()
   for (const w of p.weeks) {
     w.sessions = w.sessions.filter((s) => {
-      if (!s.templateId || s.extra || s.status !== 'prevue' || s.date < today || hasLogs(s)) return true
+      if (!s.templateId || s.extra || s.status !== 'prevue' || s.date < today || s.date > horizon || hasLogs(s)) return true
       if (s.movedFrom) { const t = tpl.get(s.templateId); if (t) refresh(s, t); return !!t }
       const id = wanted.get(s.date)
       if (!id || kept.has(s.date)) return false
@@ -216,8 +256,8 @@ export function syncFree(program: Program, today: string, o: { weeksAhead?: numb
   }
   for (const w of p.weeks) w.sessions.sort((a, b) => a.date.localeCompare(b.date))
 
-  p.q = { ...p.q, availableDays: trainingDays(plan.planning), muscuSessions: Math.max(1, trainingDays(plan.planning).length) }
-  p.warnings = []
+  const runDays = p.type === 'mixte' ? (p.q.dayPrefs?.run ?? []) : []
+  p.q = { ...p.q, availableDays: [...new Set([...trainingDays(plan.planning), ...runDays])].sort(), muscuSessions: Math.max(1, trainingDays(plan.planning).length) }
   applySuggestions(p, today, o.history)
   return p
 }
@@ -251,8 +291,9 @@ export type ExtraSource = { templateId: string } | 'vide' | 'course'
 /** « Séance en plus » : datée d'aujourd'hui, hors planning (elle ne décale rien et ne fait pas avancer la rotation). */
 export function withExtraSession(program: Program, today: string, src: ExtraSource, history?: Session[]): { program: Program; sessionId: string } {
   const p = structuredClone(program)
-  ensureWeeks(p, today, WEEKS_AHEAD)
-  const w = p.weeks.find((x) => x.startDate === mondayOf(today))!
+  if (isLibre(p)) ensureWeeks(p, today, WEEKS_AHEAD)
+  const w = p.weeks.find((x) => x.startDate === mondayOf(today))
+  if (!w) return { program, sessionId: '' } // programme MIND terminé : pas de semaine du jour
   let s: Session
   if (src === 'course') {
     s = {
@@ -267,7 +308,7 @@ export function withExtraSession(program: Program, today: string, src: ExtraSour
   }
   w.sessions.push(s)
   w.sessions.sort((a, b) => a.date.localeCompare(b.date))
-  applySuggestions(p, today, history)
+  if (isLibre(p)) applySuggestions(p, today, history)
   return { program: p, sessionId: s.id }
 }
 

@@ -167,6 +167,12 @@ export default function Onboarding() {
           <textarea className={`${inputCls} h-24 py-3`} placeholder="Autre précision (facultatif)" value={x.injuryNote ?? ''} onChange={(e) => set({ injuryNote: e.target.value })} />
           <p className="text-[13px] text-muted bg-surface rounded-xl p-3">En cas de doute sur ta santé, consulte un médecin avant de commencer. MIND ne remplace pas un avis médical.</p>
         </div>) },
+    { id: 'librerun', title: 'Un plan de course avec MIND ?', sub: 'Tes séances de muscu restent libres. MIND peut en plus te générer un plan de course (10 km, semi ou marathon) qui s\'adapte à toi.', when: () => libre,
+      render: () => (
+        <Big>
+          <Option active={m.programType === 'muscu'} title="Non, juste mes séances libres" sub="Tu peux quand même noter une sortie de course quand tu veux (km, temps, ressenti)." onClick={() => set({ programType: 'muscu' })} icon={<SportIcon sport="muscu" size={24} />} accent="var(--muscu)" />
+          <Option active={m.programType !== 'muscu'} title="Oui, un plan de course MIND" sub="MIND génère et adapte ton plan de course. Ta muscu reste 100 % libre : MIND n'y touche jamais." onClick={() => set({ programType: 'mixte' })} icon={<SportIcon sport="course" size={24} />} accent="#FF9F0A" />
+        </Big>) },
     { id: 'excl', title: 'Une partie du corps à ne pas travailler ?', sub: 'Facultatif. Aucun exercice ne la ciblera.', when: () => hasM,
       render: () => {
         const ex = m.excludedMuscles ?? []
@@ -209,7 +215,7 @@ export default function Onboarding() {
           <p className="text-[14px] text-muted px-1">{m.muscuSessions} séance{m.muscuSessions > 1 ? 's' : ''} de muscu par semaine sur {muscuDays.length} jour{muscuDays.length > 1 ? 's' : ''}.
             {m.muscuSessions > muscuDays.length ? ' Choisis-en davantage pour éviter deux séances de muscu le même jour.' : ''}</p>
         </div>) },
-    { id: 'rdays', title: 'Quels jours pour la course ?', sub: 'MIND place tes sorties de course uniquement sur ces jours.', when: () => hasR,
+    { id: 'rdays', title: 'Quels jours pour la course ?', sub: libre ? 'MIND place tes sorties de course sur ces jours. Évite tes jours de muscu si tu veux séparer les deux.' : 'MIND place tes sorties de course uniquement sur ces jours.', when: () => hasR,
       valid: () => runDays.length > 0,
       render: () => (
         <div className="flex flex-col gap-4">
@@ -407,7 +413,7 @@ export default function Onboarding() {
   ]
 
   // Mode libre : seulement l'identité et les blessures ; toutes les étapes de génération sont sautées
-  const LIBRE_STEPS = ['mode', 'name', 'birth', 'body', 'injuries']
+  const LIBRE_STEPS = ['mode', 'name', 'birth', 'body', 'injuries', 'librerun', ...(hasR ? ['rsess', 'rdays', 'longday', 'dur', 'dist', 'date', 'rlevel', 'refs', 'obj', 'vol', 'startmode', 'peak'] : [])]
   const active = steps.filter((s) => (!libre || LIBRE_STEPS.includes(s.id)) && (!s.when || s.when(q)))
   const cur = active[Math.min(idx, active.length - 1)]
   const isLast = idx >= active.length - 1
@@ -422,6 +428,7 @@ export default function Onboarding() {
     full.strength.split = full.strength.split
     full.startDate = today
     if (full.mode === 'libre') {
+      full.programType = full.programType === 'muscu' ? 'muscu' : 'mixte' // muscu libre, avec ou sans plan de course MIND
       submitQuestionnaire(me.id, full, today)
       toast(edit ? 'Formulaire mis à jour' : 'Bienvenue ! Crée ta première séance')
       nav(targetId !== auth.id ? `/coach/client/${targetId}` : edit ? (auth.role === 'coach' ? '/coach/me' : '/app/profile') : auth.role === 'coach' ? '/coach/me' : '/app/sessions', { replace: true })

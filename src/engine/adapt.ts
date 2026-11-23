@@ -39,6 +39,8 @@ export function handleMissed(program: Program, today: string, availableDays: num
   const p = clone(program)
   const adaptations: Adaptation[] = []
   for (const w of p.weeks) {
+    // une sortie libre / séance en plus jamais commencée n'est pas une séance manquée : elle disparaît
+    w.sessions = w.sessions.filter((s) => !(s.extra && s.status === 'prevue' && s.date < today && !(s.exercises ?? []).some((e) => e.logs.length)))
     const missed = w.sessions.filter((s) => s.status === 'prevue' && s.date < today)
     for (const s of missed.sort((a, b) => priorityOf(a) - priorityOf(b))) {
       const important = s.kind === 'longue' || isQuality(s.kind)

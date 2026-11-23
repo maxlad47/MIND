@@ -1,7 +1,7 @@
 // Mode libre au niveau du store : bascule MIND ↔ Libre, historique conservé, tâches quotidiennes, check-in, notifications du coach.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { P_DEBUTANT } from '@/engine/fixtures'
-import { addDays } from '@/engine/utils'
+import { addDays, todayISO } from '@/engine/utils'
 
 const MON = '2026-03-02' // un lundi
 
@@ -253,5 +253,146 @@ describe('démo : Nina (mode libre)', () => {
     expect(d.profiles.filter((q) => q.firstName === 'Nina')).toHaveLength(1)
     seed.ensureSeed()
     expect(c.s.getDB().profiles.length).toBe(others + 1) // idempotent
+  })
+})
+
+describe('muscu libre + course MIND (store)', () => {
+  let c: Ctx
+  beforeEach(async () => { c = await fresh() })
+  const race = '2026-06-14'
+  const hybridQ = (firstName: string) => ({
+    ...P_DEBUTANT, firstName, mode: 'libre' as const, programType: 'mixte' as const, runSessions: 3, startDate: MON, availableDays: [1, 3, 5], dayPrefs: { run: [1, 3, 5], longRun: 5 },
+    run: { distance: '10k' as const, raceDate: race, objective: 'finir' as const, level: 'intermediaire' as const, weeklyKm: 20, longestKm: 10, vma: 15 },
+  })
+  function hybrid() {
+    c.s.signUp('lea@test.fr', 'secret1', 'Léa')
+    const me = c.s.currentUser()!
+    const p = c.s.submitQuestionnaire(me.id, hybridQ('Léa'), MON)
+    const t = c.libre.newTemplate('Push')
+    t.exercises = [c.libre.newTemplateExercise('dev_couche_barre')]
+    c.s.saveTemplate(p.id, t)
+    c.s.setPlanning(p.id, { mode: 'fixe', days: [t.id, null, null, null, null, null, null] })
+    return { me, id: p.id }
+  }
+  const prog = (me: { id: string }) => c.s.programOf(c.s.getDB(), me.id)!
+
+  it('le formulaire libre avec course crée un carnet libre + un plan de course MIND', () => {
+    const { me } = hybrid()
+    const p = prog(me)
+    expect(p.mode).toBe('libre')
+    expect(p.type).toBe('mixte')
+    expect(c.adapt.allSessions(p).some((s) => s.sport === 'course')).toBe(true)
+    expect(c.adapt.allSessions(p).filter((s) => s.sport === 'muscu').every((s) => s.templateId)).toBe(true)
+  })
+
+  it('séance de course manquée : le moteur la déplace (adaptation) ; la muscu libre manquée n\'est jamais déplacée', () => {
+    const { me } = hybrid()
+    const key = c.adapt.allSessions(prog(me)).find((s) => s.sport === 'course' && (s.kind === 'longue' || ['vma', 'seuil', 'cotes', 'fartlek'].includes(s.kind)))!
+    c.s.runDailyJobs(addDays(key.date, 1))
+    const d = c.s.getDB()
+    const p = c.s.programOf(d, me.id)!
+    const adapts = d.adaptations.filter((a) => a.programId === p.id)
+    expect(adapts.length).toBeGreaterThan(0)
+    expect(adapts.every((a) => a.kind === 'deplacee' || a.kind === 'sautee')).toBe(true)
+    expect(c.adapt.allSessions(p).filter((s) => s.sport === 'muscu').every((s) => !s.movedFrom)).toBe(true)
+  })
+
+  it('check-in avec douleur : la course est allégée, la muscu libre reste intacte', () => {
+    const { me } = hybrid()
+    const runS = c.adapt.allSessions(prog(me)).filter((s) => s.sport === 'course' && s.status === 'prevue')[1]
+    const muscuS = c.adapt.allSessions(prog(me)).find((s) => s.sport === 'muscu' && s.status === 'prevue')!
+    const muscuBefore = JSON.stringify(muscuS.exercises)
+    c.s.addCheckin({ clientId: me.id, sessionId: muscuS.id, date: muscuS.date, energy: 1, sleep: 1, soreness: 5, pain: false }, muscuS.date)
+    c.s.addCheckin({ clientId: me.id, sessionId: runS.id, date: runS.date, energy: 1, sleep: 1, soreness: 5, pain: false }, runS.date)
+    const after = c.adapt.allSessions(prog(me))
+    expect(JSON.stringify(after.find((s) => s.id === muscuS.id)!.exercises)).toBe(muscuBefore)
+    expect(after.find((s) => s.id === muscuS.id)!.lighten).toBeUndefined()
+    expect(after.find((s) => s.id === runS.id)!.lighten).toBe(true)
+  })
+
+  it('suggestion d\'allures acceptée ; suggestion de structure (alléger la semaine) refusée', () => {
+    const { me, id } = hybrid()
+    const p = prog(me)
+    const firstRun = c.adapt.allSessions(p).find((s) => s.sport === 'course' && s.status === 'prevue' && s.run!.blocks.some((b) => b.paceSec))!
+    const pace = firstRun.run!.blocks.find((b) => b.paceSec)!.paceSec!
+    c.s.addSuggestions([
+      { id: 'a1', clientId: me.id, programId: id, date: MON, kind: 'allures', status: 'propose', text: 'VMA', payload: { vma: p.paces!.vma + 1 } },
+      { id: 'a2', clientId: me.id, programId: id, date: MON, kind: 'suggestion_ia', status: 'propose', text: 'Alléger', payload: { type: 'scale_week', weekN: 1, factor: 0.5 } },
+    ])
+    const setsBefore = JSON.stringify(c.adapt.allSessions(p).filter((s) => s.sport === 'muscu').map((s) => s.exercises?.map((e) => e.sets)))
+    c.s.acceptAdaptation('a1', MON)
+    c.s.acceptAdaptation('a2', MON)
+    const after = prog(me)
+    expect(c.adapt.allSessions(after).find((s) => s.id === firstRun.id)!.run!.blocks.find((b) => b.paceSec)!.paceSec).toBeLessThan(pace)
+    expect(JSON.stringify(c.adapt.allSessions(after).filter((s) => s.sport === 'muscu').map((s) => s.exercises?.map((e) => e.sets)))).toBe(setsBefore)
+    expect(c.s.getDB().adaptations.find((a) => a.id === 'a2')!.status).toBe('refuse')
+  })
+
+  it('modifier le formulaire régénère le plan de course sans toucher aux séances libres ni au planning', () => {
+    const T = todayISO() // une seule horloge : les actions du store utilisent la date du jour
+    c.s.signUp('lea2@test.fr', 'secret1', 'Léa')
+    const me = c.s.currentUser()!
+    const q0 = { ...hybridQ('Léa'), startDate: T, run: { ...hybridQ('Léa').run, raceDate: addDays(T, 84) } }
+    const id = c.s.submitQuestionnaire(me.id, q0, T).id
+    const t = c.libre.newTemplate('Push')
+    t.exercises = [c.libre.newTemplateExercise('dev_couche_barre')]
+    c.s.saveTemplate(id, t)
+    c.s.setPlanning(id, { mode: 'fixe', days: [t.id, null, null, null, null, null, null] })
+    const before = prog(me)
+    const muscuBefore = JSON.stringify(c.adapt.allSessions(before).filter((s) => s.sport === 'muscu').map((s) => [s.date, s.title]))
+    const q = { ...c.s.questionnaireOf(c.s.getDB(), me.id)!, run: { ...before.q.run, distance: 'semi' as const, raceDate: addDays(T, 112) } }
+    c.s.submitQuestionnaire(me.id, q, T)
+    const after = prog(me)
+    expect(after.id).toBe(id)
+    expect(after.raceDistance).toBe('semi')
+    expect(after.raceDate).toBe(addDays(T, 112))
+    expect(JSON.stringify(c.adapt.allSessions(after).filter((s) => s.sport === 'muscu').map((s) => [s.date, s.title]))).toBe(muscuBefore)
+    expect(after.libre!.templates).toEqual(before.libre!.templates)
+    // retirer la course
+    c.s.submitQuestionnaire(me.id, { ...q, programType: 'muscu' }, T)
+    const none = prog(me)
+    expect(none.type).toBe('muscu')
+    expect(c.adapt.allSessions(none).filter((s) => s.sport === 'course' && s.status === 'prevue')).toHaveLength(0)
+    expect(JSON.stringify(c.adapt.allSessions(none).filter((s) => s.sport === 'muscu').map((s) => [s.date, s.title]))).toBe(muscuBefore)
+  })
+
+  it('MIND mixte → libre garde le plan de course ; un programme de course seule ne peut pas passer en libre', () => {
+    c.s.signUp('max@test.fr', 'secret1', 'Max')
+    const me = c.s.currentUser()!
+    const g = c.s.submitQuestionnaire(me.id, { ...hybridQ('Max'), mode: 'genere' }, MON)
+    expect(g.type).toBe('mixte')
+    const libre = c.s.switchToLibre(me.id, true, MON)!
+    expect(libre.type).toBe('mixte')
+    expect(c.adapt.allSessions(libre).some((s) => s.sport === 'course' && s.status === 'prevue')).toBe(true)
+    expect(libre.libre!.templates.length).toBeGreaterThan(0)
+
+    c.s.signUp('run@test.fr', 'secret1', 'Rémi')
+    const r = c.s.currentUser()!
+    const runOnly = c.s.submitQuestionnaire(r.id, { ...hybridQ('Rémi'), mode: 'genere', programType: 'course' }, MON)
+    expect(runOnly.type).toBe('course')
+    expect(c.s.switchToLibre(r.id, true, MON)).toBeUndefined()
+    expect(c.s.programOf(c.s.getDB(), r.id)!.id).toBe(runOnly.id)
+  })
+
+  it('muscu MIND + course libre : une sortie libre se saisit, sans rien décaler ; jamais comptée comme manquée', () => {
+    c.s.signUp('paul@test.fr', 'secret1', 'Paul')
+    const me = c.s.currentUser()!
+    const g = c.s.submitQuestionnaire(me.id, { ...P_DEBUTANT, firstName: 'Paul', startDate: MON }, MON)
+    expect(g.type).toBe('muscu')
+    const planned = () => JSON.stringify(c.adapt.allSessions(c.s.programOf(c.s.getDB(), me.id)!).filter((s) => !s.extra).map((s) => [s.date, s.title, s.status]))
+    const before = planned()
+    const id = c.s.addExtraSession(g.id, 'course', MON)
+    expect(id).not.toBe('')
+    expect(c.s.addExtraSession(g.id, 'vide', MON)).toBe('') // seule la sortie libre existe hors mode libre
+    const p = c.s.programOf(c.s.getDB(), me.id)!
+    c.s.logRun(p.id, id, { km: 6, seconds: 2100, feeling: 6, comment: '' }, MON)
+    expect(c.adapt.allSessions(c.s.programOf(c.s.getDB(), me.id)!).find((s) => s.id === id)!.runLog!.km).toBe(6)
+    expect(planned()).toBe(before)
+    // une sortie libre jamais commencée disparaît le lendemain
+    const id2 = c.s.addExtraSession(g.id, 'course', addDays(MON, 1))
+    c.s.runDailyJobs(addDays(MON, 3))
+    const after = c.adapt.allSessions(c.s.programOf(c.s.getDB(), me.id)!)
+    expect(after.find((s) => s.id === id2)).toBeUndefined()
+    expect(after.find((s) => s.id === id)!.status).toBe('faite')
   })
 })

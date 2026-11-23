@@ -242,7 +242,7 @@ export default function SessionPage() {
         <Cover seed={coverSeed(session)} sports={[session.sport]} kind={session.kind} className="h-full">
           <div className="absolute inset-0 flex flex-col justify-end p-5 text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 56px)' }}>
             <div className="flex items-center justify-between gap-2 mb-auto">
-              <SportBadge sports={[session.sport]} label={session.extra ? 'Séance en plus' : isMuscu ? 'Musculation' : runKindLabel(session.kind)} />
+              <SportBadge sports={[session.sport]} label={freeRun ? 'Course libre' : session.extra ? 'Séance en plus' : isMuscu ? 'Musculation' : runKindLabel(session.kind)} />
               <span className="rounded-full px-3 h-8 inline-flex items-center gap-1 text-[13px] font-bold" style={{ background: session.status === 'faite' ? '#30D158' : session.status === 'manquee' ? '#FF453A' : 'rgba(255,255,255,.92)', color: session.status === 'prevue' ? '#000' : '#fff' }}>
                 {session.status === 'faite' && <Icon name="check" size={14} strokeWidth={3} />}{statusLabel[session.status]}
               </span>

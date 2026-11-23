@@ -67,7 +67,7 @@ export function ProfileView({ userId }: { userId: string }) {
         <Group header="Mon carnet" footer="Désactivées, aucune charge cible n'est affichée. Activées, MIND propose ta prochaine charge (double progression) d'après ta dernière performance.">
           <Row><RowIcon name="bolt" color="#FF9F0A" /><div className="flex-1"><div className="font-semibold">Suggestions de charge</div><div className="text-[13px] text-muted">{program.libre?.suggestLoads ? 'Activées' : 'Désactivées'}</div></div>
             <Toggle checked={!!program.libre?.suggestLoads} label="Suggestions de charge" onChange={() => setSuggestLoads(program.id, !program.libre?.suggestLoads)} /></Row>
-          <Row onClick={() => nav(`/onboarding?edit=1`)}><RowIcon name="edit" color="var(--accent)" /><div className="flex-1 font-semibold">Modifier mon formulaire</div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+          <Row onClick={() => nav(`/onboarding?edit=1`)}><RowIcon name="edit" color="var(--accent)" /><div className="flex-1"><div className="font-semibold">Modifier mon formulaire</div><div className="text-[13px] text-muted">{program.type === 'mixte' ? `Muscu libre + plan de course MIND (${DIST_LABEL[q.run.distance]})` : 'Ajouter ou retirer un plan de course MIND'}</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
         </Group>
         <Group header="Mode" footer="Ton historique de séances et de charges est conservé dans les deux sens.">
           <Row onClick={() => nav('/onboarding?edit=1&switch=genere')}><RowIcon name="sparkle" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">Passer à un programme MIND</div><div className="text-[13px] text-muted">MIND crée ton programme</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
@@ -79,9 +79,9 @@ export function ProfileView({ userId }: { userId: string }) {
             <div className="text-[13px] text-muted">{program.type !== 'course' ? `${q.muscuSessions} séances de muscu · ${q.strength.goal}` : ''}{program.type === 'mixte' ? ' · ' : ''}{program.type !== 'muscu' ? `${DIST_LABEL[q.run.distance]}${program.raceDate ? ` le ${prettyDate(program.raceDate)}` : ''}` : ''}</div></div></Row>
           <Row onClick={() => nav(`/onboarding?edit=1`)}><RowIcon name="edit" color="var(--accent)" /><div className="flex-1 font-semibold">Modifier mon formulaire</div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
         </Group>
-        <Group header="Mode" footer="Tu suis déjà ton propre programme ? MIND peut devenir ton carnet d'entraînement. Ton historique est conservé.">
-          <Row onClick={() => setSwitching(true)}><RowIcon name="edit" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">Passer en mode libre</div><div className="text-[13px] text-muted">J'ai déjà mon programme</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
-        </Group>
+        {program.type !== 'course' && <Group header="Mode" footer="Tu suis déjà ton propre programme ? MIND peut devenir ton carnet d'entraînement. Ton historique est conservé.">
+          <Row onClick={() => setSwitching(true)}><RowIcon name="edit" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">Passer en mode libre</div><div className="text-[13px] text-muted">J'ai déjà mon programme de musculation</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+        </Group>}
       </>)}
 
       <Group header="Rappels" footer={isIOS() && !isStandalone() ? 'Sur iPhone, ajoute d\'abord MIND à l\'écran d\'accueil.' : undefined}>
@@ -155,7 +155,7 @@ export function ProfileView({ userId }: { userId: string }) {
       <p className="text-center text-[12px] text-faint pb-4">MIND · mode local · les données restent sur cet appareil</p>
       <Sheet open={switching} onClose={() => setSwitching(false)} title="Passer en mode libre">
         <div className="flex flex-col gap-3">
-          <p className="text-[14.5px] text-muted leading-snug">MIND ne génère plus rien : tu crées tes séances, tu les places dans ta semaine et tu notes tes charges. Ton historique est conservé.</p>
+          <p className="text-[14.5px] text-muted leading-snug">MIND ne génère plus ta musculation : tu crées tes séances, tu les places dans ta semaine et tu notes tes charges. Ton plan de course MIND éventuel est conservé. Ton historique aussi.</p>
           <Button full color="var(--muscu)" onClick={() => { switchToLibre(userId, true); setSwitching(false); toast('Mode libre activé'); nav(me.role === 'coach' ? '/coach/me' : '/app/sessions') }}>Partir de mon programme actuel</Button>
           <Button full variant="secondary" onClick={() => { switchToLibre(userId, false); setSwitching(false); toast('Mode libre activé'); nav(me.role === 'coach' ? '/coach/me' : '/app/sessions') }}>Partir de zéro</Button>
         </div>

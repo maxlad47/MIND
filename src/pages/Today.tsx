@@ -3,10 +3,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { allSessions, currentWeek, weekStats } from '@/engine/adapt'
 import { exerciseOf } from '@/engine/exercises'
-import { isLibre, trainingDays } from '@/engine/libre'
+import { isFreeRun, isLibre, trainingDays } from '@/engine/libre'
 import type { Program } from '@/engine/types'
 import { addDays, fmtKm, mondayOf, prettyDate, shortDate, todayISO } from '@/engine/utils'
-import { acceptAdaptation, programOf, refuseAdaptation, startNextCycle, submitQuestionnaire, useDB } from '@/lib/store'
+import { acceptAdaptation, addExtraSession, programOf, refuseAdaptation, startNextCycle, submitQuestionnaire, useDB } from '@/lib/store'
 import { analyzeWeek } from '@/lib/ai'
 import { Button, Card, Carousel, Chip, Cover, EmptyState, Icon, Page, Ring, SectionTitle, SportBadge, SportIcon, spring, toast } from '@/ui/kit'
 import { ExtraSessionSheet } from '@/ui/free'
@@ -28,7 +28,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
 
   const libre = isLibre(program)
   const openSessions = onOpenSessions ?? (() => nav('/app/sessions'))
-  if (libre && (program.libre?.templates.length ?? 0) === 0) {
+  if (libre && (program.libre?.templates.length ?? 0) === 0 && program.type === 'muscu') {
     return <EmptyState icon="program" color="var(--muscu)" title="Crée ta première séance" text="Tu suis déjà ton programme : ajoute tes séances (ex. Push, Pull, Legs), puis place-les dans ta semaine."
       action={<Button color="var(--muscu)" onClick={openSessions}>Créer ma première séance</Button>} />
   }
@@ -73,7 +73,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
         <WeekStrip start={week.startDate} sessions={week.sessions} today={today} onOpen={(id) => nav(`/session/${id}`)} />
       </Card>
 
-      {libre && trainingDays(program.libre!.planning).length === 0 && (
+      {libre && (program.libre?.templates.length ?? 0) > 0 && trainingDays(program.libre!.planning).length === 0 && (
         <Card className="p-4 mb-4" style={{ background: 'color-mix(in srgb, var(--muscu) 13%, var(--surface))', boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--muscu) 30%, transparent)' }}>
           <div className="flex gap-3"><span style={{ color: 'var(--muscu)' }}><Icon name="calendar" /></span>
             <div className="flex-1"><div className="font-bold">Règle ton planning</div><p className="text-[14px] text-muted mt-0.5 leading-snug">Choisis tes jours d'entraînement pour que tes séances apparaissent ici.</p>
@@ -114,7 +114,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
             <motion.div key={s.id} initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ ...spring, delay: i * 0.06 }}>
               <Cover seed={coverSeed(s)} sports={[s.sport]} kind={s.kind} className="rounded-[28px]" style={{ height: 340, boxShadow: 'var(--shadow-cover)' }}>
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                  <SportBadge sports={[s.sport]} label={s.extra ? 'Séance en plus' : s.sport === 'muscu' ? 'Musculation' : 'Course'} slot={s.slot ? (s.slot === 'am' ? 'matin' : 'soir') : undefined} />
+                  <SportBadge sports={[s.sport]} label={isFreeRun(s) ? 'Sortie libre' : s.extra ? 'Séance en plus' : s.sport === 'muscu' ? 'Musculation' : 'Course'} slot={s.slot ? (s.slot === 'am' ? 'matin' : 'soir') : undefined} />
                   {s.estMinutes > 0 && <div className="rounded-full glass-dark px-3 h-8 flex items-center gap-1.5 text-white text-[13px] font-semibold border border-white/10"><Icon name="clock" size={15} /> {s.estMinutes} min</div>}
                 </div>
                 <div className="absolute bottom-0 inset-x-0 p-5 text-white">
@@ -158,6 +158,10 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
 
       {libre && (
         <div className="mt-4"><Button full variant="tinted" color="var(--muscu)" onClick={() => setExtra(true)}><Icon name="plus" size={18} strokeWidth={2.4} /> Séance en plus</Button></div>
+      )}
+      {/* muscu MIND + course libre : une sortie à saisir librement (km, temps, ressenti) */}
+      {!libre && program.type === 'muscu' && program.weeks.some((w) => w.startDate === mondayOf(today)) && (
+        <div className="mt-4"><Button full variant="tinted" color="#FF9F0A" onClick={() => { const id = addExtraSession(program.id, 'course'); if (id) nav(`/session/${id}`) }}><SportIcon sport="course" size={18} /> Sortie libre</Button></div>
       )}
 
       {lastWeekN >= 1 && !analysis && program.weeks.some((w) => w.n === lastWeekN) && (
