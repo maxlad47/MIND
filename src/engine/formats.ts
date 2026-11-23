@@ -167,7 +167,8 @@ export function applyFormat(format: SetFormat, b: FormatBase, timed = false): Fo
 /** Cible d'une partie : « 6 », « 8–12 », « 30 s », « 6 à −20 % », « 100 reps à 40 kg ». */
 export const partText = (p: SetPart): string => {
   const t = p.seconds !== undefined ? `${p.seconds} s` : p.repMax !== undefined && p.reps !== undefined && p.repMax !== p.reps ? `${p.reps}–${p.repMax}` : `${p.reps ?? '?'}`
-  if (p.pct === undefined || p.pct === 100) return p.kg !== undefined ? `${t} à ${String(p.kg).replace('.', ',')} kg` : t
+  if (p.kg !== undefined) return `${t} à ${String(p.kg).replace('.', ',')} kg`
+  if (p.pct === undefined || p.pct === 100) return t
   const d = Math.round((p.pct - 100) * 10) / 10
   return `${t} à ${d > 0 ? '+' : '−'}${String(Math.abs(d)).replace('.', ',')} %`
 }

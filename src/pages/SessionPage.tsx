@@ -148,7 +148,7 @@ function PlanSetBlock({ e, n, session, last, refKg, locked, onValidate, onUndo }
               <div className="grid items-center gap-2 py-1" style={{ gridTemplateColumns: timed ? '1fr 76px 44px' : '1fr 62px 52px 46px 44px' }}>
                 <div className="min-w-0">
                   <div className="text-[12.5px] font-semibold leading-tight">{parts.length > 1 ? `Partie ${j + 1}` : 'Cible'}</div>
-                  <div className="text-[12.5px] text-muted leading-tight num truncate">{partText(p)}</div>
+                  <div className="text-[12.5px] text-muted leading-tight num truncate">{p.kg === undefined && p.pct !== undefined && p.pct !== 100 && !(n === 1 && j === 0) ? `${partText(p)} de la lourde` : partText(p)}</div>
                 </div>
                 {timed ? (
                   <input className={cellCls} style={cellBg(!!l)} inputMode="numeric" value={secs[j]} disabled={locked} aria-label={`Secondes, partie ${j + 1}`} onChange={(ev) => setSecs((c) => c.map((x, k) => (k === j ? ev.target.value : x)))} />
@@ -246,7 +246,7 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
         <div className="flex flex-col gap-4">
           <FormatChips exerciseId={e.exerciseId} value={e.format} onChange={(f) => setExerciseFormat(program.id, session.id, e.id, f)} />
           {detailed
-            ? <PlanEditor value={e} onChange={(p) => updateExercise(program.id, session.id, e.id, p)} />
+            ? <PlanEditor value={e} refKg={findLog(e.logs, 1, 0)?.kg ?? last?.sets[0]?.parts[0]?.kg ?? e.targetKg} onChange={(p) => updateExercise(program.id, session.id, e.id, p)} />
             : (['sets', 'repMin', 'repMax'] as const).map((key) => {
               const [label, mn, mx, st] = key === 'sets' ? ['Séries', 1, 8, 1] as const : key === 'repMin' ? [timed ? 'Durée min (s)' : 'Reps min', 1, timed ? 300 : 30, timed ? 5 : 1] as const : [timed ? 'Durée max (s)' : 'Reps max', 1, timed ? 300 : 40, timed ? 5 : 1] as const
               return <div key={key} className="flex items-center justify-between"><span className="font-semibold">{label}</span>

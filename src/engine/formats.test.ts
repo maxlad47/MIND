@@ -120,6 +120,11 @@ describe('saisie et dernière performance', () => {
     expect(describeLastSet({ n: 1, parts: [{ part: 0, kg: 0, reps: 0, seconds: 45 }] })).toBe('45 s')
   })
 
+  it('un poids saisi sur une partie prime sur son pourcentage (affichage et charge suggérée)', () => {
+    const e = ex({ id: 'e', exerciseId: 'dev_couche_barre', sets: 1, plan: [{ parts: [{ reps: 1, kg: 100 }, { reps: 6, pct: 80, kg: 75 }] }] })
+    expect(describePlan(e)).toBe('1 à 100 kg + 6 à 75 kg')
+    expect(suggestedKg(e, 1, 1, (n, p) => (n === 1 && p === 0 ? 100 : undefined))).toBe(75)
+  })
   it('describePlan : résumé des séries', () => {
     expect(describePlan(combo())).toBe('3 × (1 + 6 à −20 %)')
     expect(describePlan(ex({ id: 'b', exerciseId: 'curl_halteres', sets: 3, repMin: 8, repMax: 12 }))).toBe('3 × 8–12')

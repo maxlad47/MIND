@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { exerciseOf, isTimed } from '@/engine/exercises'
 import {
   applyFormat, defaultGroup, FORMAT_DEFAULT_SETS, FORMAT_HINT, FORMAT_LABEL, FORMATS, GROUP_COLOR, GROUP_HINT, GROUP_KINDS, GROUP_LABEL, GROUP_SIZE,
-  hasPlan, isRoundsKind, letterOf, nominalReps, plannedSetsOf, repRangeOf,
+  hasPlan, isRoundsKind, letterOf, nominalReps, plannedSetsOf, relativeKg, repRangeOf,
 } from '@/engine/formats'
 import type { GroupKind, GroupSpec, PlannedSet, SetFormat, SetPart, Zone, Muscle, Exercise } from '@/engine/types'
 import { Button, Chip, Icon, NumberInput } from './kit'
@@ -42,7 +42,7 @@ export function FormatChips({ value, onChange, exerciseId }: { value?: SetFormat
 }
 
 /** Petit champ numérique compact (une ligne de partie doit tenir sur un iPhone). */
-function Mini({ value, onChange, label, suffix, max = 999, step = 1 }: { value: number | undefined; onChange: (v: number | undefined) => void; label: string; suffix?: string; max?: number; step?: number }) {
+function Mini({ value, onChange, label, suffix, placeholder, max = 999, step = 1 }: { value: number | undefined; onChange: (v: number | undefined) => void; label: string; suffix?: string; placeholder?: string; max?: number; step?: number }) {
   const [raw, setRaw] = useState(value === undefined ? '' : String(value).replace('.', ','))
   useEffect(() => { setRaw((r) => (Number(r.replace(',', '.')) === value || (r === '' && value === undefined) ? r : value === undefined ? '' : String(value).replace('.', ','))) }, [value])
   void step
@@ -50,7 +50,7 @@ function Mini({ value, onChange, label, suffix, max = 999, step = 1 }: { value: 
     <label className="block min-w-0">
       <span className="block text-[11px] font-semibold uppercase tracking-wide text-faint mb-0.5 text-center">{label}</span>
       <span className="flex items-center justify-center rounded-[12px] bg-surface px-1 focus-within:ring-2 focus-within:ring-inset focus-within:ring-accent/60">
-        <input inputMode="decimal" aria-label={label} value={raw} className="w-full min-w-0 h-11 bg-transparent text-center outline-none num font-bold text-[16px]"
+        <input inputMode="decimal" aria-label={label} value={raw} placeholder={placeholder} className="w-full min-w-0 h-11 bg-transparent text-center outline-none num font-bold text-[16px]"
           onChange={(e) => {
             setRaw(e.target.value)
             const t = e.target.value.replace(',', '.')
@@ -64,27 +64,11 @@ function Mini({ value, onChange, label, suffix, max = 999, step = 1 }: { value: 
   )
 }
 
-const partMode = (p: SetPart): 'kg' | 'pct' => (p.kg !== undefined && p.pct === undefined ? 'kg' : 'pct')
-
-/**
- * Éditeur des séries détaillées : une carte par série, une ligne par partie (reps ou secondes, charge relative en % ou absolue en kg,
- * repos avant la partie suivante : 0 = enchaîné). C'est ce que le sélecteur « Format » préremplit.
- */
-export function PlanEditor({ value, onChange }: { value: PlanFields; onChange: (p: PlanPatch) => void }) {
+export function PlanEditor({ value, onChange, refKg }: { value: PlanFields; onChange: (p: PlanPatch) => void; refKg?: number }) {
   const plan = plannedSetsOf(value)
   const timed = isTimed(value.exerciseId)
   const commit = (next: PlannedSet[]) => onChange({ plan: next, format: value.format ?? 'classique', sets: next.length, ...repRangeOf(next) })
   const setPart = (i: number, j: number, patch: Partial<SetPart>) => commit(plan.map((s, a) => (a !== i ? s : { parts: s.parts.map((p, b) => (b === j ? { ...p, ...patch } : p)) })))
-  const setLoad = (i: number, j: number, v: number | undefined) => {
-    const p = plan[i].parts[j]
-    const { kg: _kg, pct: _pct, ...rest } = p
-    setPart(i, j, { ...rest, kg: undefined, pct: undefined, ...(v === undefined ? {} : partMode(p) === 'kg' ? { kg: v } : { pct: v }) })
-  }
-  const toggleMode = (i: number, j: number) => {
-    const p = plan[i].parts[j]
-    if (partMode(p) === 'kg') setPart(i, j, { kg: undefined, pct: 100 })
-    else setPart(i, j, { pct: undefined, kg: undefined })
-  }
   return (
     <div className="flex flex-col gap-2.5">
       {plan.map((set, i) => (
@@ -96,17 +80,16 @@ export function PlanEditor({ value, onChange }: { value: PlanFields; onChange: (
           <div className="flex flex-col gap-2">
             {set.parts.map((p, j) => {
               const last = j === set.parts.length - 1
-              const mode = partMode(p)
               return (
-                <div key={j} className="grid items-end gap-1.5" style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.15fr) 44px minmax(0,1fr) 44px' }}>
+                <div key={j} className="grid items-end gap-1.5" style={{ gridTemplateColumns: 'repeat(4, minmax(0,1fr)) 40px' }}>
                   <Mini label={timed || p.seconds !== undefined ? 'Secondes' : 'Reps'} value={p.seconds ?? p.reps}
                     onChange={(v) => setPart(i, j, p.seconds !== undefined ? { seconds: v ?? 1 } : { reps: v ?? 1, ...(p.repMax !== undefined && (v ?? 1) > p.repMax ? { repMax: undefined } : {}) })} />
-                  <Mini label="Charge" value={mode === 'kg' ? p.kg : p.pct} suffix={mode === 'kg' ? 'kg' : '%'} onChange={(v) => setLoad(i, j, v)} />
-                  <button className="tap h-11 w-11 rounded-[12px] bg-surface text-[13px] font-bold" aria-label={`Charge en ${mode === 'kg' ? 'pourcentage' : 'kilos'}`} onClick={() => toggleMode(i, j)}>{mode === 'kg' ? 'kg' : '%'}</button>
-                  {last ? <div className="h-11 flex items-end justify-center pb-3 text-[12px] text-faint">repos de la série</div>
-                    : <Mini label="Repos (s)" value={p.restAfterSec ?? 0} onChange={(v) => setPart(i, j, { restAfterSec: v ?? 0 })} />}
+                  <Mini label="Poids kg" value={p.kg} placeholder={p.pct !== undefined && refKg ? String(relativeKg(refKg, p.pct)).replace('.', ',') : 'kg'} onChange={(v) => setPart(i, j, { kg: v })} />
+                  <div className={p.kg !== undefined ? 'opacity-45' : ''}><Mini label="% lourde" value={p.pct} placeholder="—" onChange={(v) => setPart(i, j, { pct: v })} /></div>
+                  {last ? <div className="h-11 flex items-end justify-center pb-3 text-[12px] text-faint text-center leading-none">fin</div>
+                    : <Mini label="Repos s" value={p.restAfterSec ?? 0} onChange={(v) => setPart(i, j, { restAfterSec: v ?? 0 })} />}
                   {set.parts.length > 1
-                    ? <button className="tap h-11 w-11 flex items-center justify-center text-muted" aria-label={`Retirer la partie ${j + 1}`} onClick={() => commit(plan.map((s, a) => (a !== i ? s : { parts: s.parts.filter((_, b) => b !== j) })))}><Icon name="x" size={15} strokeWidth={2.6} /></button>
+                    ? <button className="tap h-11 w-10 flex items-center justify-center text-muted" aria-label={`Retirer la partie ${j + 1}`} onClick={() => commit(plan.map((s, a) => (a !== i ? s : { parts: s.parts.filter((_, b) => b !== j) })))}><Icon name="x" size={15} strokeWidth={2.6} /></button>
                     : <span />}
                 </div>
               )
@@ -119,7 +102,7 @@ export function PlanEditor({ value, onChange }: { value: PlanFields; onChange: (
         </div>
       ))}
       <Button small variant="tinted" color={FORMAT_COLOR} onClick={() => commit([...plan, structuredClone(plan[plan.length - 1])])}><Icon name="plus" size={16} strokeWidth={2.6} /> Série</Button>
-      <p className="text-[12.5px] text-muted leading-snug px-1">Charge : <b>100 %</b> = la charge de la partie lourde (la première partie de la série ; pour la première partie d'une série, celle de la première série). Repos <b>0</b> = enchaîné, sans pause.</p>
+      <p className="text-[12.5px] text-muted leading-snug px-1"><b>Poids</b> : tape la charge de chaque partie (elle prime). Sans poids, <b>%</b> la calcule à partir de la partie lourde (100 % = la première partie de la série ; pour la première partie d'une série, celle de la première série). Repos <b>0</b> = enchaîné, sans pause.</p>
     </div>
   )
 }
