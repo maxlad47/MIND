@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { allSessions } from '@/engine/adapt'
-import { EXERCISE_BY_ID } from '@/engine/exercises'
+import { exerciseOf } from '@/engine/exercises'
+import { isLibre } from '@/engine/libre'
 import { epley } from '@/engine/strength'
 import { MUSCLE_LABEL, type Muscle, type Session } from '@/engine/types'
 import { addDays, fmtKm, fmtPace, fmtTime, mondayOf, shortDate, todayISO } from '@/engine/utils'
@@ -115,7 +116,7 @@ export function ProgressView({ clientId }: { clientId: string }) {
       const arr = exStats.get(e.exerciseId) ?? []
       arr.push({ date: s.date, kg: Math.max(...e.logs.map((l) => l.kg)), e1: Math.round(epley(best.kg, best.reps) * 10) / 10 })
       exStats.set(e.exerciseId, arr)
-      const m = EXERCISE_BY_ID[e.exerciseId].muscle
+      const m = exerciseOf(e.exerciseId).muscle
       setsByMuscle[m] = (setsByMuscle[m] ?? 0) + e.logs.length
       const k = mondayOf(s.date)
       tonnageByWeek.set(k, (tonnageByWeek.get(k) ?? 0) + e.logs.reduce((a, l) => a + l.kg * l.reps, 0))
@@ -150,7 +151,7 @@ export function ProgressView({ clientId }: { clientId: string }) {
 
   return (
     <div>
-      <Segmented value={filter} onChange={setFilter} options={[{ value: '4w', label: '4 semaines' }, { value: 'cycle', label: 'Cycle en cours' }, { value: 'all', label: 'Tout' }]} />
+      <Segmented value={filter} onChange={setFilter} options={isLibre(program) ? [{ value: '4w', label: '4 semaines' }, { value: 'all', label: 'Tout' }] : [{ value: '4w', label: '4 semaines' }, { value: 'cycle', label: 'Cycle en cours' }, { value: 'all', label: 'Tout' }]} />
 
       {/* synthèse */}
       <Card className="p-4 mt-4 flex items-center gap-4">
@@ -189,7 +190,7 @@ export function ProgressView({ clientId }: { clientId: string }) {
             <div className="flex gap-2 overflow-x-auto hide-scroll pb-3 -mx-1 px-1 overscroll-x-contain">
               {exOptions.slice(0, 12).map(([id]) => (
                 <button key={id} onClick={() => setExId(id)} className="tap hit shrink-0 rounded-full px-3.5 h-9 text-[13px] font-semibold"
-                  style={{ background: selected === id ? MUSCU : 'var(--surface2)', color: selected === id ? '#fff' : 'var(--text)' }}>{EXERCISE_BY_ID[id].name}</button>
+                  style={{ background: selected === id ? MUSCU : 'var(--surface2)', color: selected === id ? '#fff' : 'var(--text)' }}>{exerciseOf(id).name}</button>
               ))}
             </div>
             <div className="flex items-end justify-between mb-2">
@@ -250,7 +251,7 @@ export function ProgressView({ clientId }: { clientId: string }) {
                 <Cover seed={r.id} sports={['muscu']} scrim={false} className="w-12 h-12 rounded-[14px] shrink-0">
                   <div className="absolute inset-0 flex items-center justify-center text-white"><Icon name="trophy" size={22} /></div>
                 </Cover>
-                <div className="flex-1 min-w-0"><div className="font-bold truncate">{EXERCISE_BY_ID[r.exerciseId]?.name}</div><div className="text-[13px] text-muted">{shortDate(r.date)} · 1RM estimé {fmtKm(Math.round(r.e1rm * 10) / 10)} kg</div></div>
+                <div className="flex-1 min-w-0"><div className="font-bold truncate">{exerciseOf(r.exerciseId).name}</div><div className="text-[13px] text-muted">{shortDate(r.date)} · 1RM estimé {fmtKm(Math.round(r.e1rm * 10) / 10)} kg</div></div>
                 <div className="font-extrabold num text-[17px]">{fmtKm(r.kg)} × {r.reps}</div>
               </Card>
             ))}

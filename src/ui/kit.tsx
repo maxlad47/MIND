@@ -446,7 +446,7 @@ export function NumberInput({ value, onChange, step = 1, min = 0, max = 999, suf
     <div className="inline-flex items-center rounded-[14px] bg-surface2 h-12 overflow-hidden" style={{ width: width + 96 }}>
       <button aria-label="Diminuer" className="tap w-12 h-12 flex items-center justify-center text-muted" onClick={() => bump(-1)}><Icon name="minus" size={18} strokeWidth={2.4} /></button>
       <div className="flex-1 flex items-center justify-center min-w-0">
-        <input inputMode="decimal" value={raw} className="w-full min-w-0 bg-transparent text-center outline-none num font-bold text-[17px]"
+        <input inputMode="decimal" value={raw} className="w-full min-w-0 h-12 bg-transparent text-center outline-none num font-bold text-[17px]"
           onChange={(e) => {
             const t = e.target.value.replace(',', '.')
             setRaw(e.target.value)

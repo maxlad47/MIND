@@ -1,6 +1,8 @@
 // Test de la synchronisation avec un faux serveur Supabase en mémoire (deux « appareils » : un client, un coach).
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { P_MIXTE } from '@/engine/fixtures'
+import { newTemplate, newTemplateExercise } from '@/engine/libre'
+import { todayISO } from '@/engine/utils'
 
 type Row = Record<string, any>
 function makeServer() {
@@ -120,6 +122,49 @@ describe('synchronisation en ligne', () => {
     expect(db2.comments.length).toBe(1)
     expect(db2.notifications.some((n) => n.userId === me.id && n.title.includes('a commenté'))).toBe(true)
     expect(db2.programs[0].id).toBe(prog.id)
+  })
+
+  it('mode libre : séances modèles et planning voyagent avec le programme (aucun nouveau « kind », aucune migration SQL)', async () => {
+    const coach0 = await device(server)
+    await coach0.r.remoteSignUp('coach@test.fr', 'secret1', 'Max')
+    await coach0.r.remoteSignOut()
+
+    const cli = await device(server)
+    await cli.r.remoteSignUp('nina@test.fr', 'secret1', 'Nina')
+    const me = cli.s.currentUser()!
+    const today = todayISO()
+    const prog = cli.s.submitQuestionnaire(me.id, { ...P_MIXTE, firstName: 'Nina', mode: 'libre' }, today)
+    expect(prog.mode).toBe('libre')
+    const push = newTemplate('Push')
+    push.exercises = [newTemplateExercise('dev_couche_barre')]
+    cli.s.saveTemplate(prog.id, push)
+    cli.s.setPlanning(prog.id, { mode: 'rotation', days: [0, 1, 2, 3, 4, 5, 6], order: [push.id] })
+    const custom = cli.s.addCustomExercise(prog.id, 'Curl marteau poulie', 'biceps')
+    await cli.r.pushNow()
+    // tout vit dans l'enregistrement du programme : les seuls « kind » envoyés sont ceux qui existaient déjà
+    const kinds = new Set([...server.tables.records.keys()].map((k) => k.split(':')[0]))
+    expect([...kinds].every((k) => ['q', 'p', 'ck', 'ad', 'ed', 'c', 'pr', 'an', 'dr'].includes(k))).toBe(true)
+    const saved = server.tables.records.get(`p:${prog.id}`)!.data as any
+    expect(saved.libre.templates[0].name).toBe('Push')
+    expect(saved.libre.customExercises[0].id).toBe(custom)
+
+    // le coach voit le client en mode libre, avec ses modèles
+    const coach = await device(server)
+    await coach.r.remoteSignIn('coach@test.fr', 'secret1')
+    const seen = coach.s.getDB().programs.find((p) => p.id === prog.id)!
+    expect(seen.mode).toBe('libre')
+    expect(seen.libre!.templates.map((t) => t.name)).toEqual(['Push'])
+    // l'exercice perso se résout chez le coach comme chez le client
+    expect((await import('@/engine/exercises')).exerciseOf(custom).name).toBe('Curl marteau poulie')
+
+    // le coach modifie la séance : le client la reçoit, avec la notification
+    coach.s.saveTemplate(prog.id, { ...seen.libre!.templates[0], name: 'Push lourd' })
+    await coach.r.pushNow()
+    const cli2 = await device(server)
+    await cli2.r.remoteSignIn('nina@test.fr', 'secret1')
+    const db2 = cli2.s.getDB()
+    expect(db2.programs.find((p) => p.id === prog.id)!.libre!.templates[0].name).toBe('Push lourd')
+    expect(db2.notifications.some((n) => n.userId === me.id && n.title === 'Max a modifié ta séance Push lourd')).toBe(true)
   })
 
   it('une modification faite hors ligne n\'est pas perdue au rechargement', async () => {

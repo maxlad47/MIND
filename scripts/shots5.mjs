@@ -11,7 +11,7 @@ for (const look of ['feminin', 'masculin']) {
   await page.goto(base); await page.waitForTimeout(500); await page.screenshot({ path: out('login') })
   await page.getByText('Camille').first().click(); await page.waitForTimeout(900); await page.screenshot({ path: out('today') })
   await page.evaluate(() => window.scrollTo(0, 640)); await page.waitForTimeout(400); await page.screenshot({ path: out('today2') })
-  await page.goto(base + '/app/program'); await page.waitForTimeout(500)
+  await page.goto(base + '/#/app/program'); await page.waitForTimeout(500)
   await page.getByRole('button', { name: 'Semaine 6', exact: true }).click(); await page.waitForTimeout(600)
   await page.evaluate(() => window.scrollTo(0, 330)); await page.waitForTimeout(400); await page.screenshot({ path: out('program') })
   await page.evaluate(() => window.scrollTo(0, 900)); await page.waitForTimeout(400); await page.screenshot({ path: out('program2') })

@@ -1,11 +1,11 @@
 // Adaptations automatiques : séances manquées, charges, allures, fatigue/douleur, analyse hebdo.
 // Fonctions pures : elles renvoient un nouveau programme + les adaptations à journaliser.
 
-import { EXERCISE_BY_ID, alternativesFor } from './exercises'
+import { alternativesFor, exerciseOf } from './exercises'
 import { bestDayFor, daysFor, runClass } from './combine'
 import { capLoad } from './guardrails'
 import { computePaces, isQuality } from './running'
-import type { Adaptation, AdaptationKind, Checkin, Paces, Program, RunPlan, Session, Zone } from './types'
+import type { Adaptation, AdaptationKind, Checkin, Paces, Program, RunPlan, Session, SessionExercise, Zone } from './types'
 import { LOWER_MUSCLES } from './types'
 import { addDays, dayName, fmtKm, mondayOf, round, uid, weekday } from './utils'
 
@@ -74,16 +74,16 @@ export function handleMissed(program: Program, today: string, availableDays: num
 
 // ------------------------------------------------------------------ 2. charges selon RPE / RIR
 
-const isLowerEx = (exId: string) => LOWER_MUSCLES.includes(EXERCISE_BY_ID[exId].muscle)
+const isLowerEx = (exId: string) => LOWER_MUSCLES.includes(exerciseOf(exId).muscle)
 
 export function loadIncrement(exId: string, current: number): number {
-  const ex = EXERCISE_BY_ID[exId]
+  const ex = exerciseOf(exId)
   if (ex.equipment === 'halteres') return 2
   const base = isLowerEx(exId) ? 5 : 2.5
   return Math.max(base, round(current * 0.02, 0.5))
 }
 
-type Verdict = 'monter' | 'monter_plus' | 'maintenir' | 'baisser'
+export type Verdict = 'monter' | 'monter_plus' | 'maintenir' | 'baisser'
 
 /** Évalue les séries saisies d'un exercice par rapport à la cible. */
 export function judgeExercise(sets: { reps: number; rir: number }[], repMin: number, repMax: number, targetRir: number, previouslyFailed: boolean): Verdict {
@@ -97,6 +97,28 @@ export function judgeExercise(sets: { reps: number; rir: number }[], repMin: num
   return 'maintenir'
 }
 
+export interface NextLoad { kg: number; next: number; verdict: Verdict; why: string }
+
+/**
+ * Double progression : charge conseillée pour la prochaine fois, d'après les séries saisies (`e`) et, s'il existe,
+ * l'occurrence précédente du même exercice (`prev`). Partagée par les programmes générés et par les
+ * « suggestions de charge » du mode libre.
+ */
+export function nextLoad(e: SessionExercise, prev?: SessionExercise): NextLoad | null {
+  if (!e.logs.length) return null
+  const kg = Math.max(...e.logs.map((l) => l.kg))
+  const prevFailed = !!prev && prev.logs.some((l) => l.reps < prev.repMin) && prev.logs.every((l) => l.kg === kg || l.kg <= kg)
+  const verdict = judgeExercise(e.logs, e.repMin, e.repMax, e.rir, prevFailed)
+  let next = kg
+  let why = ''
+  const inc = loadIncrement(e.exerciseId, kg)
+  if (verdict === 'monter') { next = kg + inc; why = 'toutes les séries au haut de la fourchette' }
+  else if (verdict === 'monter_plus') { next = kg + inc * 2; why = 'séries nettement plus faciles que prévu' }
+  else if (verdict === 'baisser') { next = round(kg * 0.95, 0.5); why = 'deux séances de suite sous la cible' }
+  next = round(capLoad(kg, next), exerciseOf(e.exerciseId).equipment === 'halteres' ? 1 : 0.5)
+  return { kg, next, verdict, why }
+}
+
 /** À appeler quand une séance de muscu est terminée : ajuste les charges des séances futures. */
 export function adjustLoadsAfterSession(program: Program, sessionId: string, today: string): AdaptResult {
   const p = clone(program)
@@ -108,19 +130,11 @@ export function adjustLoadsAfterSession(program: Program, sessionId: string, tod
 
   for (const e of done.exercises) {
     if (!e.logs.length) continue
-    const kg = Math.max(...e.logs.map((l) => l.kg))
     const prev = all.filter((s) => s.date < done.date && s.status === 'faite').reverse()
       .flatMap((s) => s.exercises ?? []).find((x) => x.exerciseId === e.exerciseId && x.logs.length)
-    const prevFailed = !!prev && prev.logs.some((l) => l.reps < prev.repMin) && prev.logs.every((l) => l.kg === kg || l.kg <= kg)
-    const verdict = judgeExercise(e.logs, e.repMin, e.repMax, e.rir, prevFailed)
-    let next = kg
-    let why = ''
-    const inc = loadIncrement(e.exerciseId, kg)
-    if (verdict === 'monter') { next = kg + inc; why = 'toutes les séries au haut de la fourchette' }
-    else if (verdict === 'monter_plus') { next = kg + inc * 2; why = 'séries nettement plus faciles que prévu' }
-    else if (verdict === 'baisser') { next = round(kg * 0.95, 0.5); why = 'deux séances de suite sous la cible' }
-    else next = kg
-    next = round(capLoad(kg, next), EXERCISE_BY_ID[e.exerciseId].equipment === 'halteres' ? 1 : 0.5)
+    const res = nextLoad(e, prev)
+    if (!res) continue
+    const { next, verdict, why } = res
 
     const touched: Session[] = []
     for (const s of future) {
@@ -132,7 +146,7 @@ export function adjustLoadsAfterSession(program: Program, sessionId: string, tod
       }
     }
     if (verdict !== 'maintenir' && touched.length) {
-      const name = EXERCISE_BY_ID[e.exerciseId].name
+      const name = exerciseOf(e.exerciseId).name
       adaptations.push(adapt(p, 'charge',
         `${name} : ${verdict === 'baisser' ? 'charge réduite' : 'charge augmentée'} à ${fmtKm(next)} kg (${why}).`, today, touched))
     } else if (touched.length) {
@@ -231,7 +245,7 @@ export function applyCheckin(program: Program, sessionId: string, c: Checkin, to
     if (s.exercises) {
       const replaced: string[] = []
       s.exercises = s.exercises.flatMap((e) => {
-        const ex = EXERCISE_BY_ID[e.exerciseId]
+        const ex = exerciseOf(e.exerciseId)
         if (!ex.contra.includes(c.painZone as Zone)) return [e]
         const alt = alternativesFor(e.exerciseId, [c.painZone as Zone, ...p.q.injuries], p.q.strength.level)[0]
         if (!alt) { replaced.push(`${ex.name} (retiré)`); return [] }

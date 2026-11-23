@@ -4,13 +4,14 @@ import {
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { allSessions, currentWeek } from '@/engine/adapt'
+import { isLibre } from '@/engine/libre'
 import { bestDayFor, conflictsOfWeek, daysFor } from '@/engine/combine'
 import type { Session } from '@/engine/types'
 import { addDays, DAY_NAMES, shortDate, todayISO, weekday } from '@/engine/utils'
 import { moveSession, programOf, restoreSession, undoAdaptationById, useDB } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { Button, Card, Chip, Cover, EmptyState, Icon, Sheet, SectionTitle, SportIcon, spring, toast } from '@/ui/kit'
-import { sessionMeta, statusLabel } from '@/ui/parts'
+import { coverSeed, sessionMeta, statusLabel } from '@/ui/parts'
 import { PHASE_COLOR } from '@/ui/cover'
 
 
@@ -23,7 +24,7 @@ function SessionRow({ s, canEdit, onOpen, onMenu, dragging }: { s: Session; canE
       className="flex items-center gap-3 bg-surface rounded-[18px] p-2.5 pr-1 select-none"
       style={{ opacity: isDragging && !dragging ? 0.3 : 1, WebkitTouchCallout: 'none', WebkitUserSelect: 'none', boxShadow: dragging ? '0 18px 40px rgba(0,0,0,.45)' : 'var(--shadow-card)', transform: dragging ? 'scale(1.03) rotate(-0.6deg)' : undefined }}>
       <button onClick={onOpen} className="tap flex items-center gap-3 flex-1 min-w-0 text-left">
-        <Cover seed={s.id + s.title} sports={[s.sport]} kind={s.kind} scrim={false} className="rounded-[13px] shrink-0" style={{ width: 54, height: 54 }}>
+        <Cover seed={coverSeed(s)} sports={[s.sport]} kind={s.kind} scrim={false} className="rounded-[13px] shrink-0" style={{ width: 54, height: 54 }}>
           <div className="absolute inset-0 flex items-center justify-center"><SportIcon sport={s.sport} size={23} color="#fff" /></div>
         </Cover>
         <div className="min-w-0">
@@ -77,6 +78,7 @@ export function ProgramView({ clientId, canEdit = true }: { clientId: string; ca
 
   if (!program) return <EmptyState icon="program" title="Pas encore de programme" text="Le programme apparaîtra ici dès que le formulaire d'entrée sera rempli." />
 
+  const libre = isLibre(program)
   const curN = currentWeek(program, today).n
   const n = idx ?? curN
   const week = program.weeks.find((w) => w.n === n) ?? program.weeks[0]
@@ -130,8 +132,8 @@ export function ProgramView({ clientId, canEdit = true }: { clientId: string; ca
       <div className="card p-2 flex items-center justify-between mb-1">
         <button className="tap w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-25" aria-label="Semaine précédente" disabled={n <= 1} onClick={() => setIdx(n - 1)}><Icon name="back" strokeWidth={2.4} /></button>
         <motion.div key={week.n} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="text-center">
-          <div className="text-[19px] font-extrabold tracking-tight">Semaine {week.n}/{program.weeks.length}</div>
-          <div className="text-[13.5px] font-semibold" style={{ color: PHASE_COLOR[week.phase] }}>{week.phase}{week.light ? ' · allégée' : ''}<span className="text-muted font-medium"> · {Number(week.startDate.slice(8))}–{shortDate(addDays(week.startDate, 6))}</span></div>
+          <div className="text-[19px] font-extrabold tracking-tight">{libre ? `Semaine du ${shortDate(week.startDate)}` : `Semaine ${week.n}/${program.weeks.length}`}</div>
+          <div className="text-[13.5px] font-semibold" style={{ color: PHASE_COLOR[week.phase] }}>{libre ? 'Mon carnet' : <>{week.phase}{week.light ? ' · allégée' : ''}</>}<span className="text-muted font-medium"> · {Number(week.startDate.slice(8))}–{shortDate(addDays(week.startDate, 6))}</span></div>
         </motion.div>
         <button className="tap w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-25" aria-label="Semaine suivante" disabled={n >= program.weeks.length} onClick={() => setIdx(n + 1)}><Icon name="chevron" strokeWidth={2.4} /></button>
       </div>

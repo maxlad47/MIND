@@ -1,17 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { alternativesFor, EXERCISES, EXERCISE_BY_ID, isAllowed } from '@/engine/exercises'
+import { alternativesFor, EXERCISES, exerciseOf, isAllowed } from '@/engine/exercises'
+import { isFreeRun, isLibre } from '@/engine/libre'
 import { describeBlock } from '@/engine/running'
-import { ZONES, MUSCLE_LABEL, PATTERN_LABEL, type Muscle, type Program, type Session, type Zone } from '@/engine/types'
+import { ZONES, MUSCLE_LABEL, PATTERN_LABEL, type Exercise, type Muscle, type Program, type Session, type Zone } from '@/engine/types'
 import { addDays, DAY_NAMES, DAY_SHORT, fmtKm, parseDate, prettyDate, shortDate, todayISO } from '@/engine/utils'
-import { addCheckin, markNotificationsRead, useDB, type AppNotification } from '@/lib/store'
+import { addCheckin, markNotificationsRead, programOf, useDB, type AppNotification } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { Button, Card, Chip, Cover, Icon, Sheet, SportIcon, spring, toast } from './kit'
 
 export const sportOf = (s: Session) => s.sport
 export const statusLabel: Record<string, string> = { prevue: 'Prévue', faite: 'Faite', manquee: 'Manquée', sautee: 'Sautée' }
 
+/** Graine de la pochette : en mode libre, une séance garde la pochette de son modèle. */
+export const coverSeed = (s: Session): string => s.templateId ?? s.id + s.title
+
 export function sessionMeta(s: Session): string {
+  if (isFreeRun(s)) return s.runLog ? `${fmtKm(s.runLog.km)} km` : 'Sortie libre'
   if (s.run) return `${fmtKm(s.run.totalKm)} km · ${s.estMinutes} min`
   return `${s.exercises?.length ?? 0} exercices · ${s.estMinutes} min`
 }
@@ -21,14 +26,15 @@ export function sessionSubtitle(s: Session): string {
     const b = s.run.blocks[0]
     return b ? describeBlock(b) : ''
   }
-  return (s.exercises ?? []).slice(0, 3).map((e) => EXERCISE_BY_ID[e.exerciseId]?.name).filter(Boolean).join(' · ')
+  if (isFreeRun(s)) return 'Saisis km, temps et ressenti'
+  return (s.exercises ?? []).slice(0, 3).map((e) => exerciseOf(e.exerciseId).name).filter(Boolean).join(' · ')
 }
 
 /** Carte « pochette » pour carrousel : grande pochette carrée, titre dessus, date et durée dessous. */
 export function SessionTile({ s, onClick, width = 168 }: { s: Session; onClick: () => void; width?: number }) {
   return (
     <motion.button onClick={onClick} whileTap={{ scale: 0.96 }} transition={spring} className="snap-start shrink-0 self-start text-left align-top" style={{ width, display: 'block' }}>
-      <Cover seed={s.id + s.title} sports={[s.sport]} kind={s.kind} className="rounded-[20px]" style={{ width, height: width, boxShadow: 'var(--shadow-cover)' }}>
+      <Cover seed={coverSeed(s)} sports={[s.sport]} kind={s.kind} className="rounded-[20px]" style={{ width, height: width, boxShadow: 'var(--shadow-cover)' }}>
         <div className="absolute top-2.5 left-2.5 w-8 h-8 rounded-full glass-dark flex items-center justify-center"><SportIcon sport={s.sport} size={17} color="#fff" /></div>
         {s.status === 'faite' && <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-ok text-white flex items-center justify-center shadow"><Icon name="check" size={16} strokeWidth={3} /></div>}
         {s.status === 'manquee' && <div className="absolute top-2.5 right-2.5 rounded-full bg-bad text-white text-[11px] font-bold px-2.5 h-6 flex items-center shadow">Manquée</div>}
@@ -43,6 +49,7 @@ export function SessionTile({ s, onClick, width = 168 }: { s: Session; onClick: 
 }
 
 export function WarningBanner({ program, onFinish, onChangeGoal }: { program: Program; onFinish?: () => void; onChangeGoal?: () => void }) {
+  if (isLibre(program)) return null // mode libre : aucun avertissement de génération
   const list = program.warnings.filter((w) => ['prepa_trop_courte', 'chrono_irrealiste', 'muscu_prioritaire_course', 'conflit_placement', 'pic_non_atteint'].includes(w.code))
   if (!list.length) return null
   return (
@@ -120,6 +127,8 @@ function Scale({ label, value, onChange, low, high }: { label: string; value: nu
 }
 
 export function CheckinSheet({ open, onClose, clientId, sessionId, onDone }: { open: boolean; onClose: () => void; clientId: string; sessionId: string; onDone: () => void }) {
+  const db = useDB()
+  const libre = isLibre(programOf(db, clientId))
   const [energy, setEnergy] = useState(4)
   const [sleep, setSleep] = useState(4)
   const [sore, setSore] = useState(2)
@@ -128,8 +137,9 @@ export function CheckinSheet({ open, onClose, clientId, sessionId, onDone }: { o
   const submit = () => {
     addCheckin({ clientId, sessionId, date: todayISO(), energy, sleep, soreness: sore, pain, painZone: pain ? zone : undefined })
     const low = (energy + sleep + (6 - sore)) / 3 <= 2.5
-    if (pain && zone) toast('Séance adaptée à ta douleur. Ton coach est prévenu.')
-    else if (low) toast('Forme basse : séance allégée de 30 %.')
+    // mode libre : MIND n'adapte rien tout seul, il prévient seulement le coach
+    if (pain && zone) toast(libre ? 'Ton coach est prévenu.' : 'Séance adaptée à ta douleur. Ton coach est prévenu.')
+    else if (low && !libre) toast('Forme basse : séance allégée de 30 %.')
     onDone()
   }
   return (
@@ -157,30 +167,69 @@ export function CheckinSheet({ open, onClose, clientId, sessionId, onDone }: { o
 }
 
 // ------------------------------------------------------------------ choix d'exercice
-export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exercice', injuries, level, replacing, excluded = [] }: {
+export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exercice', injuries, level, replacing, excluded = [], customs = [], onCreateCustom, warn = [] }: {
   open: boolean; onClose: () => void; onPick: (id: string) => void; title?: string; injuries: Zone[]; level?: 'debutant' | 'intermediaire' | 'avance'; replacing?: string; excluded?: Muscle[]
+  /** Mode libre : exercices perso du client, affichés avec la bibliothèque. */
+  customs?: Exercise[]
+  /** Mode libre : « Créer un exercice » (nom + muscle principal) ; renvoie l'id du nouvel exercice. */
+  onCreateCustom?: (name: string, muscle: Muscle) => string
+  /** Zones à signaler (au lieu de masquer) : « À éviter ». */
+  warn?: Zone[]
 }) {
   const [q, setQ] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [name, setName] = useState('')
+  const [muscle, setMuscle] = useState<Muscle>('pectoraux')
+  useEffect(() => { if (!open) { setCreating(false); setName(''); setQ('') } }, [open])
   const alts = replacing ? alternativesFor(replacing, injuries) : []
-  const pool = (replacing ? alts : EXERCISES.filter((e) => isAllowed(e, injuries) && !excluded.includes(e.muscle)))
-    .filter((e) => e.name.toLowerCase().includes(q.toLowerCase()) || MUSCLE_LABEL[e.muscle].toLowerCase().includes(q.toLowerCase()))
+  const match = (e: Exercise) => e.name.toLowerCase().includes(q.toLowerCase()) || MUSCLE_LABEL[e.muscle].toLowerCase().includes(q.toLowerCase())
+  const pool = [...(replacing ? [] : customs), ...(replacing ? alts : EXERCISES.filter((e) => isAllowed(e, injuries) && !excluded.includes(e.muscle)))].filter(match)
   void level
+  const create = () => {
+    if (!onCreateCustom || !name.trim()) return
+    const id = onCreateCustom(name.trim(), muscle)
+    onPick(id)
+    onClose()
+  }
   return (
-    <Sheet open={open} onClose={onClose} title={title} tall>
-      {replacing && (
-        <p className="text-[14px] text-muted mb-3">Même muscle ({MUSCLE_LABEL[EXERCISE_BY_ID[replacing].muscle]}) et même schéma ({PATTERN_LABEL[EXERCISE_BY_ID[replacing].pattern]}), hors exercices contre-indiqués pour toi.</p>
-      )}
-      {!replacing && <input className="w-full h-11 rounded-[14px] bg-surface2 px-4 mb-3 outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60" placeholder="Rechercher" value={q} onChange={(e) => setQ(e.target.value)} />}
-      {pool.length === 0 && <p className="text-muted text-center py-6">Aucune alternative sans contre-indication.</p>}
-      <div className="flex flex-col gap-2">
-        {pool.map((e) => (
-          <button key={e.id} className="tap text-left bg-surface2 rounded-xl p-3" style={{ borderRadius: 16, padding: 14 }} onClick={() => { onPick(e.id); onClose() }}>
-            <div className="font-semibold">{e.name}</div>
-            <div className="text-[13px] text-muted">{MUSCLE_LABEL[e.muscle]} · {PATTERN_LABEL[e.pattern]}</div>
-            <div className="text-[13px] text-muted mt-0.5">{e.cue}</div>
+    <Sheet open={open} onClose={onClose} title={creating ? 'Créer un exercice' : title} tall>
+      {creating ? (
+        <div className="flex flex-col gap-4">
+          <input autoFocus className="w-full h-12 rounded-[14px] bg-surface2 px-4 outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60" placeholder="Nom de l'exercice" value={name} onChange={(e) => setName(e.target.value)} aria-label="Nom de l'exercice" />
+          <div>
+            <div className="text-[13px] text-muted mb-2 ml-1 font-medium">Muscle principal</div>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(MUSCLE_LABEL) as Muscle[]).map((m) => (
+                <button key={m} aria-pressed={muscle === m} onClick={() => setMuscle(m)} className="tap rounded-full h-11 px-4 text-[15px] font-semibold" style={{ background: muscle === m ? 'var(--muscu)' : 'var(--surface2)', color: muscle === m ? '#fff' : 'var(--text)' }}>{MUSCLE_LABEL[m]}</button>
+              ))}
+            </div>
+          </div>
+          <p className="text-[13px] text-muted leading-snug">Il sera suivi comme les autres : charges, dernière performance et graphiques. MIND ne propose pas d'alternative pour un exercice perso.</p>
+          <Button full disabled={!name.trim()} onClick={create} color="var(--muscu)">Créer et ajouter</Button>
+          <Button full variant="ghost" onClick={() => setCreating(false)}>Retour à la liste</Button>
+        </div>
+      ) : (<>
+        {replacing && (
+          <p className="text-[14px] text-muted mb-3">Même muscle ({MUSCLE_LABEL[exerciseOf(replacing).muscle]}) et même schéma ({PATTERN_LABEL[exerciseOf(replacing).pattern]}), hors exercices contre-indiqués pour toi.</p>
+        )}
+        {!replacing && <input className="w-full h-11 rounded-[14px] bg-surface2 px-4 mb-3 outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60" placeholder="Rechercher" value={q} onChange={(e) => setQ(e.target.value)} />}
+        {onCreateCustom && !replacing && (
+          <button className="tap w-full text-left flex items-center gap-3 mb-3 px-3.5 min-h-[52px] rounded-[16px]" style={{ background: 'color-mix(in srgb, var(--muscu) 14%, transparent)', color: 'var(--muscu)' }} onClick={() => { setName(q); setCreating(true) }}>
+            <Icon name="plus" size={20} strokeWidth={2.6} /><span className="font-bold">Créer un exercice</span>
           </button>
-        ))}
-      </div>
+        )}
+        {pool.length === 0 && <p className="text-muted text-center py-6">{replacing ? 'Aucune alternative sans contre-indication.' : 'Aucun exercice trouvé.'}</p>}
+        <div className="flex flex-col gap-2">
+          {pool.map((e) => (
+            <button key={e.id} className="tap text-left bg-surface2 rounded-xl p-3" style={{ borderRadius: 16, padding: 14 }} onClick={() => { onPick(e.id); onClose() }}>
+              <div className="font-semibold">{e.name}{e.id.startsWith('custom:') && <span className="ml-2 align-middle text-[11px] font-bold rounded-full px-2 py-0.5" style={{ background: 'color-mix(in srgb, var(--muscu) 18%, transparent)', color: 'var(--muscu)' }}>Perso</span>}</div>
+              <div className="text-[13px] text-muted">{MUSCLE_LABEL[e.muscle]}{e.id.startsWith('custom:') ? '' : ` · ${PATTERN_LABEL[e.pattern]}`}</div>
+              {!e.id.startsWith('custom:') && <div className="text-[13px] text-muted mt-0.5">{e.cue}</div>}
+              {warn.length > 0 && !isAllowed(e, warn) && <div className="text-[12.5px] font-semibold mt-1" style={{ color: '#FF9F0A' }}>À éviter avec : {e.contra.filter((z) => warn.includes(z)).join(', ')}</div>}
+            </button>
+          ))}
+        </div>
+      </>)}
     </Sheet>
   )
 }

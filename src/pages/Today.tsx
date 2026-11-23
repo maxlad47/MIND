@@ -2,25 +2,35 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { allSessions, currentWeek, weekStats } from '@/engine/adapt'
-import { EXERCISE_BY_ID } from '@/engine/exercises'
+import { exerciseOf } from '@/engine/exercises'
+import { isLibre, trainingDays } from '@/engine/libre'
 import type { Program } from '@/engine/types'
-import { addDays, fmtKm, mondayOf, prettyDate, todayISO } from '@/engine/utils'
+import { addDays, fmtKm, mondayOf, prettyDate, shortDate, todayISO } from '@/engine/utils'
 import { acceptAdaptation, programOf, refuseAdaptation, startNextCycle, submitQuestionnaire, useDB } from '@/lib/store'
 import { analyzeWeek } from '@/lib/ai'
 import { Button, Card, Carousel, Chip, Cover, EmptyState, Icon, Page, Ring, SectionTitle, SportBadge, SportIcon, spring, toast } from '@/ui/kit'
-import { BellButton, CheckinSheet, NotificationsSheet, SessionTile, sessionMeta, sessionSubtitle, WarningBanner, WeekStrip } from '@/ui/parts'
+import { ExtraSessionSheet } from '@/ui/free'
+import { BellButton, CheckinSheet, coverSeed, NotificationsSheet, SessionTile, sessionMeta, sessionSubtitle, WarningBanner, WeekStrip } from '@/ui/parts'
 
-export function TodayView({ clientId, onboardPath = '/onboarding' }: { clientId: string; onboardPath?: string }) {
+export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSessions }: { clientId: string; onboardPath?: string; onOpenSessions?: () => void }) {
   const db = useDB()
   const nav = useNavigate()
   const today = todayISO()
   const program = programOf(db, clientId)
   const [checkin, setCheckin] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [extra, setExtra] = useState(false)
 
   if (!program) {
     return <EmptyState icon="sparkle" title="Pas encore de programme" text="Réponds à quelques questions et MIND génère ton programme personnalisé tout de suite."
       action={<Button onClick={() => nav(onboardPath)}>Créer mon programme</Button>} />
+  }
+
+  const libre = isLibre(program)
+  const openSessions = onOpenSessions ?? (() => nav('/app/sessions'))
+  if (libre && (program.libre?.templates.length ?? 0) === 0) {
+    return <EmptyState icon="program" color="var(--muscu)" title="Crée ta première séance" text="Tu suis déjà ton programme : ajoute tes séances (ex. Push, Pull, Legs), puis place-les dans ta semaine."
+      action={<Button color="var(--muscu)" onClick={openSessions}>Créer ma première séance</Button>} />
   }
 
   const week = currentWeek(program, today)
@@ -56,12 +66,20 @@ export function TodayView({ clientId, onboardPath = '/onboarding' }: { clientId:
             <span className="text-[13px] font-extrabold num">{stats.done}/{stats.planned}</span>
           </Ring>
           <div className="flex-1 min-w-0">
-            <div className="text-[17px] font-bold leading-tight">Semaine {week.n} sur {total}</div>
-            <div className="text-[13.5px] text-muted mt-0.5">{week.phase}{week.light ? ' · semaine allégée' : ''}</div>
+            <div className="text-[17px] font-bold leading-tight">{libre ? `Semaine du ${shortDate(week.startDate)}` : `Semaine ${week.n} sur ${total}`}</div>
+            <div className="text-[13.5px] text-muted mt-0.5">{libre ? `${stats.planned} séance${stats.planned > 1 ? 's' : ''} cette semaine` : `${week.phase}${week.light ? ' · semaine allégée' : ''}`}</div>
           </div>
         </div>
         <WeekStrip start={week.startDate} sessions={week.sessions} today={today} onOpen={(id) => nav(`/session/${id}`)} />
       </Card>
+
+      {libre && trainingDays(program.libre!.planning).length === 0 && (
+        <Card className="p-4 mb-4" style={{ background: 'color-mix(in srgb, var(--muscu) 13%, var(--surface))', boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--muscu) 30%, transparent)' }}>
+          <div className="flex gap-3"><span style={{ color: 'var(--muscu)' }}><Icon name="calendar" /></span>
+            <div className="flex-1"><div className="font-bold">Règle ton planning</div><p className="text-[14px] text-muted mt-0.5 leading-snug">Choisis tes jours d'entraînement pour que tes séances apparaissent ici.</p>
+              <div className="mt-3"><Button small color="var(--muscu)" onClick={openSessions}>Régler mon planning</Button></div></div></div>
+        </Card>
+      )}
 
       <WarningBanner program={program} onFinish={finishGoal} onChangeGoal={() => nav('/onboarding?edit=1')} />
 
@@ -81,7 +99,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding' }: { clientId:
         </Card>
       ))}
 
-      {finished && program.type === 'muscu' && (
+      {finished && !libre && program.type === 'muscu' && (
         <Card className="p-4 mb-4">
           <div className="font-bold text-[17px]">Cycle terminé</div>
           <p className="text-muted text-[14px] mt-1">Tu as fini les 8 semaines. Génère le cycle suivant pour continuer à progresser.</p>
@@ -94,10 +112,10 @@ export function TodayView({ clientId, onboardPath = '/onboarding' }: { clientId:
         <div className="flex flex-col gap-4">
           {todays.map((s, i) => (
             <motion.div key={s.id} initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ ...spring, delay: i * 0.06 }}>
-              <Cover seed={s.id + s.title} sports={[s.sport]} kind={s.kind} className="rounded-[28px]" style={{ height: 340, boxShadow: 'var(--shadow-cover)' }}>
+              <Cover seed={coverSeed(s)} sports={[s.sport]} kind={s.kind} className="rounded-[28px]" style={{ height: 340, boxShadow: 'var(--shadow-cover)' }}>
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                  <SportBadge sports={[s.sport]} label={s.sport === 'muscu' ? 'Musculation' : 'Course'} slot={s.slot ? (s.slot === 'am' ? 'matin' : 'soir') : undefined} />
-                  <div className="rounded-full glass-dark px-3 h-8 flex items-center gap-1.5 text-white text-[13px] font-semibold border border-white/10"><Icon name="clock" size={15} /> {s.estMinutes} min</div>
+                  <SportBadge sports={[s.sport]} label={s.extra ? 'Séance en plus' : s.sport === 'muscu' ? 'Musculation' : 'Course'} slot={s.slot ? (s.slot === 'am' ? 'matin' : 'soir') : undefined} />
+                  {s.estMinutes > 0 && <div className="rounded-full glass-dark px-3 h-8 flex items-center gap-1.5 text-white text-[13px] font-semibold border border-white/10"><Icon name="clock" size={15} /> {s.estMinutes} min</div>}
                 </div>
                 <div className="absolute bottom-0 inset-x-0 p-5 text-white">
                   <div className="t-over opacity-80">Aujourd'hui</div>
@@ -128,7 +146,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding' }: { clientId:
             <p className="text-muted text-[15px] mt-1.5 max-w-[260px]">Ton corps progresse pendant la récupération. Profites-en.</p>
             {upcoming[0] && (
               <motion.button whileTap={{ scale: 0.97 }} transition={spring} onClick={() => nav(`/session/${upcoming[0].id}`)} className="mt-4 flex items-center gap-3 rounded-[18px] bg-surface2/80 p-2 pr-4 text-left">
-                <Cover seed={upcoming[0].id + upcoming[0].title} sports={[upcoming[0].sport]} kind={upcoming[0].kind} className="rounded-[12px] shrink-0" style={{ width: 48, height: 48 }} scrim={false}>
+                <Cover seed={coverSeed(upcoming[0])} sports={[upcoming[0].sport]} kind={upcoming[0].kind} className="rounded-[12px] shrink-0" style={{ width: 48, height: 48 }} scrim={false}>
                   <div className="absolute inset-0 flex items-center justify-center"><SportIcon sport={upcoming[0].sport} size={20} color="#fff" /></div>
                 </Cover>
                 <div className="min-w-0"><div className="text-[12px] text-muted font-semibold">Prochaine séance · <span className="cap-first inline-block">{prettyDate(upcoming[0].date)}</span></div><div className="font-bold truncate">Voir « {upcoming[0].title} »</div></div>
@@ -136,6 +154,10 @@ export function TodayView({ clientId, onboardPath = '/onboarding' }: { clientId:
             )}
           </div>
         </div>
+      )}
+
+      {libre && (
+        <div className="mt-4"><Button full variant="tinted" color="var(--muscu)" onClick={() => setExtra(true)}><Icon name="plus" size={18} strokeWidth={2.4} /> Séance en plus</Button></div>
       )}
 
       {lastWeekN >= 1 && !analysis && program.weeks.some((w) => w.n === lastWeekN) && (
@@ -186,7 +208,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding' }: { clientId:
               <div className="absolute inset-0 p-3.5 flex flex-col justify-between text-white">
                 <div className="flex items-center gap-1.5 t-over"><Icon name="trophy" size={15} /> Record</div>
                 <div>
-                  <div className="text-[13px] font-semibold leading-tight line-clamp-2 opacity-95">{EXERCISE_BY_ID[r.exerciseId]?.name}</div>
+                  <div className="text-[13px] font-semibold leading-tight line-clamp-2 opacity-95">{exerciseOf(r.exerciseId).name}</div>
                   <div className="text-[24px] leading-tight font-extrabold tracking-tight num">{fmtKm(r.kg)} kg × {r.reps}</div>
                 </div>
               </div>
@@ -195,6 +217,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding' }: { clientId:
         </Carousel>
       </>)}
 
+      {libre && <ExtraSessionSheet open={extra} onClose={() => setExtra(false)} program={program} />}
       <CheckinSheet open={!!checkin} onClose={() => setCheckin(null)} clientId={clientId} sessionId={checkin ?? ''} onDone={() => { const id = checkin; setCheckin(null); if (id) nav(`/session/${id}`) }} />
     </>
   )

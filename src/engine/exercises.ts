@@ -146,6 +146,50 @@ for (const ex of EXERCISES) {
 
 export const EXERCISE_BY_ID: Record<string, Exercise> = Object.fromEntries(EXERCISES.map((e) => [e.id, e]))
 
+// ------------------------------------------------------------------ exercices perso (mode libre)
+
+/** Les ids des exercices créés par le client commencent par ce préfixe. */
+export const CUSTOM_PREFIX = 'custom:'
+export const isCustomId = (id: string): boolean => id.startsWith(CUSTOM_PREFIX)
+
+const CUSTOM_PATTERN: Record<Muscle, Pattern> = {
+  pectoraux: 'push_h', dos: 'pull_h', epaules: 'push_v', biceps: 'curl', triceps: 'tri_ext',
+  quadriceps: 'squat', ischios: 'hinge', fessiers: 'hip_thrust', mollets: 'calf', abdos: 'core',
+}
+
+/** Construit un exercice perso : suivi comme les autres (charges, dernière performance, graphiques), sans alternatives automatiques. */
+export function makeCustomExercise(id: string, name: string, muscle: Muscle): Exercise {
+  return {
+    id, name: name.trim(), muscle, secondary: [], pattern: CUSTOM_PATTERN[muscle], equipment: 'machine', level: 'debutant',
+    contra: [], alts: [], cue: 'Exercice personnalisé.', compound: false,
+  }
+}
+
+let registered: string[] = []
+/**
+ * Branche les exercices perso sur `EXERCISE_BY_ID` : tous les endroits qui résolvent un `exerciseId` (nom, muscle, Progress,
+ * lastPerformance…) les trouvent comme les exercices de la bibliothèque. Ils ne sont jamais ajoutés à `EXERCISES`,
+ * donc le générateur de programmes ne les voit pas. Appelé par le store après chaque changement de données.
+ */
+export function registerCustomExercises(list: Exercise[]): void {
+  for (const id of registered) delete EXERCISE_BY_ID[id]
+  registered = []
+  for (const ex of list) {
+    if (!isCustomId(ex.id) || EXERCISE_BY_ID[ex.id]) continue
+    EXERCISE_BY_ID[ex.id] = ex
+    registered.push(ex.id)
+  }
+}
+
+const UNKNOWN: Exercise = {
+  id: 'unknown', name: 'Exercice supprimé', muscle: 'abdos', secondary: [], pattern: 'core', equipment: 'poids_du_corps',
+  level: 'debutant', contra: [], alts: [], cue: '', compound: false,
+}
+/** Résolution sûre d'un `exerciseId` : ne plante jamais, même pour un exercice perso introuvable. */
+export function exerciseOf(id: string): Exercise {
+  return EXERCISE_BY_ID[id] ?? UNKNOWN
+}
+
 export const LEVEL_RANK: Record<Level, number> = { debutant: 0, intermediaire: 1, avance: 2 }
 
 export function isAllowed(ex: Exercise, injuries: Zone[]): boolean {

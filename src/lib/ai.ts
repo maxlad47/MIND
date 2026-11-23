@@ -6,6 +6,7 @@ import { alternativesFor, EXERCISE_BY_ID } from '@/engine/exercises'
 import { allSessions, ruleBasedWeeklyAnalysis, weekStats } from '@/engine/adapt'
 import { personalizeSchema, weeklySchema } from '../../shared/ai-core'
 import { addSuggestions, applyAIPersonalization, getDB, mutate, setAnalysis } from './store'
+import { isLibre, weekRecap } from '@/engine/libre'
 import { uid, todayISO } from '@/engine/utils'
 
 const base = (import.meta.env.VITE_SUPABASE_URL as string | undefined)
@@ -30,7 +31,7 @@ async function post<T>(route: 'personalize' | 'weekly', body: unknown, schema: z
 /** Personnalise le programme (notes de semaine + remplacements d'exercices) sans bloquer l'interface. */
 export async function personalizeInBackground(programId: string): Promise<boolean> {
   const p = getDB().programs.find((x) => x.id === programId)
-  if (!p) return false
+  if (!p || isLibre(p)) return false // mode libre : MIND ne personalise ni ne remplace rien
   const summary = {
     goal: p.goal, type: p.type, level: p.q.strength.level, injuries: p.q.injuries, priority: p.priority,
     raceDistance: p.raceDistance, objective: p.objective,
@@ -66,6 +67,11 @@ export async function personalizeInBackground(programId: string): Promise<boolea
 export async function analyzeWeek(programId: string, weekN: number): Promise<'ia' | 'regles'> {
   const p = getDB().programs.find((x) => x.id === programId)
   if (!p) return 'regles'
+  if (isLibre(p)) {
+    // mode libre : simple bilan, aucune suggestion qui touche à la structure du programme
+    setAnalysis(programId, weekN, weekRecap(p, weekN), 'regles')
+    return 'regles'
+  }
   const today = todayISO()
   const rules = ruleBasedWeeklyAnalysis(p, weekN, today)
   const out = await post('weekly', { weekN, next: weekN + 1, stats: weekStats(p, weekN), phase: p.weeks.find((w) => w.n === weekN + 1)?.phase }, weeklySchema)

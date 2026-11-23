@@ -64,7 +64,12 @@ export type SplitKey =
 
 export interface Lift { kg: number; reps: number }
 
+/** « genere » : MIND crée le programme. « libre » : le client suit son propre programme, MIND sert de carnet. Absent = « genere ». */
+export type ProgramMode = 'genere' | 'libre'
+
 export interface Questionnaire {
+  /** Mode d'utilisation. Absent = « genere » (anciens programmes). */
+  mode?: ProgramMode
   firstName: string
   birthDate: string
   sex: 'homme' | 'femme' | 'autre'
@@ -129,6 +134,8 @@ export interface SessionExercise {
   targetKg?: number
   logs: SetLog[]
   note?: string
+  /** Mode libre : le client n'a pas fixé de RIR visé (on n'affiche pas « RIR 2 » par défaut). */
+  noRir?: boolean
 }
 
 export interface RunBlock {
@@ -180,6 +187,10 @@ export interface Session {
   durationMin?: number
   movedFrom?: string
   note?: string
+  /** Mode libre : séance modèle dont cette séance est issue. */
+  templateId?: string
+  /** Mode libre : « séance en plus », hors planning (ne décale rien, ne fait pas avancer la rotation). */
+  extra?: boolean
 }
 
 export interface Week {
@@ -213,9 +224,52 @@ export interface PlanWarning {
   suggestion?: string
 }
 
+// ------------------------------------------------------------------ mode libre
+
+/** Un exercice d'une séance modèle. Le RIR visé est facultatif. */
+export interface TemplateExercise {
+  id: string
+  exerciseId: string
+  sets: number
+  repMin: number
+  repMax: number
+  restSec: number
+  rir?: number
+  note?: string
+}
+
+/** Séance modèle créée par le client (ex. Push, Pull, Legs). */
+export interface SessionTemplate {
+  id: string
+  name: string
+  exercises: TemplateExercise[]
+}
+
+/**
+ * Planning du mode libre.
+ * - « fixe » : `days[0..6]` (lundi → dimanche) = id du modèle du jour, ou null pour un repos.
+ * - « rotation » : jours d'entraînement cochés + ordre des modèles ; MIND les enchaîne A → B → C → A…
+ */
+export type LibrePlanning =
+  | { mode: 'fixe'; days: (string | null)[] }
+  | { mode: 'rotation'; days: number[]; order: string[] }
+
+export interface LibrePlan {
+  templates: SessionTemplate[]
+  planning: LibrePlanning
+  /** Interrupteur « Suggestions de charge » (désactivé par défaut). */
+  suggestLoads: boolean
+  /** Exercices créés par le client (ids « custom:… »). */
+  customExercises: Exercise[]
+}
+
 export interface Program {
   id: string
   clientId: string
+  /** Absent = « genere ». */
+  mode?: ProgramMode
+  /** Séances modèles et planning (mode libre uniquement). */
+  libre?: LibrePlan
   type: ProgramType
   goal: Goal
   priority: Priority

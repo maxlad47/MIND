@@ -6,11 +6,14 @@ import {
   applyCheckin, applySuggestion, adjustLoadsAfterSession, allSessions, findSession, handleMissed,
   ruleBasedWeeklyAnalysis, scalePaces, suggestVmaUpdate, undoAdaptation,
 } from '@/engine/adapt'
-import { EXERCISE_BY_ID } from '@/engine/exercises'
+import { CUSTOM_PREFIX, exerciseOf, makeCustomExercise, registerCustomExercises } from '@/engine/exercises'
+import {
+  isLibre, libreFromProgram, newLibreProgram, syncFree, templateFromSession, withExtraSession, weekRecap, type ExtraSource,
+} from '@/engine/libre'
 import { generateProgram, nextStrengthCycle, regenerateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
 import type {
-  Adaptation, Checkin, Program, Questionnaire, RunBlock, RunLog, Session, SessionExercise, SetLog,
+  Adaptation, Checkin, Exercise, LibrePlanning, Muscle, Program, Questionnaire, RunBlock, RunLog, Session, SessionExercise, SessionTemplate, SetLog,
 } from '@/engine/types'
 import { vmaFromRecent } from '@/engine/running'
 import { addDays, fmtKm, mondayOf, todayISO, uid, weekday } from '@/engine/utils'
@@ -69,6 +72,12 @@ function load(): DB {
 let db: DB = load()
 const listeners = new Set<() => void>()
 
+/** Les exercices perso (mode libre) sont branchés sur la bibliothèque : tous les `exerciseId` se résolvent, y compris ceux des programmes archivés. */
+function registerCustoms(d: DB): void {
+  registerCustomExercises(d.programs.flatMap((p) => p.libre?.customExercises ?? []))
+}
+registerCustoms(db)
+
 function persist() {
   try { localStorage.setItem(KEY, JSON.stringify(db)) } catch { /* quota / mode privé */ }
 }
@@ -79,6 +88,7 @@ export function mutate(fn: (d: DB) => void): void {
   const next = structuredClone(db)
   fn(next)
   db = next
+  registerCustoms(db)
   persist()
   listeners.forEach((l) => l())
   changeHook?.()
@@ -86,6 +96,7 @@ export function mutate(fn: (d: DB) => void): void {
 /** Remplace les données sans déclencher d'envoi (données reçues du serveur). */
 export function replaceDB(next: DB): void {
   db = next
+  registerCustoms(db)
   persist()
   listeners.forEach((l) => l())
 }
@@ -96,6 +107,7 @@ export function useDB(): DB {
 }
 export function resetDB(): void {
   db = empty()
+  registerCustoms(db)
   persist()
   listeners.forEach((l) => l())
 }
@@ -181,7 +193,8 @@ export function lastDoneDate(p?: Program): string | undefined {
 
 export function summarizeClient(d: DB, profile: Profile, today = todayISO()): ClientSummary {
   const program = programOf(d, profile.id)
-  const last = lastDoneDate(program)
+  // dernière séance toutes périodes confondues : elle survit à un changement de mode (programme archivé)
+  const last = clientSessions(d, profile.id).filter((s) => s.status === 'faite').map((s) => s.date).sort().pop() ?? lastDoneDate(program)
   const monday = mondayOf(today)
   const w = program?.weeks.find((x) => x.startDate === monday)
   const planned = (w?.sessions ?? []).filter((s) => s.status !== 'sautee').length
@@ -204,16 +217,27 @@ export function summarizeClient(d: DB, profile: Profile, today = todayISO()): Cl
   return { profile, program, status, lastDone: last, weekDone: done, weekPlanned: planned, alerts }
 }
 
+/** Toutes les séances d'un client, tous programmes confondus (actif et archivés) : l'historique survit aux changements de mode. */
+export function clientSessions(d: DB, clientId: string): Session[] {
+  return d.programs.filter((p) => p.clientId === clientId).flatMap(allSessions)
+}
+
 export function lastPerformance(d: DB, clientId: string, exerciseId: string, beforeSessionId: string): { date: string; logs: SetLog[] } | undefined {
-  const p = programOf(d, clientId)
-  if (!p) return undefined
-  const cur = findSession(p, beforeSessionId)
-  const found = allSessions(p)
+  const all = clientSessions(d, clientId)
+  const cur = all.find((s) => s.id === beforeSessionId)
+  const found = all
     .filter((s) => s.status === 'faite' && s.id !== beforeSessionId && (!cur || s.date <= cur.date))
     .sort((a, b) => b.date.localeCompare(a.date))
     .map((s) => ({ s, e: s.exercises?.find((x) => x.exerciseId === exerciseId && x.logs.length) }))
     .find((x) => x.e)
   return found ? { date: found.s.date, logs: found.e!.logs } : undefined
+}
+
+/** Exercices perso d'un client (tous programmes confondus, sans doublon). */
+export function customExercisesOf(d: DB, clientId: string): Exercise[] {
+  const seen = new Map<string, Exercise>()
+  for (const p of d.programs.filter((x) => x.clientId === clientId)) for (const e of p.libre?.customExercises ?? []) if (!seen.has(e.id)) seen.set(e.id, e)
+  return [...seen.values()]
 }
 
 // ------------------------------------------------------------------ helpers internes
@@ -229,6 +253,15 @@ export function notify(d: DB, userId: string, title: string, body: string, link?
   d.notifications.unshift({ id: uid('n'), userId, title, body, link, at: new Date().toISOString(), read: false })
 }
 function coachIds(d: DB): string[] { return d.profiles.filter((p) => p.role === 'coach').map((p) => p.id) }
+
+/** Séances des autres programmes du même client (l'historique alimente les suggestions de charge du mode libre). */
+function historyOf(d: DB, p: Program): Session[] {
+  return d.programs.filter((x) => x.clientId === p.clientId && x.id !== p.id).flatMap(allSessions)
+}
+/** Remet le carnet libre à jour : manquées, fenêtre glissante, séances futures vierges, charges suggérées. */
+function syncLibre(d: DB, p: Program, today = todayISO()): void {
+  Object.assign(p, syncFree(p, today, { history: historyOf(d, p) }))
+}
 
 function withSession(programId: string, sessionId: string, fn: (s: Session, p: Program, d: DB) => string | void): void {
   mutate((d) => {
@@ -252,15 +285,34 @@ export function submitQuestionnaire(clientId: string, q: Questionnaire, today = 
     const version = d.questionnaires.filter((x) => x.clientId === clientId).length + 1
     d.questionnaires.push({ id: uid('q'), clientId, version, data: q, at: new Date().toISOString() })
     const existing = programOf(d, clientId)
-    program = existing ? regenerateProgram(existing, q, today) : generateProgram({ ...q, startDate: q.startDate || today }, { clientId, now: today })
-    program.clientId = clientId
-    if (existing) d.programs = d.programs.filter((p) => p.id !== existing.id)
-    d.programs.push(program)
+    let changed = !!existing // « programme régénéré » seulement quand un programme est remplacé
+    if (q.mode === 'libre' && existing && isLibre(existing)) {
+      // mode libre déjà en place : le formulaire (identité, blessures) se met à jour, les séances et le planning ne bougent pas
+      existing.q = { ...existing.q, ...q, mode: 'libre', programType: 'muscu' }
+      program = existing
+      changed = false
+    } else if (q.mode === 'libre') {
+      if (existing) existing.status = 'archive'
+      program = newLibreProgram(q, { clientId, now: today, customExercises: customExercisesOf(d, clientId) })
+      d.programs.push(program)
+      syncLibre(d, program, today)
+    } else if (existing && isLibre(existing)) {
+      // Libre → MIND : l'ancien programme est archivé, son historique reste lisible (lastPerformance, Progress)
+      existing.status = 'archive'
+      program = generateProgram({ ...q, mode: 'genere', startDate: q.startDate || today }, { clientId, now: today })
+      program.clientId = clientId
+      d.programs.push(program)
+    } else {
+      program = existing ? regenerateProgram(existing, q, today) : generateProgram({ ...q, startDate: q.startDate || today }, { clientId, now: today })
+      program.clientId = clientId
+      if (existing) d.programs = d.programs.filter((p) => p.id !== existing.id)
+      d.programs.push(program)
+    }
     delete d.drafts[clientId]
     const pr = d.profiles.find((p) => p.id === clientId)
     if (pr) { pr.onboarded = true; pr.firstName = q.firstName || pr.firstName }
-    if (existing) logEdit(d, program, 'Programme régénéré après modification du formulaire.')
-    else for (const c of coachIds(d)) if (c !== clientId) notify(d, c, 'Nouveau programme', `${q.firstName || 'Un client'} vient de remplir son formulaire.`, `/coach/client/${clientId}`)
+    if (changed) logEdit(d, program, isLibre(existing) ? 'Passage de « J\'ai déjà mon programme » à un programme MIND.' : q.mode === 'libre' ? 'Passage en mode libre.' : 'Programme régénéré après modification du formulaire.')
+    else if (!existing) for (const c of coachIds(d)) if (c !== clientId) notify(d, c, 'Nouveau programme', q.mode === 'libre' ? `${q.firstName || 'Un client'} utilise MIND comme carnet (mode libre).` : `${q.firstName || 'Un client'} vient de remplir son formulaire.`, `/coach/client/${clientId}`)
   })
   return program
 }
@@ -283,7 +335,7 @@ export function applyAIPersonalization(programId: string, weekNotes: Record<numb
 export function startNextCycle(clientId: string): void {
   mutate((d) => {
     const cur = programOf(d, clientId)
-    if (!cur) return
+    if (!cur || isLibre(cur)) return // pas de fin de cycle en mode libre
     const next = nextStrengthCycle(cur)
     cur.status = 'termine'
     d.programs.push(next)
@@ -327,16 +379,16 @@ export function replaceExercise(programId: string, sessionId: string, seId: stri
   withSession(programId, sessionId, (s) => {
     const e = s.exercises?.find((x) => x.id === seId)
     if (!e) return
-    const from = EXERCISE_BY_ID[e.exerciseId].name
+    const from = exerciseOf(e.exerciseId).name
     e.exerciseId = exerciseId
     e.targetKg = undefined
     e.logs = []
-    return `${from} remplacé par ${EXERCISE_BY_ID[exerciseId].name} dans « ${s.title} ».`
+    return `${from} remplacé par ${exerciseOf(exerciseId).name} dans « ${s.title} ».`
   })
 }
 export function addExercise(programId: string, sessionId: string, exerciseId: string): void {
   withSession(programId, sessionId, (s) => {
-    const ex = EXERCISE_BY_ID[exerciseId]
+    const ex = exerciseOf(exerciseId)
     const e: SessionExercise = {
       id: uid('se'), exerciseId, order: (s.exercises?.length ?? 0), sets: 3, repMin: ex.compound ? 6 : 10, repMax: ex.compound ? 10 : 15,
       rir: 2, restSec: ex.compound ? 120 : 75, logs: [],
@@ -349,7 +401,7 @@ export function removeExercise(programId: string, sessionId: string, seId: strin
   withSession(programId, sessionId, (s) => {
     const e = s.exercises?.find((x) => x.id === seId)
     s.exercises = (s.exercises ?? []).filter((x) => x.id !== seId)
-    return e ? `${EXERCISE_BY_ID[e.exerciseId].name} retiré de « ${s.title} ».` : undefined
+    return e ? `${exerciseOf(e.exerciseId).name} retiré de « ${s.title} ».` : undefined
   })
 }
 export function updateExercise(programId: string, sessionId: string, seId: string, patch: Partial<Pick<SessionExercise, 'sets' | 'repMin' | 'repMax' | 'rir' | 'restSec' | 'targetKg'>>): void {
@@ -357,7 +409,7 @@ export function updateExercise(programId: string, sessionId: string, seId: strin
     const e = s.exercises?.find((x) => x.id === seId)
     if (!e) return
     Object.assign(e, patch)
-    return `${EXERCISE_BY_ID[e.exerciseId].name} modifié dans « ${s.title} » (${e.sets}×${e.repMin}-${e.repMax}${e.targetKg ? `, ${fmtKm(e.targetKg)} kg` : ''}).`
+    return `${exerciseOf(e.exerciseId).name} modifié dans « ${s.title} » (${e.sets}×${e.repMin}-${e.repMax}${e.targetKg ? `, ${fmtKm(e.targetKg)} kg` : ''}).`
   })
 }
 export function updateRun(programId: string, sessionId: string, patch: { km?: number; blocks?: RunBlock[]; warmup?: string; cooldown?: string }): void {
@@ -410,16 +462,21 @@ export function finishStrength(programId: string, sessionId: string, feeling: nu
       if (!e.logs.length) continue
       const best = e.logs.reduce((a, b) => (epley(b.kg, b.reps) > epley(a.kg, a.reps) ? b : a))
       const e1 = epley(best.kg, best.reps)
-      const prev = Math.max(0, ...allSessions(p).filter((x) => x.status === 'faite' && x.id !== s.id && x.date <= s.date)
+      const prev = Math.max(0, ...clientSessions(d, p.clientId).filter((x) => x.status === 'faite' && x.id !== s.id && x.date <= s.date)
         .flatMap((x) => x.exercises ?? []).filter((x) => x.exerciseId === e.exerciseId).flatMap((x) => x.logs).map((l) => epley(l.kg, l.reps)))
       if (prev > 0 && e1 > prev * 1.005 && best.kg > 0) {
         recap.prs.push({ exerciseId: e.exerciseId, kg: best.kg, reps: best.reps })
         d.records.push({ id: uid('pr'), clientId: p.clientId, exerciseId: e.exerciseId, kg: best.kg, reps: best.reps, e1rm: e1, date: s.date, sessionId: s.id })
       }
     }
-    const res = adjustLoadsAfterSession(p, sessionId, today)
-    Object.assign(p, res.program)
-    d.adaptations.unshift(...res.adaptations)
+    if (isLibre(p)) {
+      // mode libre : la rotation repart du dernier modèle fait, les charges ne sont suggérées que si l'interrupteur est activé
+      syncLibre(d, p, today)
+    } else {
+      const res = adjustLoadsAfterSession(p, sessionId, today)
+      Object.assign(p, res.program)
+      d.adaptations.unshift(...res.adaptations)
+    }
   })
   return recap
 }
@@ -460,6 +517,14 @@ export function addCheckin(c: Omit<Checkin, 'id'>, today = todayISO()): void {
     d.checkins.push(full)
     const p = programOf(d, c.clientId)
     if (!p || !c.sessionId) return
+    if (isLibre(p)) {
+      // mode libre : l'alerte au coach reste active, mais MIND ne remplace ni n'allège rien tout seul
+      if (c.pain) {
+        const name = nameOf(d, c.clientId)
+        for (const id of coachIds(d)) if (id !== c.clientId) notify(d, id, 'Douleur signalée', `${name} signale une douleur (${c.painZone ?? '—'}).`, `/coach/client/${c.clientId}`)
+      }
+      return
+    }
     const res = applyCheckin(p, c.sessionId, full, today)
     Object.assign(p, res.program)
     d.adaptations.unshift(...res.adaptations)
@@ -477,6 +542,7 @@ export function acceptAdaptation(adId: string, today = todayISO()): void {
     const a = d.adaptations.find((x) => x.id === adId)
     const p = a && d.programs.find((x) => x.id === a.programId)
     if (!a || !p) return
+    if (isLibre(p)) { a.status = 'refuse'; return } // aucune réorganisation automatique en mode libre
     if (a.kind === 'allures') {
       const vma = (a.payload as { vma: number }).vma
       const res = scalePaces(p, vma, today)
@@ -514,6 +580,15 @@ export function runDailyJobs(today = todayISO()): void {
     d.lastJobs['daily'] = today
     // en ligne, chacun ne gère que son propre programme (le coach ne rejoue pas les tâches de ses clients)
     for (const p of d.programs.filter((x) => x.status === 'actif' && (!REMOTE || x.clientId === d.sessionUserId))) {
+      if (isLibre(p)) {
+        // mode libre : séances manquées simplement « manquées », fenêtre glissante prolongée, bilan du dimanche sans suggestion
+        syncLibre(d, p, today)
+        const last = p.weeks.find((w) => w.startDate === addDays(mondayOf(today), -7))
+        if (last && last.sessions.length && !d.analyses.some((a) => a.programId === p.id && a.weekN === last.n)) {
+          d.analyses.unshift({ id: uid('an'), programId: p.id, clientId: p.clientId, weekN: last.n, summary: weekRecap(p, last.n), at: new Date().toISOString(), source: 'regles' })
+        }
+        continue
+      }
       const res = handleMissed(p, today, p.q.availableDays)
       if (res.adaptations.length) {
         Object.assign(p, res.program)
@@ -542,6 +617,128 @@ export function setAnalysis(programId: string, weekN: number, summary: string, s
 }
 export function addSuggestions(list: Adaptation[]): void {
   mutate((d) => { d.adaptations.unshift(...list) })
+}
+
+// ------------------------------------------------------------------ mode libre
+
+/** Prévient le client quand c'est son coach qui modifie ses séances ou son planning. */
+function libreEdited(d: DB, p: Program, what: string, log: string): void {
+  logEdit(d, p, log)
+  const m = me(d)
+  if (m.role === 'coach' && m.id !== p.clientId) notify(d, p.clientId, `${m.firstName} ${what}`, 'Ouvre « Mes séances » pour voir le changement.', '/app/sessions')
+}
+const libreOf = (d: DB, programId: string): Program | undefined => {
+  const p = d.programs.find((x) => x.id === programId)
+  return p && isLibre(p) && p.libre ? p : undefined
+}
+
+/** Crée ou met à jour une séance modèle ; les séances futures vierges sont recalculées. */
+export function saveTemplate(programId: string, tpl: SessionTemplate): void {
+  mutate((d) => {
+    const p = libreOf(d, programId)
+    if (!p?.libre) return
+    const i = p.libre.templates.findIndex((t) => t.id === tpl.id)
+    if (i >= 0) p.libre.templates[i] = tpl
+    else {
+      p.libre.templates.push(tpl)
+      if (p.libre.planning.mode === 'rotation') p.libre.planning.order.push(tpl.id)
+    }
+    syncLibre(d, p)
+    libreEdited(d, p, i >= 0 ? `a modifié ta séance ${tpl.name}` : `a ajouté la séance ${tpl.name}`, `Séance modèle « ${tpl.name} » ${i >= 0 ? 'modifiée' : 'créée'}.`)
+  })
+}
+
+export function deleteTemplate(programId: string, templateId: string): void {
+  mutate((d) => {
+    const p = libreOf(d, programId)
+    const t = p?.libre?.templates.find((x) => x.id === templateId)
+    if (!p?.libre || !t) return
+    p.libre.templates = p.libre.templates.filter((x) => x.id !== templateId)
+    const pl = p.libre.planning
+    if (pl.mode === 'fixe') pl.days = pl.days.map((id) => (id === templateId ? null : id))
+    else pl.order = pl.order.filter((id) => id !== templateId)
+    syncLibre(d, p)
+    libreEdited(d, p, `a supprimé ta séance ${t.name}`, `Séance modèle « ${t.name} » supprimée.`)
+  })
+}
+
+export function setPlanning(programId: string, planning: LibrePlanning): void {
+  mutate((d) => {
+    const p = libreOf(d, programId)
+    if (!p?.libre) return
+    p.libre.planning = planning
+    syncLibre(d, p)
+    libreEdited(d, p, 'a modifié ton planning', 'Planning modifié.')
+  })
+}
+
+/** Interrupteur « Suggestions de charge » (désactivé par défaut) : stocké dans le programme, sans migration SQL. */
+export function setSuggestLoads(programId: string, on: boolean): void {
+  mutate((d) => {
+    const p = libreOf(d, programId)
+    if (!p?.libre) return
+    p.libre.suggestLoads = on
+    syncLibre(d, p)
+  })
+}
+
+/** Crée un exercice perso (id « custom:… ») et le renvoie. */
+export function addCustomExercise(programId: string, name: string, muscle: Muscle): string {
+  const id = `${CUSTOM_PREFIX}${uid('x')}`
+  mutate((d) => {
+    const p = libreOf(d, programId)
+    p?.libre?.customExercises.push(makeCustomExercise(id, name, muscle))
+  })
+  return id
+}
+
+/** « Séance en plus » : un de ses modèles, une séance vide ou une sortie de course libre, datée d'aujourd'hui. */
+export function addExtraSession(programId: string, src: ExtraSource, today = todayISO()): string {
+  let sessionId = ''
+  mutate((d) => {
+    const p = libreOf(d, programId)
+    if (!p) return
+    const res = withExtraSession(p, today, src, historyOf(d, p))
+    Object.assign(p, res.program)
+    sessionId = res.sessionId
+  })
+  return sessionId
+}
+
+/** « Garder les changements pour tes prochains … » : le modèle reprend la séance, les séances futures vierges suivent. */
+export function applySessionToTemplate(programId: string, sessionId: string): void {
+  mutate((d) => {
+    const p = libreOf(d, programId)
+    const s = p && findSession(p, sessionId)
+    const i = p?.libre?.templates.findIndex((t) => t.id === s?.templateId) ?? -1
+    if (!p?.libre || !s || i < 0) return
+    p.libre.templates[i] = templateFromSession(s, p.libre.templates[i])
+    syncLibre(d, p)
+    logEdit(d, p, `Séance modèle « ${p.libre.templates[i].name} » mise à jour d'après la séance du ${s.date}.`)
+  })
+}
+
+/**
+ * MIND → Libre. L'ancien programme passe en « archive » (son historique reste visible dans lastPerformance et Progress).
+ * `fromCurrent` : un modèle par séance de muscu distincte de la semaine en cours + le planning en jours fixes correspondant.
+ */
+export function switchToLibre(clientId: string, fromCurrent: boolean, today = todayISO()): Program | undefined {
+  let created: Program | undefined
+  mutate((d) => {
+    const cur = programOf(d, clientId)
+    if (!cur || isLibre(cur)) return
+    const conv = fromCurrent ? libreFromProgram(cur, today) : undefined
+    const q: Questionnaire = { ...cur.q, mode: 'libre', programType: 'muscu' }
+    cur.status = 'archive'
+    d.questionnaires.push({ id: uid('q'), clientId, version: d.questionnaires.filter((x) => x.clientId === clientId).length + 1, data: q, at: new Date().toISOString() })
+    created = newLibreProgram(q, { clientId, now: today, templates: conv?.templates, planning: conv?.planning, customExercises: customExercisesOf(d, clientId) })
+    d.programs.push(created)
+    syncLibre(d, created, today)
+    logEdit(d, created, fromCurrent ? 'Passage en mode libre à partir du programme MIND.' : 'Passage en mode libre.')
+    const m = me(d)
+    if (m.role === 'coach' && m.id !== clientId) notify(d, clientId, `${m.firstName} a passé ton programme en mode libre`, 'Retrouve tes séances dans « Mes séances ».', '/app/sessions')
+  })
+  return created
 }
 
 // ------------------------------------------------------------------ commentaires & notifications

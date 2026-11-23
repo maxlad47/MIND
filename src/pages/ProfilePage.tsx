@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { programOf, questionnaireOf, resetDB, updateProfile, useDB } from '@/lib/store'
+import { isLibre } from '@/engine/libre'
+import { programOf, questionnaireOf, resetDB, setSuggestLoads, switchToLibre, updateProfile, useDB } from '@/lib/store'
 import { signOut } from '@/lib/auth'
 import { REMOTE } from '@/lib/supabase'
 import { ensureSeed } from '@/lib/seed'
@@ -48,6 +49,8 @@ export function ProfileView({ userId }: { userId: string }) {
   const q = questionnaireOf(db, userId)
   const program = programOf(db, userId)
   const [guide, setGuide] = useState(false)
+  const [switching, setSwitching] = useState(false)
+  const libre = isLibre(program)
   const edits = db.edits.filter((e) => e.clientId === userId).slice(0, 12)
 
   return (
@@ -60,13 +63,26 @@ export function ProfileView({ userId }: { userId: string }) {
         </div>
       </Cover>
 
-      {program && q && (
+      {program && q && libre && (<>
+        <Group header="Mon carnet" footer="Désactivées, aucune charge cible n'est affichée. Activées, MIND propose ta prochaine charge (double progression) d'après ta dernière performance.">
+          <Row><RowIcon name="bolt" color="#FF9F0A" /><div className="flex-1"><div className="font-semibold">Suggestions de charge</div><div className="text-[13px] text-muted">{program.libre?.suggestLoads ? 'Activées' : 'Désactivées'}</div></div>
+            <Toggle checked={!!program.libre?.suggestLoads} label="Suggestions de charge" onChange={() => setSuggestLoads(program.id, !program.libre?.suggestLoads)} /></Row>
+          <Row onClick={() => nav(`/onboarding?edit=1`)}><RowIcon name="edit" color="var(--accent)" /><div className="flex-1 font-semibold">Modifier mon formulaire</div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+        </Group>
+        <Group header="Mode" footer="Ton historique de séances et de charges est conservé dans les deux sens.">
+          <Row onClick={() => nav('/onboarding?edit=1&switch=genere')}><RowIcon name="sparkle" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">Passer à un programme MIND</div><div className="text-[13px] text-muted">MIND crée ton programme</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+        </Group>
+      </>)}
+      {program && q && !libre && (<>
         <Group header="Mon programme" footer="Modifier le formulaire régénère la suite du programme en gardant ton historique.">
           <Row><RowIcon name="target" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">{program.type === 'muscu' ? 'Musculation' : program.type === 'course' ? 'Course à pied' : 'Musculation + course'}</div>
             <div className="text-[13px] text-muted">{program.type !== 'course' ? `${q.muscuSessions} séances de muscu · ${q.strength.goal}` : ''}{program.type === 'mixte' ? ' · ' : ''}{program.type !== 'muscu' ? `${DIST_LABEL[q.run.distance]}${program.raceDate ? ` le ${prettyDate(program.raceDate)}` : ''}` : ''}</div></div></Row>
           <Row onClick={() => nav(`/onboarding?edit=1`)}><RowIcon name="edit" color="var(--accent)" /><div className="flex-1 font-semibold">Modifier mon formulaire</div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
         </Group>
-      )}
+        <Group header="Mode" footer="Tu suis déjà ton propre programme ? MIND peut devenir ton carnet d'entraînement. Ton historique est conservé.">
+          <Row onClick={() => setSwitching(true)}><RowIcon name="edit" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">Passer en mode libre</div><div className="text-[13px] text-muted">J'ai déjà mon programme</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+        </Group>
+      </>)}
 
       <Group header="Rappels" footer={isIOS() && !isStandalone() ? 'Sur iPhone, ajoute d\'abord MIND à l\'écran d\'accueil.' : undefined}>
         <Row>
@@ -137,6 +153,13 @@ export function ProfileView({ userId }: { userId: string }) {
         {!REMOTE && (        <Row onClick={() => { if (confirm('Réinitialiser toutes les données locales et recréer la démo ?')) { resetDB(); ensureSeed(); nav('/') } }}><RowIcon name="refresh" color="#8E8E93" /><div className="flex-1 text-muted">Réinitialiser les données de démo</div></Row>)}
       </Group>
       <p className="text-center text-[12px] text-faint pb-4">MIND · mode local · les données restent sur cet appareil</p>
+      <Sheet open={switching} onClose={() => setSwitching(false)} title="Passer en mode libre">
+        <div className="flex flex-col gap-3">
+          <p className="text-[14.5px] text-muted leading-snug">MIND ne génère plus rien : tu crées tes séances, tu les places dans ta semaine et tu notes tes charges. Ton historique est conservé.</p>
+          <Button full color="var(--muscu)" onClick={() => { switchToLibre(userId, true); setSwitching(false); toast('Mode libre activé'); nav(me.role === 'coach' ? '/coach/me' : '/app/sessions') }}>Partir de mon programme actuel</Button>
+          <Button full variant="secondary" onClick={() => { switchToLibre(userId, false); setSwitching(false); toast('Mode libre activé'); nav(me.role === 'coach' ? '/coach/me' : '/app/sessions') }}>Partir de zéro</Button>
+        </div>
+      </Sheet>
       <InstallGuide open={guide} onClose={() => setGuide(false)} onGranted={() => updateProfile(me.id, { notifications: true })} />
     </div>
   )

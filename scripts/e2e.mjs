@@ -20,7 +20,7 @@ const prog = d.programs.find((p) => p.clientId === cam.id)
 const sessions = prog.weeks.flatMap((w) => w.sessions)
 const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
 const muscu = sessions.find((s) => s.sport === 'muscu' && s.status === 'prevue' && s.date >= iso)
-await page.goto(base + '/session/' + muscu.id); await shot('10-session-muscu')
+await page.goto(base + '/#/session/' + muscu.id); await shot('10-session-muscu')
 // valider 3 séries du premier exercice
 const checks = page.getByLabel('Valider la série')
 const n = await checks.count(); ok(n > 5, `boutons de série présents (${n})`)
@@ -47,9 +47,9 @@ const s4 = d.programs.find((p) => p.id === prog.id).weeks.flatMap((w) => w.sessi
 ok(s4.status === 'faite', 'séance marquée faite')
 
 // --- course : saisie
-await page.goto(base + '/app/today'); await page.waitForTimeout(500)
+await page.goto(base + '/#/app/today'); await page.waitForTimeout(500)
 const run = sessions.find((s) => s.sport === 'course' && s.status === 'prevue' && s.date >= iso)
-await page.goto(base + '/session/' + run.id); await shot('15-run')
+await page.goto(base + '/#/session/' + run.id); await shot('15-run')
 await page.getByText('Saisir ma sortie').click(); await page.waitForTimeout(400)
 await page.getByLabel('Minutes').fill('35'); await shot('16-run-log')
 await page.getByRole('button', { name: 'Enregistrer' }).click(); await page.waitForTimeout(500)
@@ -58,7 +58,7 @@ const r2 = d.programs.find((p) => p.id === prog.id).weeks.flatMap((w) => w.sessi
 ok(r2.status === 'faite' && r2.runLog?.seconds === 2100, 'sortie de course enregistrée')
 
 // --- glisser-déposer
-await page.goto(base + '/app/program'); await page.waitForTimeout(500)
+await page.goto(base + '/#/app/program'); await page.waitForTimeout(500)
 const grips = page.getByLabel('Déplacer')
 const gc = await grips.count(); ok(gc > 0, `poignées de déplacement (${gc})`)
 if (gc) {
@@ -71,11 +71,11 @@ if (gc) {
 // --- coach
 await page.evaluate(() => { const x = JSON.parse(localStorage.getItem('mind.db.v2')); x.sessionUserId = null; localStorage.setItem('mind.db.v2', JSON.stringify(x)) })
 await page.goto(base); await page.getByText('Max').first().click(); await page.waitForTimeout(700); await shot('20-coach-clients')
-await page.goto(base + '/coach/alerts'); await shot('21-coach-alerts')
+await page.goto(base + '/#/coach/alerts'); await shot('21-coach-alerts')
 const hugo = (await db()).profiles.find((p) => p.firstName === 'Hugo')
-await page.goto(base + '/coach/client/' + hugo.id); await shot('22-client-detail')
+await page.goto(base + '/#/coach/client/' + hugo.id); await shot('22-client-detail')
 await page.getByText('Profil', { exact: true }).last().click(); await shot('23-client-profil')
-await page.goto(base + '/coach/me'); await shot('24-coach-me')
+await page.goto(base + '/#/coach/me'); await shot('24-coach-me')
 
 // --- onboarding d'un nouveau compte
 await page.evaluate(() => { const x = JSON.parse(localStorage.getItem('mind.db.v2')); x.sessionUserId = null; localStorage.setItem('mind.db.v2', JSON.stringify(x)) })

@@ -51,13 +51,22 @@ export default function Auth() {
 
         {!REMOTE && <div>
           <div className="text-[12.5px] uppercase tracking-wide text-muted mb-2 text-center font-medium">Découvrir la démo</div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
             <motion.button whileTap={{ scale: 0.96 }} transition={spring} className="text-left" onClick={() => demo(DEMO_ACCOUNTS.client)}>
               <Cover seed="demo-client" sports={['muscu']} className="rounded-[22px] h-[104px]" style={{ boxShadow: 'var(--shadow-cover)' }}>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-2 gap-0.5">
                   <div className="flex gap-1.5 mb-1"><SportIcon sport="muscu" size={18} color="#fff" /><SportIcon sport="course" size={18} color="#fff" /></div>
-                  <div className="text-[11.5px] font-bold uppercase tracking-wide opacity-85">Espace client</div>
-                  <div className="text-[21px] font-extrabold leading-tight tracking-tight">Camille</div>
+                  <div className="text-[10.5px] font-bold uppercase tracking-wide opacity-85">Client</div>
+                  <div className="text-[19px] font-extrabold leading-tight tracking-tight">Camille</div>
+                </div>
+              </Cover>
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.96 }} transition={spring} className="text-left" onClick={() => demo(DEMO_ACCOUNTS.libre)}>
+              <Cover seed="demo-libre" sports={['muscu']} className="rounded-[22px] h-[104px]" style={{ boxShadow: 'var(--shadow-cover)' }}>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-2 gap-0.5">
+                  <div className="mb-1"><Icon name="edit" size={19} color="#fff" /></div>
+                  <div className="text-[10.5px] font-bold uppercase tracking-wide opacity-85">Mode libre</div>
+                  <div className="text-[19px] font-extrabold leading-tight tracking-tight">Nina</div>
                 </div>
               </Cover>
             </motion.button>
@@ -65,8 +74,8 @@ export default function Auth() {
               <Cover seed="demo-coach-2" sports={['course']} className="rounded-[22px] h-[104px]" style={{ boxShadow: 'var(--shadow-cover)' }}>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-2 gap-0.5">
                   <div className="mb-1"><Icon name="users" size={20} color="#fff" /></div>
-                  <div className="text-[11.5px] font-bold uppercase tracking-wide opacity-85">Espace coach</div>
-                  <div className="text-[21px] font-extrabold leading-tight tracking-tight">Max</div>
+                  <div className="text-[10.5px] font-bold uppercase tracking-wide opacity-85">Coach</div>
+                  <div className="text-[19px] font-extrabold leading-tight tracking-tight">Max</div>
                 </div>
               </Cover>
             </motion.button>

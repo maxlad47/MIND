@@ -1,12 +1,14 @@
 import { lazy, Suspense, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { allSessions } from '@/engine/adapt'
+import { isLibre } from '@/engine/libre'
 import { DIST_LABEL, referencesOf } from '@/engine/running'
 import { SPLIT_LABEL } from '@/engine/strength'
 import { MUSCLE_LABEL, ZONES } from '@/engine/types'
 import { ageFrom, fmtTime, prettyDate, shortDate } from '@/engine/utils'
-import { acceptAdaptation, programOf, questionnaireOf, refuseAdaptation, summarizeClient, useDB } from '@/lib/store'
-import { Button, Card, Chip, Cover, Group, Icon, Page, Row, Segmented, SectionTitle, toast } from '@/ui/kit'
+import { acceptAdaptation, programOf, questionnaireOf, refuseAdaptation, summarizeClient, switchToLibre, useDB } from '@/lib/store'
+import { Button, Card, Chip, Cover, Group, Icon, Page, Row, Segmented, SectionTitle, Sheet, toast } from '@/ui/kit'
+import { FreeSessionsView } from '@/ui/free'
 import { statusLabel } from '@/ui/parts'
 import { ProgramView } from './ProgramPage'
 const ProgressView = lazy(() => import('./Progress').then((m) => ({ default: m.ProgressView })))
@@ -20,6 +22,7 @@ export default function ClientDetail() {
   const db = useDB()
   const nav = useNavigate()
   const [tab, setTab] = useState<'programme' | 'seances' | 'progres' | 'profil'>('programme')
+  const [switching, setSwitching] = useState(false)
   const profile = db.profiles.find((p) => p.id === id)
   if (!profile) return <Page title="Client" back="/coach" tabbed={false}><p className="text-muted">Client introuvable. Retourne à la liste pour en choisir un autre.</p></Page>
   const sum = summarizeClient(db, profile)
@@ -30,6 +33,7 @@ export default function ClientDetail() {
   const edits = db.edits.filter((e) => e.clientId === id).slice(0, 15)
   const checkins = db.checkins.filter((c) => c.clientId === id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
   const st = STATUS[sum.status]
+  const libre = isLibre(program)
 
   return (
     <Page title={profile.firstName} back="/coach" tabbed={false} heroHeight={230}
@@ -40,10 +44,10 @@ export default function ClientDetail() {
               <div className="w-[72px] h-[72px] rounded-full glass-light border border-white/30 flex items-center justify-center text-[34px] font-extrabold shrink-0">{profile.firstName[0]}</div>
               <div className="min-w-0 pb-0.5">
                 <div className="t-display text-[34px] leading-[1.05] font-extrabold tracking-[-0.025em]" style={{ textShadow: '0 2px 14px rgba(0,0,0,.3)' }}>{profile.firstName}</div>
-                <div className="text-[15px] font-medium opacity-90 mt-0.5">{program ? `${program.type === 'mixte' ? 'Muscu + course' : program.type === 'course' ? 'Course' : 'Musculation'}` : 'Sans programme'} · {sum.weekDone}/{sum.weekPlanned} cette semaine</div>
+                <div className="text-[15px] font-medium opacity-90 mt-0.5">{libre ? 'Mode libre' : program ? `${program.type === 'mixte' ? 'Muscu + course' : program.type === 'course' ? 'Course' : 'Musculation'}` : 'Sans programme'} · {sum.weekDone}/{sum.weekPlanned} cette semaine</div>
               </div>
             </div>
-            <div className="absolute top-[calc(env(safe-area-inset-top)+54px)] right-4"><span className="inline-flex items-center rounded-full px-3 h-8 text-[13px] font-bold text-white" style={{ background: st.color }}>{st.label}</span></div>
+            <div className="absolute top-[calc(env(safe-area-inset-top)+54px)] right-4"><span className="inline-flex items-center gap-1.5">{libre && <span className="inline-flex items-center rounded-full px-3 h-8 text-[13px] font-bold text-white glass-dark border border-white/20">Libre</span>}<span className="inline-flex items-center rounded-full px-3 h-8 text-[13px] font-bold text-white" style={{ background: st.color }}>{st.label}</span></span></div>
           </div>
         </Cover>
       }>
@@ -60,9 +64,13 @@ export default function ClientDetail() {
         </Card>
       ))}
 
-      <div className="mb-4"><Segmented value={tab} onChange={setTab} options={[{ value: 'programme', label: 'Programme' }, { value: 'seances', label: 'Séances' }, { value: 'progres', label: 'Progrès' }, { value: 'profil', label: 'Profil' }]} /></div>
+      <div className="mb-4"><Segmented value={tab} onChange={setTab} options={[{ value: 'programme', label: libre ? 'Modèles' : 'Programme' }, { value: 'seances', label: 'Séances' }, { value: 'progres', label: 'Progrès' }, { value: 'profil', label: 'Profil' }]} /></div>
 
-      {tab === 'programme' && <ProgramView clientId={id} canEdit />}
+      {tab === 'programme' && (libre ? (<>
+        <FreeSessionsView clientId={id} />
+        <SectionTitle>Agenda</SectionTitle>
+        <ProgramView clientId={id} canEdit />
+      </>) : <ProgramView clientId={id} canEdit />)}
       {tab === 'progres' && <Suspense fallback={<div className="skeleton h-48 rounded-2xl" />}><ProgressView clientId={id} /></Suspense>}
 
       {tab === 'seances' && (
@@ -87,7 +95,7 @@ export default function ClientDetail() {
           {q.injuryNote && <Row><span className="text-[14px]">{q.injuryNote}</span></Row>}
           <Row><span className="flex-1 text-muted">Disponibilité</span><span className="font-semibold">{q.availableDays.length} jours · {q.maxMinutes} min max</span></Row>
         </Group>
-        {q.programType !== 'course' && (
+        {!libre && q.programType !== 'course' && (
           <Group header="Musculation">
             <Row><span className="flex-1 text-muted">Objectif</span><span className="font-semibold">{GOAL[q.strength.goal]}</span></Row>
             <Row><span className="flex-1 text-muted">Niveau</span><span className="font-semibold">{LEVEL[q.strength.level]}</span></Row>
@@ -98,7 +106,7 @@ export default function ClientDetail() {
             ))}
           </Group>
         )}
-        {q.programType !== 'muscu' && (
+        {!libre && q.programType !== 'muscu' && (
           <Group header="Course">
             <Row><span className="flex-1 text-muted">Course</span><span className="font-semibold">{DIST_LABEL[q.run.distance]} · {prettyDate(q.run.raceDate)}</span></Row>
             <Row><span className="flex-1 text-muted">Objectif</span><span className="font-semibold">{q.run.objective === 'chrono' && q.run.targetSeconds ? fmtTime(q.run.targetSeconds) : 'Finir'}</span></Row>
@@ -108,7 +116,15 @@ export default function ClientDetail() {
             {program?.paces && <Row><span className="flex-1 text-muted">VMA</span><span className="font-semibold">{program.paces.vma.toFixed(1).replace('.', ',')} km/h</span></Row>}
           </Group>
         )}
-        <div className="mb-5"><Button full variant="secondary" onClick={() => nav(`/onboarding?edit=1&client=${id}`)}>Modifier le formulaire et régénérer</Button></div>
+        {libre && <Group header="Mode libre"><Row><span className="flex-1 text-muted">Suggestions de charge</span><span className="font-semibold">{program?.libre?.suggestLoads ? 'Activées' : 'Désactivées'}</span></Row></Group>}
+        <div className="mb-3"><Button full variant="secondary" onClick={() => nav(`/onboarding?edit=1&client=${id}`)}>{libre ? 'Modifier le formulaire' : 'Modifier le formulaire et régénérer'}</Button></div>
+        {program && (
+          <div className="mb-5">
+            {libre
+              ? <Button full variant="tinted" onClick={() => nav(`/onboarding?edit=1&switch=genere&client=${id}`)}>Passer en programme MIND</Button>
+              : <Button full variant="tinted" color="var(--muscu)" onClick={() => setSwitching(true)}>Passer en mode libre</Button>}
+          </div>
+        )}
         {edits.length > 0 && (<>
           <SectionTitle>Historique des modifications</SectionTitle>
           <Group>{edits.map((e) => (
@@ -117,6 +133,13 @@ export default function ClientDetail() {
         </>)}
         <div className="text-[12px] text-muted">{Object.keys(MUSCLE_LABEL).length} groupes musculaires suivis.</div>
       </>)}
+      <Sheet open={switching} onClose={() => setSwitching(false)} title="Passer en mode libre">
+        <div className="flex flex-col gap-3">
+          <p className="text-[14.5px] text-muted leading-snug">{profile.firstName} suivra son propre programme et MIND ne génère plus rien. L'historique des séances et des charges est conservé.</p>
+          <Button full color="var(--muscu)" onClick={() => { switchToLibre(id, true); setSwitching(false); toast('Mode libre activé') }}>Partir de son programme actuel</Button>
+          <Button full variant="secondary" onClick={() => { switchToLibre(id, false); setSwitching(false); toast('Mode libre activé') }}>Partir de zéro</Button>
+        </div>
+      </Sheet>
     </Page>
   )
 }

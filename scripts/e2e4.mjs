@@ -13,7 +13,7 @@ const touch = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touch
 const sess = async (id) => { const d = await db(); return d.programs.flatMap((p) => p.weeks.flatMap((w) => w.sessions)).find((s) => s.id === id) }
 
 await page.goto(base); await page.getByText('Camille').first().click(); await page.waitForTimeout(600)
-await page.goto(base + '/app/program'); await page.waitForTimeout(500)
+await page.goto(base + '/#/app/program'); await page.waitForTimeout(500)
 await page.getByRole('button', { name: 'Semaine 6', exact: true }).click(); await page.waitForTimeout(500)
 
 // 1) appui long + glisser au doigt : on prend la dernière carte déplaçable de la semaine et on la lâche sur le 2e jour affiché

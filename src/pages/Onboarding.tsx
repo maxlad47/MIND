@@ -2,10 +2,11 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DIST_KM, DIST_LABEL, PREP, assessTarget, pacesFromQuestionnaire, leadIn, phasePlan, predictRaceSeconds, prepWarnings, recommendedStartMode, referencesOf, startModeOf, volumeOutlook } from '@/engine/running'
+import { estimateLiftsFromHistory } from '@/engine/libre'
 import { SPLIT_DESC, SPLIT_LABEL, isUpperOnly, recommendedSplit, splitOptions } from '@/engine/strength'
 import { ZONES, type Goal, type Level, type Muscle, type Priority, type ProgramType, type Questionnaire, type RaceDistance, type RecentDistance, type SplitKey, type Zone } from '@/engine/types'
 import { DAY_NAMES, DAY_SHORT, diffDays, fmtPace, fmtTime, mondayOf, todayISO, addDays } from '@/engine/utils'
-import { currentUser, programOf, questionnaireOf, saveDraft, submitQuestionnaire, useDB } from '@/lib/store'
+import { clientSessions, currentUser, programOf, questionnaireOf, saveDraft, submitQuestionnaire, useDB } from '@/lib/store'
 import { personalizeInBackground } from '@/lib/ai'
 import { Button, Cover, DurationInput, Field, Icon, inputCls, NumberInput, Segmented, SportIcon, springT, toast } from '@/ui/kit'
 
@@ -79,11 +80,17 @@ export default function Onboarding() {
   const nav = useNavigate()
   const [params] = useSearchParams()
   const edit = params.get('edit') === '1'
+  // Libre → MIND : le formulaire s'ouvre en mode génération, pré-rempli (charges de référence estimées d'après l'historique)
+  const switching = params.get('switch') === 'genere'
   const targetId = params.get('client') ?? auth.id
   const me = db.profiles.find((p) => p.id === targetId) ?? auth
   const existing = questionnaireOf(db, me.id)
 
   const init = useMemo<Q>(() => {
+    if (edit && existing && switching) {
+      const lifts = { ...existing.strength.lifts, ...estimateLiftsFromHistory(clientSessions(db, me.id), todayISO()) }
+      return { ...existing, mode: 'genere', strength: { ...existing.strength, lifts } }
+    }
     if (edit && existing) return existing
     const d = db.drafts[me.id]
     return d ? d.data : { firstName: me.firstName }
@@ -108,6 +115,7 @@ export default function Onboarding() {
   const setS = (p: Partial<Questionnaire['strength']>) => set({ strength: { ...m.strength, ...p } })
   const setR = (p: Partial<Questionnaire['run']>) => set({ run: { ...m.run, ...p } })
 
+  const libre = m.mode === 'libre'
   const hasM = m.programType !== 'course'
   const hasR = m.programType !== 'muscu'
   const today = todayISO()
@@ -126,6 +134,12 @@ export default function Onboarding() {
   }
 
   const steps: Step[] = [
+    { id: 'mode', title: 'Comment veux-tu utiliser MIND ?', sub: 'Tu pourras changer d\'avis plus tard, sans perdre ton historique.', when: () => !edit,
+      render: () => (
+        <Big>
+          <Option active={!libre} title="MIND me crée mon programme" sub="Quelques questions, puis MIND génère un programme de musculation et/ou de course adapté à toi." onClick={() => set({ mode: 'genere' })} icon={<Icon name="sparkle" size={24} />} />
+          <Option active={libre} title="J'ai déjà mon programme" sub="Tu le suis déjà : MIND devient ton carnet. Tu crées tes séances, tu les places dans ta semaine et tu notes tes charges." onClick={() => set({ mode: 'libre' })} icon={<Icon name="edit" size={22} />} accent="var(--muscu)" />
+        </Big>) },
     { id: 'name', title: 'Comment t\'appelles-tu ?', sub: 'Juste ton prénom.', valid: (x) => !!x.firstName?.trim(),
       render: (x) => <input autoFocus className={`${inputCls} text-[22px] h-16`} placeholder="Prénom" value={x.firstName ?? ''} onChange={(e) => set({ firstName: e.target.value })} /> },
     { id: 'birth', title: 'Ta date de naissance et ton sexe', sub: 'Pour adapter les repères de ton programme.', valid: (x) => !!x.birthDate,
@@ -392,7 +406,9 @@ export default function Onboarding() {
       } },
   ]
 
-  const active = steps.filter((s) => !s.when || s.when(q))
+  // Mode libre : seulement l'identité et les blessures ; toutes les étapes de génération sont sautées
+  const LIBRE_STEPS = ['mode', 'name', 'birth', 'body', 'injuries']
+  const active = steps.filter((s) => (!libre || LIBRE_STEPS.includes(s.id)) && (!s.when || s.when(q)))
   const cur = active[Math.min(idx, active.length - 1)]
   const isLast = idx >= active.length - 1
   const canNext = cur.valid ? cur.valid(q) : true
@@ -405,6 +421,13 @@ export default function Onboarding() {
     if (full.run.objective === 'finir') full.run.targetSeconds = undefined
     full.strength.split = full.strength.split
     full.startDate = today
+    if (full.mode === 'libre') {
+      submitQuestionnaire(me.id, full, today)
+      toast(edit ? 'Formulaire mis à jour' : 'Bienvenue ! Crée ta première séance')
+      nav(targetId !== auth.id ? `/coach/client/${targetId}` : edit ? (auth.role === 'coach' ? '/coach/me' : '/app/profile') : auth.role === 'coach' ? '/coach/me' : '/app/sessions', { replace: true })
+      return
+    }
+    full.mode = 'genere'
     const p = submitQuestionnaire(me.id, full, today)
     personalizeInBackground(p.id)
     toast(edit ? 'Programme mis à jour' : 'Ton programme est prêt')
@@ -448,7 +471,7 @@ export default function Onboarding() {
 
       <div className="sticky bottom-0 -mx-5 px-5 pt-5 z-10" style={{ background: 'linear-gradient(to top, var(--bg) 70%, transparent)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {isLast ? (
-          <Button full disabled={!canNext || busy} onClick={finish}>{busy ? 'Génération en cours…' : edit ? 'Régénérer mon programme' : 'Générer mon programme'}</Button>
+          <Button full disabled={!canNext || busy} onClick={finish}>{busy ? (libre ? 'Un instant…' : 'Génération en cours…') : libre ? (edit ? 'Enregistrer' : 'Accéder à mes séances') : edit && !switching ? 'Régénérer mon programme' : 'Générer mon programme'}</Button>
         ) : (
           <Button full disabled={!canNext} onClick={() => go(1)}>Continuer</Button>
         )}

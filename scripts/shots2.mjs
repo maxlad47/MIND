@@ -22,9 +22,9 @@ await page.goto(base); await page.waitForTimeout(1600)
 if (want('login')) await shot('01-login', 200)
 await page.getByText('Camille').first().click(); await page.waitForTimeout(900)
 if (want('today')) { await shot('02-today'); await scroll(520); await shot('03-today2', 200); await scroll(1100); await shot('04-today3', 200); await scroll(0) }
-if (want('program')) { await page.goto(base + '/app/program'); await shot('05-program'); await scroll(450); await shot('06-program2', 200) }
-if (want('progress')) { await page.goto(base + '/app/progress'); await shot('07-progress'); await scroll(600); await shot('08-progress2', 200); await scroll(1300); await shot('09-progress3', 200); await scroll(2100); await shot('10-progress4', 200); await scroll(2900); await shot('11-progress5', 200) }
-if (want('profile')) { await page.goto(base + '/app/profile'); await shot('12-profile'); await scroll(500); await shot('13-profile2', 200) }
+if (want('program')) { await page.goto(base + '/#/app/program'); await shot('05-program'); await scroll(450); await shot('06-program2', 200) }
+if (want('progress')) { await page.goto(base + '/#/app/progress'); await shot('07-progress'); await scroll(600); await shot('08-progress2', 200); await scroll(1300); await shot('09-progress3', 200); await scroll(2100); await shot('10-progress4', 200); await scroll(2900); await shot('11-progress5', 200) }
+if (want('profile')) { await page.goto(base + '/#/app/profile'); await shot('12-profile'); await scroll(500); await shot('13-profile2', 200) }
 const d = await db()
 const cam = d.profiles.find((p) => p.firstName === 'Camille')
 const prog = d.programs.find((p) => p.clientId === cam.id)
@@ -33,20 +33,20 @@ const iso = new Date().toISOString().slice(0, 10)
 const muscu = sessions.find((s) => s.sport === 'muscu' && s.status === 'prevue' && s.date >= iso)
 const run = sessions.find((s) => s.sport === 'course' && s.status === 'prevue' && s.date >= iso)
 if (want('session')) {
-  await page.goto(base + '/session/' + muscu.id); await shot('14-session')
+  await page.goto(base + '/#/session/' + muscu.id); await shot('14-session')
   await scroll(500); await shot('15-session2', 200)
   await page.getByLabel('Valider la série').first().click(); await page.waitForTimeout(300); await scroll(0); await shot('16-session3', 200)
-  await page.goto(base + '/session/' + run.id); await shot('17-run'); await scroll(400); await shot('18-run2', 200)
+  await page.goto(base + '/#/session/' + run.id); await shot('17-run'); await scroll(400); await shot('18-run2', 200)
   await page.getByText('Saisir ma sortie').click(); await shot('19-run-sheet', 700)
 }
 if (want('coach')) {
   await page.evaluate(() => { const x = JSON.parse(localStorage.getItem('mind.db.v2')); x.sessionUserId = null; localStorage.setItem('mind.db.v2', JSON.stringify(x)) })
   await page.goto(base); await page.waitForTimeout(500); await page.getByText('Max').first().click(); await shot('20-coach')
-  await page.goto(base + '/coach/alerts'); await shot('21-alerts')
+  await page.goto(base + '/#/coach/alerts'); await shot('21-alerts')
   const hugo = (await db()).profiles.find((p) => p.firstName === 'Hugo')
-  await page.goto(base + '/coach/client/' + hugo.id); await shot('22-client'); await scroll(500); await shot('23-client2', 200)
-  await page.goto(base + '/coach/me'); await shot('25-coach-me')
-  await page.goto(base + '/coach/profile'); await shot('24-coach-profile')
+  await page.goto(base + '/#/coach/client/' + hugo.id); await shot('22-client'); await scroll(500); await shot('23-client2', 200)
+  await page.goto(base + '/#/coach/me'); await shot('25-coach-me')
+  await page.goto(base + '/#/coach/profile'); await shot('24-coach-profile')
 }
 if (want('onb')) {
   await page.evaluate(() => { const x = JSON.parse(localStorage.getItem('mind.db.v2')); x.sessionUserId = null; localStorage.setItem('mind.db.v2', JSON.stringify(x)) })

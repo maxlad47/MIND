@@ -30,6 +30,7 @@ Sur l'écran de connexion, deux boutons ouvrent la démo :
 |---|---|---|
 | Coach (Max) | `coach@mind.app` | `mind1234` |
 | Client (Camille, muscu + semi-marathon) | `camille@demo.mind` | `mind1234` |
+| Client en **mode libre** (Nina, PPL 4×/semaine en rotation) | `nina@demo.mind` | `mind1234` |
 
 Trois autres clients sont visibles côté coach : Hugo (force, douleur à l'épaule), Léa (marathon) et Théo (qui décroche).
 N'importe qui peut aussi **créer un compte** : il apparaît automatiquement dans la liste des clients du coach.
@@ -47,7 +48,7 @@ Le bouton « Réinitialiser les données de démo » (Profil) remet tout à zér
 ## 3. Les tests du moteur
 
 ```bash
-npm test           # 48 tests : bibliothèque, allures, 5 profils types, adaptations
+npm test           # moteur (bibliothèque, allures, 5 profils types, adaptations), mode libre, store, synchronisation
 npm run typecheck  # vérification TypeScript
 ```
 
@@ -68,6 +69,19 @@ src/pages/     Écrans
 shared/        Code IA partagé avec les Edge Functions
 supabase/      Schéma SQL, sécurité (RLS), fonctions serveur
 ```
+
+### Mode libre (« J'ai déjà mon programme »)
+
+Au premier écran du formulaire, le client choisit entre « MIND me crée mon programme » (défaut) et « J'ai déjà mon programme ». En mode libre, MIND ne génère rien : il sert de carnet d'entraînement.
+
+- **Séances modèles** (Push, Pull, Legs…) : exercices ordonnés par glisser-déposer, séries, reps min–max, repos, RIR visé et note facultatifs. Exercices perso possibles (ids `custom:…`, suivis comme les autres, sans alternatives automatiques).
+- **Planning** : *jours fixes* (un modèle par jour) ou *à la suite* (jours cochés + ordre des modèles, MIND enchaîne A → B → C → A…). En rotation, une séance manquée ne consomme pas son tour.
+- Les séances sont de vraies `Session` dans `Program.weeks` (phase `Musculation`), sur une **fenêtre glissante** de 4 semaines prolongée à chaque ouverture (`runDailyJobs`). Modifier un modèle ou le planning ne met à jour que les séances futures prévues sans aucune série saisie.
+- **Fin de séance** : si la séance diffère de son modèle, MIND propose de garder les changements. **Séance en plus** (bouton sur Aujourd'hui) : n'avance pas la rotation. Sortie de course libre : km, temps, ressenti.
+- **Suggestions de charge** (Profil, désactivées par défaut) : double progression du moteur (`nextLoad`, `src/engine/adapt.ts`).
+- Aucun décalage automatique, aucune semaine allégée, aucun remplacement d'exercice. Restent actifs : alertes douleur / « décroche » / commentaires, et un bilan du dimanche sans suggestion de structure.
+- **Passer d'un mode à l'autre** (Profil, ou fiche client côté coach) : l'ancien programme est archivé, l'historique (`lastPerformance`, Progrès) est conservé.
+- **Données** : tout vit dans l'enregistrement `Program` (`mode`, `libre`), donc synchronisé avec le coach comme le reste ; aucune migration SQL. Code : `src/engine/libre.ts` (pur), écrans `src/ui/free.tsx`.
 
 ### La couche IA (Claude)
 

@@ -2,17 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { findSession } from '@/engine/adapt'
 import { conflictsOfWeek } from '@/engine/combine'
-import { EXERCISE_BY_ID } from '@/engine/exercises'
+import { exerciseOf, isCustomId } from '@/engine/exercises'
+import { diffSessionTemplate, isFreeRun, isLibre } from '@/engine/libre'
 import { describeBlock, runKindLabel } from '@/engine/running'
 import type { Program, RunBlock, Session, SessionExercise } from '@/engine/types'
 import { fmtKm, fmtPace, fmtTime, mondayOf, parseTime, prettyDate, todayISO } from '@/engine/utils'
 import {
-  addComment, addExercise, currentUser, finishStrength, lastPerformance, logRun, logSet, moveSession, removeExercise, replaceExercise,
+  addComment, addCustomExercise, addExercise, applySessionToTemplate, currentUser, customExercisesOf, finishStrength, lastPerformance, logRun, logSet, moveSession, removeExercise, replaceExercise,
   skipSession, restoreSession, unlogSet, updateExercise, updateRun, useDB, type Recap,
 } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { Button, Card, Chip, Cover, DurationInput, Icon, NumberInput, Page, Ring, SectionTitle, Sheet, SportBadge, spring, toast } from '@/ui/kit'
-import { ExercisePicker, sessionMeta, statusLabel } from '@/ui/parts'
+import { coverSeed, ExercisePicker, sessionMeta, statusLabel } from '@/ui/parts'
 
 const startKey = (id: string) => `mind.start.${id}`
 function getStart(id: string): number | undefined {
@@ -52,7 +53,8 @@ function SetRow({ n, ex, defaults, prev, done, locked, onValidate, onUndo }: {
 
 function ExerciseCard({ program, session, e, locked }: { program: Program; session: Session; e: SessionExercise; locked: boolean }) {
   const db = useDB()
-  const ex = EXERCISE_BY_ID[e.exerciseId]
+  const ex = exerciseOf(e.exerciseId)
+  const libre = isLibre(program)
   const [pick, setPick] = useState(false)
   const [edit, setEdit] = useState(false)
   const last = lastPerformance(db, program.clientId, e.exerciseId, session.id)
@@ -67,7 +69,7 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
         <div className="flex-1 min-w-0 pl-1">
           <div className="text-[18px] font-extrabold leading-tight tracking-tight">{ex.name}</div>
           <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[13px] text-muted mt-0.5 num">
-            <span className="font-semibold text-ink">{e.sets} × {e.repMin}–{e.repMax}</span><span>RIR {e.rir}</span><span>repos {String(Math.round(e.restSec / 6) / 10).replace('.', ',')} min</span>{e.targetKg ? <span>{fmtKm(e.targetKg)} kg</span> : null}
+            <span className="font-semibold text-ink">{e.sets} × {e.repMin}–{e.repMax}</span>{!e.noRir && <span>RIR {e.rir}</span>}<span>repos {String(Math.round(e.restSec / 6) / 10).replace('.', ',')} min</span>{e.targetKg ? <span>{libre ? 'suggéré ' : ''}{fmtKm(e.targetKg)} kg</span> : null}
           </div>
         </div>
         {!locked && (<>
@@ -75,7 +77,7 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
           <button className="tap hit w-10 h-10 rounded-full bg-surface2 flex items-center justify-center" aria-label="Modifier" onClick={() => setEdit(true)}><Icon name="edit" size={17} /></button>
         </>)}
       </div>
-      <p className="text-[13px] text-muted mt-2 leading-snug">{ex.cue}</p>
+      {!isCustomId(e.exerciseId) && <p className="text-[13px] text-muted mt-2 leading-snug">{ex.cue}</p>}
       <div className="grid text-[11px] font-semibold uppercase tracking-wide text-faint mt-3.5 px-0" style={{ gridTemplateColumns: '24px 1fr 62px 52px 46px 44px', gap: 8 }}>
         <span /> <span>Dernière</span><span className="text-center">kg</span><span className="text-center">reps</span><span className="text-center">RIR</span><span />
       </div>
@@ -84,7 +86,8 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
         const before = e.logs.filter((l) => l.n < n).slice(-1)[0]
         const p = prevSetOf(n)
         const defaults = {
-          kg: before?.kg ?? p?.kg ?? e.targetKg ?? 0,
+          // mode libre : la charge suggérée (si activée) passe avant la dernière performance
+          kg: before?.kg ?? (libre ? (e.targetKg ?? p?.kg) : (p?.kg ?? e.targetKg)) ?? 0,
           reps: before?.reps ?? p?.reps ?? e.repMin,
           rir: before?.rir ?? e.rir,
         }
@@ -93,16 +96,19 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
           onUndo={() => unlogSet(program.id, session.id, e.id, n)} />
       })}
 
-      <ExercisePicker open={pick} onClose={() => setPick(false)} title="Remplacer l'exercice" replacing={e.exerciseId} injuries={program.q.injuries}
-        onPick={(id) => { replaceExercise(program.id, session.id, e.id, id); toast('Exercice remplacé') }} />
+      {libre
+        ? <ExercisePicker open={pick} onClose={() => setPick(false)} title="Remplacer l'exercice" injuries={[]} warn={program.q.injuries} customs={customExercisesOf(db, program.clientId)}
+          onCreateCustom={(name, muscle) => addCustomExercise(program.id, name, muscle)} onPick={(id) => { replaceExercise(program.id, session.id, e.id, id); toast('Exercice remplacé') }} />
+        : <ExercisePicker open={pick} onClose={() => setPick(false)} title="Remplacer l'exercice" replacing={e.exerciseId} injuries={program.q.injuries}
+          onPick={(id) => { replaceExercise(program.id, session.id, e.id, id); toast('Exercice remplacé') }} />}
       <Sheet open={edit} onClose={() => setEdit(false)} title={ex.name}>
         <div className="flex flex-col gap-4">
-          {([['Séries', 'sets', 1, 8, 1], ['Reps min', 'repMin', 1, 30, 1], ['Reps max', 'repMax', 1, 40, 1], ['RIR cible', 'rir', 0, 5, 1], ['Repos (s)', 'restSec', 30, 480, 15]] as const).map(([label, key, mn, mx, st]) => (
+          {([['Séries', 'sets', 1, 8, 1], ['Reps min', 'repMin', 1, 30, 1], ['Reps max', 'repMax', 1, 40, 1], ['RIR cible', 'rir', 0, 5, 1], ['Repos (s)', 'restSec', 30, 480, 15]] as const).filter(([, key]) => !(libre && key === 'rir')).map(([label, key, mn, mx, st]) => (
             <div key={key} className="flex items-center justify-between"><span className="font-semibold">{label}</span>
-              <NumberInput value={e[key]} min={mn} max={mx} step={st} width={40} onChange={(v) => v !== undefined && updateExercise(program.id, session.id, e.id, { [key]: v })} /></div>
+              <NumberInput value={e[key]} min={mn} max={mx} step={st} width={48} onChange={(v) => v !== undefined && updateExercise(program.id, session.id, e.id, { [key]: v })} /></div>
           ))}
-          <div className="flex items-center justify-between"><span className="font-semibold">Charge (kg)</span>
-            <NumberInput value={e.targetKg} min={0} max={600} step={2.5} width={40} onChange={(v) => updateExercise(program.id, session.id, e.id, { targetKg: v })} /></div>
+          {!libre && <div className="flex items-center justify-between"><span className="font-semibold">Charge (kg)</span>
+            <NumberInput value={e.targetKg} min={0} max={600} step={2.5} width={48} onChange={(v) => updateExercise(program.id, session.id, e.id, { targetKg: v })} /></div>}
           <Button full variant="danger" onClick={() => { removeExercise(program.id, session.id, e.id); setEdit(false) }}>Retirer l'exercice</Button>
         </div>
       </Sheet>
@@ -183,8 +189,12 @@ export default function SessionPage() {
   const [runSeconds, setRunSeconds] = useState<number | undefined>(undefined)
   const [runFeeling, setRunFeeling] = useState(5)
   const [runComment, setRunComment] = useState('')
+  const [changesOpen, setChangesOpen] = useState(false)
 
-  useEffect(() => { if (session?.run && km === undefined) setKm(session.run.totalKm) }, [session?.id])
+  useEffect(() => { if (session?.run && km === undefined) setKm(session.run.totalKm || undefined) }, [session?.id])
+  // mode libre : ce qui diffère entre la séance saisie et son modèle
+  const template = program?.libre?.templates.find((t) => t.id === session?.templateId)
+  const changes = useMemo(() => (session && template ? diffSessionTemplate(session, template) : []), [session, template])
 
   const allowed = !!program && (me.role === 'coach' || program.clientId === me.id)
   const conflicts = useMemo(() => {
@@ -205,6 +215,10 @@ export default function SessionPage() {
   const total = (session.exercises ?? []).reduce((a, e) => a + e.sets, 0)
   const doneSets = (session.exercises ?? []).reduce((a, e) => a + e.logs.length, 0)
   const clientName = db.profiles.find((p) => p.id === program.clientId)?.firstName
+  const libre = isLibre(program)
+  const freeRun = isFreeRun(session)
+  /** Fin de séance : si elle diffère de son modèle, on demande si on garde les changements. */
+  const leave = () => { if (libre && changes.length > 0) setChangesOpen(true); else nav(-1) }
 
   const finish = () => {
     const startedAt = getStart(session.id)
@@ -225,10 +239,10 @@ export default function SessionPage() {
   return (
     <Page title={session.title} back tabbed={false} heroHeight={250}
       hero={
-        <Cover seed={session.id + session.title} sports={[session.sport]} kind={session.kind} className="h-full">
+        <Cover seed={coverSeed(session)} sports={[session.sport]} kind={session.kind} className="h-full">
           <div className="absolute inset-0 flex flex-col justify-end p-5 text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 56px)' }}>
             <div className="flex items-center justify-between gap-2 mb-auto">
-              <SportBadge sports={[session.sport]} label={isMuscu ? 'Musculation' : runKindLabel(session.kind)} />
+              <SportBadge sports={[session.sport]} label={session.extra ? 'Séance en plus' : isMuscu ? 'Musculation' : runKindLabel(session.kind)} />
               <span className="rounded-full px-3 h-8 inline-flex items-center gap-1 text-[13px] font-bold" style={{ background: session.status === 'faite' ? '#30D158' : session.status === 'manquee' ? '#FF453A' : 'rgba(255,255,255,.92)', color: session.status === 'prevue' ? '#000' : '#fff' }}>
                 {session.status === 'faite' && <Icon name="check" size={14} strokeWidth={3} />}{statusLabel[session.status]}
               </span>
@@ -260,7 +274,7 @@ export default function SessionPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <RunDetail s={session} />
+          {!freeRun && <RunDetail s={session} />}
           {session.runLog && (
             <Card className="p-4">
               <div className="font-bold text-[17px]">Ta sortie</div>
@@ -275,7 +289,7 @@ export default function SessionPage() {
           {!locked && session.status !== 'sautee' && (
             <>
               <Button full onClick={() => setRunSheet(true)} color="#FF9F0A">Saisir ma sortie</Button>
-              <Button full variant="secondary" onClick={() => setEditRun(true)}><Icon name="edit" size={17} /> Modifier la séance</Button>
+              {!freeRun && <Button full variant="secondary" onClick={() => setEditRun(true)}><Icon name="edit" size={17} /> Modifier la séance</Button>}
             </>
           )}
         </div>
@@ -295,7 +309,10 @@ export default function SessionPage() {
       <Comments program={program} session={session} />
 
       {/* feuilles */}
-      <ExercisePicker open={pickAdd} onClose={() => setPickAdd(false)} title="Ajouter un exercice" injuries={program.q.injuries} excluded={program.q.excludedMuscles} onPick={(eid) => { addExercise(program.id, session.id, eid); toast('Exercice ajouté') }} />
+      {libre
+        ? <ExercisePicker open={pickAdd} onClose={() => setPickAdd(false)} title="Ajouter un exercice" injuries={[]} warn={program.q.injuries} customs={customExercisesOf(db, program.clientId)}
+          onCreateCustom={(name, muscle) => addCustomExercise(program.id, name, muscle)} onPick={(eid) => { addExercise(program.id, session.id, eid); toast('Exercice ajouté') }} />
+        : <ExercisePicker open={pickAdd} onClose={() => setPickAdd(false)} title="Ajouter un exercice" injuries={program.q.injuries} excluded={program.q.excludedMuscles} onPick={(eid) => { addExercise(program.id, session.id, eid); toast('Exercice ajouté') }} />}
 
       <Sheet open={finishing} onClose={() => setFinishing(false)} title="Ressenti de la séance">
         <p className="text-muted text-[14px] mb-3">1 = très facile, 10 = au bout de moi.</p>
@@ -305,7 +322,7 @@ export default function SessionPage() {
         <Button full onClick={finish}>Terminer</Button>
       </Sheet>
 
-      <Sheet open={!!recap} onClose={() => { setRecap(null); nav(-1) }} title="Bravo, séance terminée !">
+      <Sheet open={!!recap} onClose={() => { setRecap(null); leave() }} title="Bravo, séance terminée !">
         {recap && (
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-3 gap-2 text-center">
@@ -316,12 +333,23 @@ export default function SessionPage() {
             {recap.prs.length > 0 && (
               <div className="rounded-xl p-3" style={{ background: 'color-mix(in srgb, #FF9F0A 16%, transparent)' }}>
                 <div className="font-bold flex items-center gap-1.5" style={{ color: '#FF9F0A' }}><Icon name="trophy" size={18} /> {recap.prs.length > 1 ? 'Records battus' : 'Record battu'}</div>
-                {recap.prs.map((p) => <div key={p.exerciseId} className="text-[15px] mt-1">{EXERCISE_BY_ID[p.exerciseId].name} : {fmtKm(p.kg)} kg × {p.reps}</div>)}
+                 {recap.prs.map((p) => <div key={p.exerciseId} className="text-[15px] mt-1">{exerciseOf(p.exerciseId).name} : {fmtKm(p.kg)} kg × {p.reps}</div>)}
               </div>
             )}
-            <Button full onClick={() => { setRecap(null); nav(-1) }}>Super</Button>
+            <Button full onClick={() => { setRecap(null); leave() }}>Super</Button>
           </div>
         )}
+      </Sheet>
+
+      <Sheet open={changesOpen} onClose={() => { setChangesOpen(false); nav(-1) }} title={`Tu as changé ${changes.length} chose${changes.length > 1 ? 's' : ''}`}>
+        <div className="flex flex-col gap-3">
+          <p className="text-[15.5px] leading-snug">Les garder pour tes prochains <b>{template?.name ?? session.title}</b> ?</p>
+          <div className="bg-surface2 rounded-[16px] p-3.5 flex flex-col gap-1.5">
+            {changes.map((c, i) => <div key={i} className="flex gap-2 text-[14.5px] leading-snug"><span style={{ color: 'var(--muscu)' }}>•</span><span>{c.text}</span></div>)}
+          </div>
+          <Button full color="var(--muscu)" onClick={() => { applySessionToTemplate(program.id, session.id); setChangesOpen(false); toast('Modèle mis à jour'); nav(-1) }}>Oui, mettre à jour mon modèle</Button>
+          <Button full variant="secondary" onClick={() => { setChangesOpen(false); nav(-1) }}>Non, juste cette fois</Button>
+        </div>
       </Sheet>
 
       <Sheet open={runSheet} onClose={() => setRunSheet(false)} title="Ma sortie" tall>

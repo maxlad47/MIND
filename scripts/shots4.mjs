@@ -19,12 +19,12 @@ for (const [w, h] of [[390, 844], [375, 667]]) {
     if (w === 390) {
       await page.getByText('Camille').first().click(); await page.waitForTimeout(900)
       await page.screenshot({ path: `/tmp/shots/d/${scheme}-${tag}-today.png` })
-      await page.goto(base + '/app/program'); await page.waitForTimeout(800); await page.screenshot({ path: `/tmp/shots/d/${scheme}-${tag}-program.png` })
-      await page.goto(base + '/app/profile'); await page.waitForTimeout(800); await page.evaluate(() => window.scrollTo(0, 560)); await page.waitForTimeout(300); await page.screenshot({ path: `/tmp/shots/d/${scheme}-${tag}-profile.png` })
+      await page.goto(base + '/#/app/program'); await page.waitForTimeout(800); await page.screenshot({ path: `/tmp/shots/d/${scheme}-${tag}-program.png` })
+      await page.goto(base + '/#/app/profile'); await page.waitForTimeout(800); await page.evaluate(() => window.scrollTo(0, 560)); await page.waitForTimeout(300); await page.screenshot({ path: `/tmp/shots/d/${scheme}-${tag}-profile.png` })
       const d = await page.evaluate(() => JSON.parse(localStorage.getItem('mind.db.v2')))
       const cam = d.profiles.find((p) => p.firstName === 'Camille'); const prog = d.programs.find((p) => p.clientId === cam.id)
       const s = prog.weeks.flatMap((x) => x.sessions).find((x) => x.sport === 'muscu' && x.status === 'prevue')
-      await page.goto(base + '/session/' + s.id); await page.waitForTimeout(800); await page.screenshot({ path: `/tmp/shots/d/${scheme}-${tag}-session.png` })
+      await page.goto(base + '/#/session/' + s.id); await page.waitForTimeout(800); await page.screenshot({ path: `/tmp/shots/d/${scheme}-${tag}-session.png` })
     }
     // onboarding : un nouveau compte, on mesure chaque étape
     await page.evaluate(() => { const x = JSON.parse(localStorage.getItem('mind.db.v2')); if (x) { x.sessionUserId = null; localStorage.setItem('mind.db.v2', JSON.stringify(x)) } })

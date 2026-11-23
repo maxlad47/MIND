@@ -1,9 +1,11 @@
 import { lazy, Suspense, useState } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { allSessions } from '@/engine/adapt'
+import { isLibre } from '@/engine/libre'
 import { clientsOf, currentUser, summarizeClient, programOf, useDB } from '@/lib/store'
 import { Page, PageSkeleton, Segmented, TabBar } from '@/ui/kit'
 import { PageFade } from '@/ui/motion'
+import { FreeSessionsView } from '@/ui/free'
 import { BellButton, NotificationsSheet } from '@/ui/parts'
 import { ProfileView } from './ProfilePage'
 import TodayPage, { TodayView } from './Today'
@@ -14,16 +16,24 @@ import { AlertsPage, ClientsPage } from './Coach'
 export function ClientShell() {
   const db = useDB()
   const me = currentUser(db)!
+  const libre = isLibre(programOf(db, me.id))
   return (
     <>
       <PageFade><Routes>
         <Route path="today" element={<TodayPage clientId={me.id} />} />
+        <Route path="sessions" element={libre ? <Page title="Mes séances"><FreeSessionsView clientId={me.id} /></Page> : <Navigate to="/app/today" replace />} />
         <Route path="program" element={<Page title="Programme"><ProgramView clientId={me.id} /></Page>} />
         <Route path="progress" element={<Page title="Progrès"><Suspense fallback={<PageSkeleton />}><ProgressView clientId={me.id} /></Suspense></Page>} />
         <Route path="profile" element={<Page title="Profil"><ProfileView userId={me.id} /></Page>} />
         <Route path="*" element={<Navigate to="today" replace />} />
       </Routes></PageFade>
-      <TabBar tabs={[
+      <TabBar tabs={libre ? [
+        { to: '/app/today', label: 'Aujourd\'hui', icon: 'today' },
+        { to: '/app/sessions', label: 'Mes séances', icon: 'program' },
+        { to: '/app/program', label: 'Agenda', icon: 'calendar' },
+        { to: '/app/progress', label: 'Progrès', icon: 'progress' },
+        { to: '/app/profile', label: 'Profil', icon: 'profile' },
+      ] : [
         { to: '/app/today', label: 'Aujourd\'hui', icon: 'today' },
         { to: '/app/program', label: 'Programme', icon: 'program' },
         { to: '/app/progress', label: 'Progrès', icon: 'progress' },
@@ -34,12 +44,15 @@ export function ClientShell() {
 }
 
 function MyTraining({ userId }: { userId: string }) {
-  const [tab, setTab] = useState<'today' | 'program' | 'progress'>('today')
+  const db = useDB()
+  const libre = isLibre(programOf(db, userId))
+  const [tab, setTab] = useState<'today' | 'sessions' | 'program' | 'progress'>('today')
   const [bell, setBell] = useState(false)
   return (
     <Page title="Mon entraînement" right={<BellButton userId={userId} onClick={() => setBell(true)} />}>
-      <div className="mb-4"><Segmented value={tab} onChange={setTab} options={[{ value: 'today', label: 'Aujourd\'hui' }, { value: 'program', label: 'Programme' }, { value: 'progress', label: 'Progrès' }]} /></div>
-      {tab === 'today' && <TodayView clientId={userId} onboardPath="/onboarding" />}
+      <div className="mb-4"><Segmented value={tab} onChange={setTab} options={[{ value: 'today', label: 'Aujourd\'hui' }, ...(libre ? [{ value: 'sessions' as const, label: 'Séances' }] : []), { value: 'program', label: libre ? 'Agenda' : 'Programme' }, { value: 'progress', label: 'Progrès' }]} /></div>
+      {tab === 'sessions' && <FreeSessionsView clientId={userId} />}
+      {tab === 'today' && <TodayView clientId={userId} onboardPath="/onboarding" onOpenSessions={() => setTab('sessions')} />}
       {tab === 'program' && <ProgramView clientId={userId} />}
       {tab === 'progress' && <Suspense fallback={<PageSkeleton />}><ProgressView clientId={userId} /></Suspense>}
       <NotificationsSheet open={bell} onClose={() => setBell(false)} userId={userId} />

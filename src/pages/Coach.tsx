@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientsOf, currentUser, summarizeClient, useDB, type ClientStatus, type ClientSummary } from '@/lib/store'
+import { isLibre } from '@/engine/libre'
 import { prettyDate, shortDate } from '@/engine/utils'
 import { motion } from 'framer-motion'
 import { Card, Chip, Cover, EmptyState, Icon, Page, spring } from '@/ui/kit'
@@ -24,7 +25,7 @@ function ClientCard({ c, onClick, i = 0 }: { c: ClientSummary; onClick: () => vo
           <div className="absolute inset-0 flex items-center justify-center text-white text-[28px] font-extrabold" style={{ textShadow: '0 2px 10px rgba(0,0,0,.3)' }}>{c.profile.firstName[0]}</div>
         </Cover>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2"><span className="text-[18px] font-extrabold tracking-tight truncate">{c.profile.firstName}</span><Chip color={st.color}>{st.label}</Chip></div>
+          <div className="flex items-center gap-2"><span className="text-[18px] font-extrabold tracking-tight truncate">{c.profile.firstName}</span><Chip color={st.color}>{st.label}</Chip>{isLibre(c.program) && <Chip color="var(--muscu)">Libre</Chip>}</div>
           <div className="text-[13px] text-muted mt-0.5 truncate">{c.lastDone ? `Dernière séance : ${shortDate(c.lastDone)}` : 'Aucune séance réalisée pour le moment'}</div>
           <div className="flex items-center gap-2 mt-2">
             <div className="flex-1 h-1.5 rounded-full bg-surface2 overflow-hidden"><motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ ...spring, delay: 0.15 }} style={{ background: st.color }} /></div>
