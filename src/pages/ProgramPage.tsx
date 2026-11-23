@@ -69,7 +69,15 @@ export function ProgramView({ clientId, canEdit = true }: { clientId: string; ca
   const nav = useNavigate()
   const program = programOf(db, clientId)
   const today = todayISO()
-  const [idx, setIdx] = useState<number | null>(null)
+  // la semaine consultée est retenue (le temps de la visite de l'app) : en revenant d'une séance, on reste sur la même semaine
+  const weekKey = `mind.program.week.${program?.id ?? ''}`
+  const [idx, setIdxState] = useState<number | null>(() => {
+    try { const v = Number(sessionStorage.getItem(weekKey)); return v >= 1 ? v : null } catch { return null }
+  })
+  const setIdx = (v: number | null) => {
+    setIdxState(v)
+    try { if (v === null) sessionStorage.removeItem(weekKey); else sessionStorage.setItem(weekKey, String(v)) } catch { /* stockage indisponible */ }
+  }
   const [activeId, setActiveId] = useState<string | null>(null)
   const [pending, setPending] = useState<{ s: Session; date: string; conflicts: string[]; suggestion: number | null } | null>(null)
   // souris : on glisse directement ; doigt : appui long (~0,25 s) puis glisser, pour ne pas gêner le défilement de la page
