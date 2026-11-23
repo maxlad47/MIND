@@ -7,7 +7,8 @@ import { applyFormat, defaultGroup, plannedSetsOf, relativeKg } from '@/engine/f
 import { newLibreProgram, newTemplate, newTemplateExercise, syncFree } from '@/engine/libre'
 import { generateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
-import type { LibrePlanning, Program, Questionnaire, SessionExercise, SessionTemplate } from '@/engine/types'
+import { attachRun, extraIdOf, intervalBlocks, runIdOf, targetPaceOf } from '@/engine/runs'
+import type { HealthDay, HrPoint, ImportedLap, ImportedRun, LibrePlanning, Program, Questionnaire, Session, SessionExercise, SessionTemplate } from '@/engine/types'
 import { addDays, hash, mondayOf, todayISO, uid } from '@/engine/utils'
 import { COACH_EMAIL, getDB, hashPw, mutate, type DB, type Profile } from './store'
 
@@ -151,6 +152,102 @@ function addNina(db: DB, today: string): Profile {
   return profile
 }
 
+// ------------------------------------------------------------------ courses importées de Léa (montre Garmin simulée)
+
+interface Synth { id: string; clientId: string; startAt: string; km: number; seconds: number; avgHr: number; maxHr: number; splits?: { km: number; seconds: number; avgPaceSec: number; avgHr: number }[]; laps: ImportedLap[]; hrSeries: HrPoint[] }
+/** Série de FC (un point toutes les 10 s) à partir de tronçons (durée, FC). */
+function hrOf(parts: { seconds: number; hr: number }[], key: string): HrPoint[] {
+  const out: HrPoint[] = []
+  let t = 0
+  for (const p of parts) for (let k = 0; k < p.seconds; k += 10, t += 10) out.push({ t, hr: p.hr + ((hash(key + t) % 5) - 2) })
+  return out
+}
+/** Sortie régulière : une allure et une FC par km. */
+function steady(id: string, clientId: string, startAt: string, paces: number[], hrs: number[]): Synth {
+  const splits = paces.map((p, i) => ({ km: 1, seconds: p, avgPaceSec: p, avgHr: hrs[i] }))
+  return {
+    id, clientId, startAt, km: paces.length, seconds: paces.reduce((a, b) => a + b, 0), avgHr: Math.round(hrs.reduce((a, b) => a + b, 0) / hrs.length), maxHr: Math.max(...hrs) + 6,
+    splits, laps: splits.map((s) => ({ meters: 1000, seconds: s.seconds, avgPaceSec: s.avgPaceSec, avgHr: s.avgHr })), hrSeries: hrOf(paces.map((p, i) => ({ seconds: p, hr: hrs[i] })), id),
+  }
+}
+/** Fractionné : échauffement, tours de travail (quelques-uns trop lents), récupérations, retour au calme. */
+function intervals(id: string, clientId: string, startAt: string, s: Session): Synth | undefined {
+  const b = intervalBlocks(s)[0]
+  if (!b?.meters || !b.paceSec) return undefined
+  const laps: ImportedLap[] = [], parts: { seconds: number; hr: number }[] = []
+  const add = (meters: number, pace: number, hr: number) => { const seconds = Math.round((meters / 1000) * pace); laps.push({ meters, seconds, avgPaceSec: Math.round(pace), avgHr: hr }); parts.push({ seconds, hr }) }
+  add(2000, b.paceSec * 1.4, 140)
+  for (let i = 0; i < (b.reps ?? 1); i++) { add(b.meters, b.paceSec * (i === 2 || i === 6 ? 1.09 : 0.99), 168 + Math.min(6, i)); add(200, 430, 150) }
+  add(1500, 380, 138)
+  const meters = laps.reduce((a, l) => a + l.meters, 0), seconds = laps.reduce((a, l) => a + l.seconds, 0)
+  return { id, clientId, startAt, km: Math.round(meters / 100) / 10, seconds, avgHr: 155, maxHr: 178, laps, hrSeries: hrOf(parts, id) }
+}
+const toRun = (o: Synth): ImportedRun => ({
+  id: runIdOf(`garmin:${o.id}`), clientId: o.clientId, source: 'garmin', externalId: `garmin:${o.id}`, startAt: o.startAt, km: o.km, seconds: o.seconds, avgPaceSec: Math.round(o.seconds / o.km),
+  avgHr: o.avgHr, maxHr: o.maxHr, elevationGain: 20 + (hash(o.id) % 90), laps: o.laps, splits: o.splits, hrSeries: o.hrSeries, activityType: 'route', status: 'a_rattacher',
+})
+
+/** Léa : une EF trop intense (bilan rempli), un fractionné « à compléter », une sortie longue au départ trop rapide, une sortie en plus, des jours de pas et de sommeil. */
+function addLeaRuns(db: DB, prog: Program, clientId: string, today: string): void {
+  const past = allSessions(prog).filter((s) => s.sport === 'course' && s.kind !== 'renfo' && s.date < today && s.date >= addDays(today, -30)).sort((a, b) => b.date.localeCompare(a.date))
+  const pick = (f: (s: Session) => boolean) => past.find(f)
+  const attach = (run: ImportedRun, sid?: string) => {
+    const s = sid ? allSessions(prog).find((x) => x.id === sid) : undefined
+    if (s) { s.status = 'prevue'; s.runLog = undefined; s.feeling = undefined; s.doneAt = undefined }
+    const res = attachRun(prog, run, { forceSessionId: sid, today })
+    Object.assign(prog, res.program)
+    db.importedRuns.push({ ...run, status: 'rattachee', matchedSessionId: res.sessionId })
+    return res.sessionId ? allSessions(prog).find((x) => x.id === res.sessionId) : undefined
+  }
+  const review = (s: Session | undefined, r: { respected: 'oui' | 'partiel' | 'non'; reasons?: ('fatigue' | 'difficile' | 'temps')[]; rpe: number }) => {
+    if (!s?.runLog) return
+    Object.assign(s.runLog, { respected: r.respected, reasons: r.reasons ?? [], rpe: r.rpe, feeling: r.rpe })
+    s.feeling = r.rpe
+  }
+  const clock = (s: Session, h: string) => `${s.date}T${h}`
+
+  // 1. EF déjà rattachée, bilan rempli, alerte « endurance trop intense » (FC plus haute que Z2 sur une grande part de la sortie)
+  const ef = pick((s) => s.kind === 'ef')
+  if (ef) {
+    const km = Math.max(6, Math.round(ef.run!.totalKm))
+    const t = targetPaceOf(ef) ?? 330
+    const paces = Array.from({ length: km }, (_, i) => t - 4 + (i % 3) * 4 - (i > 3 ? 3 : 0)) // dans l'allure : le problème est la FC, pas le rythme
+    const hrs = Array.from({ length: km }, (_, i) => (i < 2 ? 128 : 150 + Math.min(10, i * 2))) // FC max ≈ 186 : au-dessus de 80 % (149) dès le 3e km
+    review(attach(toRun(steady('seed-ef', clientId, clock(ef, '07:45:00'), paces, hrs)), ef.id), { respected: 'partiel', reasons: ['fatigue'], rpe: 7 })
+  }
+  // 2. Sortie longue avec un départ trop rapide
+  const longue = pick((s) => s.kind === 'longue')
+  if (longue) {
+    const target = targetPaceOf(longue) ?? 340
+    const km = Math.max(10, Math.round(longue.run!.totalKm))
+    const paces = Array.from({ length: km }, (_, i) => (i < 3 ? target - 28 : i > km - 4 ? target + 14 : target + 2 + (i % 2) * 3))
+    const hrs = Array.from({ length: km }, (_, i) => 142 + Math.round((i / km) * 22))
+    review(attach(toRun(steady('seed-longue', clientId, clock(longue, '09:00:00'), paces, hrs)), longue.id), { respected: 'partiel', reasons: ['difficile'], rpe: 8 })
+  }
+  // 3. Fractionné arrivé de la montre, bilan « à compléter »
+  const quality = pick((s) => ['vma', 'seuil', 'specifique', 'cotes', 'fartlek'].includes(s.kind) && !!intervalBlocks(s).length)
+  if (quality) {
+    const syn = intervals('seed-fractionne', clientId, clock(quality, '18:15:00'), quality)
+    if (syn) attach(toRun(syn), quality.id)
+  }
+  // 4. Sortie en plus : un jour sans séance de course
+  const busy = new Set(allSessions(prog).filter((s) => s.sport === 'course').map((s) => s.date))
+  for (let n = 1; n < 20; n++) {
+    const d = addDays(today, -n)
+    if (busy.has(d) || !prog.weeks.some((w) => w.startDate === mondayOf(d))) continue
+    const extra = attach(toRun(steady('seed-en-plus', clientId, `${d}T12:30:00`, [345, 340, 342, 338, 341, 336], [135, 141, 143, 145, 146, 149])))
+    review(extra, { respected: 'oui', rpe: 4 })
+    void extraIdOf
+    break
+  }
+  // 5. Pas et sommeil des 7 derniers jours
+  for (let n = 0; n < 7; n++) {
+    const date = addDays(today, -n)
+    const h: HealthDay = { id: `${clientId}-${date}`, clientId, date, steps: n === 0 ? 3120 : 7200 + (hash('pas' + date) % 5200), sleepMinutes: 380 + (hash('nuit' + date) % 110), sleepScore: 66 + (hash('score' + date) % 25) }
+    db.health.push(h)
+  }
+}
+
 export function buildSeed(today = todayISO()): DB {
   const db = JSON.parse(JSON.stringify(getDB())) as DB
   const mk = (email: string, firstName: string, role: 'coach' | 'client'): Profile => {
@@ -204,6 +301,7 @@ export function buildSeed(today = todayISO()): DB {
       renfo: { perWeek: 1, kit: 'nu' } }, // renfo coureur : 1 fois par semaine, sans matériel
   })
   const pl = add(lea, ql, 0.95)
+  addLeaRuns(db, pl, lea.id, today)
   const nextWeek = pl.weeks.find((w) => w.startDate === addDays(mondayOf(today), 7))
   if (nextWeek) {
     db.adaptations.unshift({
@@ -239,6 +337,12 @@ export function ensureSeed(): void {
   if (getDB().seeded) {
     // démo déjà créée avant le mode libre : on ajoute Nina sans toucher au reste
     if (!getDB().users.some((u) => u.email === DEMO_ACCOUNTS.libre)) mutate((d) => { addNina(d, todayISO()) })
+    // démo créée avant les courses importées : on ajoute celles de Léa sans toucher au reste
+    if (!getDB().importedRuns.length) mutate((d) => {
+      const lea = d.profiles.find((p) => p.email === 'lea@demo.mind')
+      const prog = lea && d.programs.find((p) => p.clientId === lea.id && p.status === 'actif')
+      if (lea && prog) addLeaRuns(d, prog, lea.id, todayISO())
+    })
     return
   }
   const seeded = buildSeed()

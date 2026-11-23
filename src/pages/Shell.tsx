@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { allSessions } from '@/engine/adapt'
 import { isLibre } from '@/engine/libre'
+import { useGarminAuto } from '@/lib/garmin'
 import { clientsOf, currentUser, summarizeClient, programOf, useDB } from '@/lib/store'
 import { Page, PageSkeleton, Segmented, TabBar } from '@/ui/kit'
 import { PageFade } from '@/ui/motion'
@@ -17,6 +18,7 @@ export function ClientShell() {
   const db = useDB()
   const me = currentUser(db)!
   const libre = isLibre(programOf(db, me.id))
+  useGarminAuto(me.id)
   return (
     <>
       <PageFade><Routes>
@@ -63,6 +65,7 @@ function MyTraining({ userId }: { userId: string }) {
 export function CoachShell() {
   const db = useDB()
   const me = currentUser(db)!
+  useGarminAuto(me.id)
   const alerts = clientsOf(db).reduce((a, c) => a + summarizeClient(db, c).alerts.length, 0)
   void allSessions; void programOf; void useNavigate
   return (

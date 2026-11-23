@@ -7,7 +7,7 @@
 // n'est jamais écrasée par une donnée reçue.
 
 import { useSyncExternalStore } from 'react'
-import type { Adaptation, Checkin, Program } from '@/engine/types'
+import type { Adaptation, Checkin, GarminLink, GarminSettings, HealthDay, ImportedRun, Program } from '@/engine/types'
 import {
   emptyDB, getDB, replaceDB, setChangeHook,
   type AppNotification, type Comment, type DB, type Draft, type EditEntry, type Analysis, type PersonalRecord,
@@ -15,7 +15,7 @@ import {
 } from './store'
 import { supabase } from './supabase'
 
-type Kind = 'q' | 'p' | 'ck' | 'ad' | 'ed' | 'c' | 'pr' | 'an' | 'dr' | 'n' | 'profile'
+type Kind = 'q' | 'p' | 'ck' | 'ad' | 'ed' | 'c' | 'pr' | 'an' | 'dr' | 'n' | 'profile' | 'ir' | 'hd' | 'gs' | 'gl'
 
 interface Ent { key: string; kind: Kind; id: string; owner: string; data: unknown }
 
@@ -78,6 +78,11 @@ const COLL: Record<Exclude<Kind, 'dr'>, Coll> = {
   c: { list: (d) => d.comments, owner: (x: Comment) => x.clientId, sort: asc('at') },
   pr: { list: (d) => d.records, owner: (x: PersonalRecord) => x.clientId, sort: asc('date') },
   an: { list: (d) => d.analyses, owner: (x: Analysis) => x.clientId, sort: desc('at') },
+  // courses importées et santé du jour (écrites par la synchro Garmin ou par l'app), réglage FC max, statut de liaison (écrit par le serveur)
+  ir: { list: (d) => d.importedRuns, owner: (x: ImportedRun) => x.clientId, sort: asc('startAt') },
+  hd: { list: (d) => d.health, owner: (x: HealthDay) => x.clientId, sort: asc('date') },
+  gs: { list: (d) => d.garminSettings, owner: (x: GarminSettings) => x.clientId },
+  gl: { list: (d) => d.garminLinks, owner: (x: GarminLink) => x.clientId },
   n: { list: (d) => d.notifications, owner: (x: AppNotification) => x.userId, sort: desc('at') },
   profile: { list: (d) => d.profiles, owner: (x: Profile) => x.id },
 }

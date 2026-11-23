@@ -4,7 +4,7 @@
 import { useSyncExternalStore } from 'react'
 import {
   applyCheckin, applySuggestion, adjustLoadsAfterSession, allSessions, findSession, handleMissed,
-  ruleBasedWeeklyAnalysis, scalePaces, suggestVmaUpdate, undoAdaptation,
+  ruleBasedWeeklyAnalysis, runReviewRules, scalePaces, suggestVmaUpdate, undoAdaptation,
 } from '@/engine/adapt'
 import { CUSTOM_PREFIX, exerciseOf, isTimed, makeCustomExercise, registerCustomExercises } from '@/engine/exercises'
 import {
@@ -18,9 +18,10 @@ import {
 import { generateProgram, nextStrengthCycle, regenerateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
 import type {
-  Adaptation, Checkin, Exercise, ExerciseGroup, GroupResult, GroupSpec, LibrePlanning, Muscle, PlannedSet, Program, Questionnaire, RunBlock, RunLog, Session,
-  SessionExercise, SessionTemplate, SetFormat, SetLog,
+  Adaptation, Checkin, Exercise, ExerciseGroup, GarminLink, GarminSettings, GroupResult, GroupSpec, HealthDay, ImportedRun, ImportSource, LibrePlanning, Muscle, PlannedSet, Program,
+  Questionnaire, RunBlock, RunData, RunLog, RunReason, RunRespect, Session, SessionExercise, SessionTemplate, SetFormat, SetLog, Zone,
 } from '@/engine/types'
+import { attachRun, detachRun, manualRun, pendingRuns, plannedMeasures, runIdOf } from '@/engine/runs'
 import { vmaFromRecent } from '@/engine/running'
 import { addDays, fmtKm, mondayOf, todayISO, uid, weekday } from '@/engine/utils'
 import { skipRest } from './rest'
@@ -56,6 +57,14 @@ export interface DB {
   records: PersonalRecord[]
   notifications: AppNotification[]
   analyses: Analysis[]
+  /** Courses importées (montre Garmin, fichier .fit, saisie rapide). */
+  importedRuns: ImportedRun[]
+  /** Santé du jour (pas, sommeil) écrite par la synchro Garmin. */
+  health: HealthDay[]
+  /** Réglage du client : FC max. */
+  garminSettings: GarminSettings[]
+  /** Statut de la liaison Garmin (écrit par le serveur, sans secret). */
+  garminLinks: GarminLink[]
   sessionUserId: string | null
   seeded: boolean
   lastJobs: Record<string, string>
@@ -65,7 +74,7 @@ export interface DB {
 const KEY = REMOTE ? 'mind.db.remote.v1' : 'mind.db.v2'
 const empty = (): DB => ({
   v: 1, users: [], profiles: [], questionnaires: [], drafts: {}, programs: [], checkins: [], adaptations: [],
-  edits: [], comments: [], records: [], notifications: [], analyses: [], sessionUserId: null, seeded: false, lastJobs: {},
+  edits: [], comments: [], records: [], notifications: [], analyses: [], importedRuns: [], health: [], garminSettings: [], garminLinks: [], sessionUserId: null, seeded: false, lastJobs: {},
 })
 
 function load(): DB {
@@ -622,16 +631,19 @@ export function logRun(programId: string, sessionId: string, run: Omit<RunLog, '
     s.status = 'faite'
     s.doneAt = new Date().toISOString()
     s.feeling = run.feeling
-    const sug = suggestVmaUpdate(p)
-    if (sug && !d.adaptations.some((a) => a.programId === p.id && a.status === 'propose' && a.kind === 'allures')) {
-      d.adaptations.unshift({
-        id: uid('ad'), clientId: p.clientId, programId: p.id, date: today, kind: 'allures', status: 'propose', text: sug.text, payload: { vma: sug.vma },
-      })
-      suggestion = sug.text
-    }
+    suggestion = proposeVma(d, p, today)
   })
   return { suggestion }
 }
+
+/** Propose (sans rien appliquer) un recalcul des allures : 3 sorties faciles plus rapides que prévu. Une seule proposition à la fois. */
+function proposeVma(d: DB, p: Program, today: string): string | undefined {
+  const sug = suggestVmaUpdate(p)
+  if (!sug || hasPendingPaces(d, p)) return undefined
+  d.adaptations.unshift({ id: uid('ad'), clientId: p.clientId, programId: p.id, date: today, kind: 'allures', status: 'propose', text: sug.text, payload: { vma: sug.vma } })
+  return sug.text
+}
+const hasPendingPaces = (d: DB, p: Program) => d.adaptations.some((a) => a.programId === p.id && a.status === 'propose' && a.kind === 'allures')
 
 export function updateVmaFromRecent(programId: string, recent: NonNullable<Questionnaire['run']['recent']>, today = todayISO()): void {
   mutate((d) => {
@@ -908,5 +920,163 @@ export function markNotificationsRead(userId: string): void {
   mutate((d) => { d.notifications.forEach((n) => { if (n.userId === userId) n.read = true }) })
 }
 
+
+// ------------------------------------------------------------------ courses importées : rattachement, bilan
+
+/** Une notification avec un identifiant imposé : rejouée sur un autre appareil, elle ne se duplique pas. */
+function notifyOnce(d: DB, id: string, userId: string, title: string, body: string, link?: string): void {
+  if (d.notifications.some((n) => n.id === id)) return
+  d.notifications.unshift({ id, userId, title, body, link, at: new Date().toISOString(), read: false })
+}
+
+/** Rattache une activité au programme actif du client (même résultat sur tous les appareils). Sans programme, elle attend. */
+function attachInDb(d: DB, run: ImportedRun, today: string, o: { forceSessionId?: string; asExtra?: boolean } = {}): void {
+  if (!isRunTypeStr(run.activityType)) { run.status = 'ignoree'; run.note = 'Ce n\'est pas une course à pied.'; return } // vélo, marche, muscu… : jamais rattaché
+  const p = programOf(d, run.clientId)
+  if (!p) return
+  const res = attachRun(p, run, { ...o, today, history: historyOf(d, p) })
+  if (res.outcome === 'ignoree') { run.status = 'ignoree'; run.note = res.note; run.matchedSessionId = undefined; return }
+  Object.assign(p, res.program)
+  run.status = 'rattachee'
+  run.matchedSessionId = res.sessionId
+  run.movedFromDate = res.movedFrom
+  run.note = undefined
+  const s = res.sessionId ? findSession(p, res.sessionId) : undefined
+  if (res.outcome === 'deplacee' && s) {
+    d.adaptations.unshift({ id: `ad-${run.id}`, clientId: p.clientId, programId: p.id, date: today, kind: 'deplacee', status: 'applique', text: `« ${s.title} » rattachée à ta sortie du ${run.startAt.slice(0, 10)} (prévue le ${res.movedFrom}).` })
+  }
+  // sorties arrivées toutes seules de la montre : le client a un bilan à remplir
+  if (run.source === 'garmin' && s) notifyOnce(d, `n-${run.id}`, run.clientId, 'À compléter', `Ta sortie de ${fmtKm(run.km)} km : respectée ? effort ?`, `/session/${s.id}`)
+}
+
+/** Rattache toutes les activités en attente. En ligne, chaque compte ne traite que les siennes. */
+export function attachPendingRuns(today = todayISO()): number {
+  const me = db.sessionUserId
+  const todo = db.importedRuns.filter((r) => r.status === 'a_rattacher' && (!REMOTE || r.clientId === me) && (r.status === 'a_rattacher'))
+  const ready = todo.filter((r) => !isRunTypeStr(r.activityType) || !!programOf(db, r.clientId))
+  if (!ready.length) return 0
+  mutate((d) => {
+    for (const r0 of ready) {
+      const r = d.importedRuns.find((x) => x.id === r0.id)
+      if (r && r.status === 'a_rattacher') attachInDb(d, r, today)
+    }
+  })
+  return ready.length
+}
+const isRunTypeStr = (t: string) => ['route', 'tapis', 'trail', 'piste'].includes(t)
+
+export interface ImportOutcome { run: ImportedRun; duplicate: boolean; sessionId?: string }
+
+/**
+ * Reçoit une activité (fichier .fit, saisie rapide, « fait comme prévu ») et la rattache tout de suite.
+ * `sessionId` : le client est sur cette séance, on y rattache sans deviner. La même activité (même `externalId`) n'est jamais créée deux fois.
+ */
+export function importRun(clientId: string, data: RunData, source: ImportSource, opts: { externalId?: string; sessionId?: string; today?: string } = {}): ImportOutcome {
+  const today = opts.today ?? todayISO()
+  const externalId = opts.externalId ?? data.externalId ?? `${source}:${data.startAt}:${data.km}:${data.seconds}`
+  const id = runIdOf(externalId)
+  const existing = db.importedRuns.find((r) => r.clientId === clientId && (r.id === id || r.externalId === externalId))
+  if (existing) return { run: existing, duplicate: true, sessionId: existing.matchedSessionId }
+  const run: ImportedRun = { ...data, id, clientId, source, externalId, status: 'a_rattacher' }
+  mutate((d) => {
+    d.importedRuns.push(run)
+    attachInDb(d, d.importedRuns[d.importedRuns.length - 1], today, { forceSessionId: opts.sessionId })
+  })
+  const saved = db.importedRuns.find((r) => r.id === id)!
+  return { run: saved, duplicate: false, sessionId: saved.matchedSessionId }
+}
+
+/** « Fait comme prévu » : distance et temps du plan, puis le bilan s'ouvre. */
+export function logPlannedRun(programId: string, sessionId: string, today = todayISO()): ImportOutcome | undefined {
+  const p = db.programs.find((x) => x.id === programId)
+  const s = p && findSession(p, sessionId)
+  if (!p || !s) return undefined
+  const { km, seconds } = plannedMeasures(s)
+  if (!km || !seconds) return undefined
+  return importRun(p.clientId, manualRun({ clientId: p.clientId, externalId: `manuel:${s.id}`, startAt: startOf(s, today), km, seconds }), 'manuel', { externalId: `manuel:${s.id}`, sessionId, today })
+}
+
+/** Saisie rapide : distance + temps, l'allure est calculée. */
+export function logQuickRun(programId: string, sessionId: string, km: number, seconds: number, today = todayISO()): ImportOutcome | undefined {
+  const p = db.programs.find((x) => x.id === programId)
+  const s = p && findSession(p, sessionId)
+  if (!p || !s || !(km > 0) || !(seconds > 0)) return undefined
+  return importRun(p.clientId, manualRun({ clientId: p.clientId, externalId: `manuel:${s.id}`, startAt: startOf(s, today), km, seconds }), 'manuel', { externalId: `manuel:${s.id}`, sessionId, today })
+}
+/** Début d'une sortie saisie à la main : le jour de la séance (jamais dans le futur), à l'heure de son créneau. */
+const startOf = (s: Session, today: string) => `${s.date > today ? today : s.date}T${s.slot === 'pm' ? '18' : '08'}:00:00`
+
+export type CorrectTarget = { sessionId: string } | 'extra' | 'ignore'
+
+/** « Ce n'est pas cette séance » : la rattacher à une autre séance, en faire une sortie en plus, ou l'ignorer. Le bilan déjà rempli suit. */
+export function correctRun(runId: string, target: CorrectTarget, today = todayISO()): void {
+  mutate((d) => {
+    const run = d.importedRuns.find((r) => r.id === runId)
+    const p = run && programOf(d, run.clientId)
+    if (!run || !p) return
+    const old = run.matchedSessionId ? findSession(p, run.matchedSessionId) : undefined
+    const review = old?.runLog ? { respected: old.runLog.respected, reasons: old.runLog.reasons, reasonNote: old.runLog.reasonNote, rpe: old.runLog.rpe, painZone: old.runLog.painZone, feeling: old.runLog.feeling } : undefined
+    Object.assign(p, detachRun(p, run))
+    run.matchedSessionId = undefined
+    if (target === 'ignore') { run.status = 'ignoree'; run.note = 'Ignorée à ta demande.'; return }
+    attachInDb(d, run, today, target === 'extra' ? { asExtra: true } : { forceSessionId: target.sessionId })
+    const s = run.matchedSessionId ? findSession(p, run.matchedSessionId) : undefined
+    if (s?.runLog && review) { Object.assign(s.runLog, review); s.feeling = review.feeling || undefined }
+  })
+}
+
+export interface RunReviewInput { respected: RunRespect; reasons: RunReason[]; reasonNote?: string; rpe: number; painZone?: Zone }
+
+/** Bilan après séance : respect, raisons, RPE. Déclenche les règles (toujours proposées) et les alertes coach. */
+export function completeRunReview(programId: string, sessionId: string, rv: RunReviewInput, today = todayISO()): void {
+  mutate((d) => {
+    const p = d.programs.find((x) => x.id === programId)
+    const s = p && findSession(p, sessionId)
+    if (!p || !s?.runLog) return
+    const reasons = rv.respected === 'oui' ? [] : rv.reasons
+    Object.assign(s.runLog, { respected: rv.respected, reasons, reasonNote: reasons.includes('autre') ? rv.reasonNote?.trim() || undefined : undefined, rpe: rv.rpe, feeling: rv.rpe, painZone: reasons.includes('douleur') ? rv.painZone : undefined })
+    s.feeling = rv.rpe
+    const name = nameOf(d, p.clientId)
+    const coaches = coachIds(d).filter((id) => id !== p.clientId)
+    if (reasons.includes('douleur')) {
+      // alerte coach immédiate, comme la douleur au check-in
+      const ck = d.checkins.find((x) => x.id === `ck-${s.id}`)
+      if (ck) ck.painZone = rv.painZone
+      else d.checkins.push({ id: `ck-${s.id}`, clientId: p.clientId, date: s.date, energy: 3, sleep: 3, soreness: 3, pain: true, painZone: rv.painZone })
+      for (const id of coaches) notifyOnce(d, `n-pain-${s.id}-${id}`, id, 'Douleur signalée', `${name} signale une douleur (${rv.painZone ?? '—'}) après sa sortie.`, `/coach/client/${p.clientId}`)
+    }
+    const rules = runReviewRules(p, today)
+    for (const a of rules.coachAlerts) for (const id of coaches) notifyOnce(d, `n-${a.kind}-${p.clientId}-${id}-${mondayOf(today)}`, id, 'Motivation en baisse', `${name} : ${a.text}`, `/coach/client/${p.clientId}`)
+    const prop = rules.slower ?? rules.faster
+    if (prop && !hasPendingPaces(d, p)) {
+      d.adaptations.unshift({ id: uid('ad'), clientId: p.clientId, programId: p.id, date: today, kind: 'allures', status: 'propose', text: prop.text, payload: { vma: prop.vma } })
+    } else proposeVma(d, p, today)
+  })
+}
+
+/** FC max saisie par le client ou le coach (zones cardio). `undefined` = retour à la valeur déduite. */
+export function setMaxHr(clientId: string, maxHr: number | undefined): void {
+  mutate((d) => {
+    const cur = d.garminSettings.find((g) => g.clientId === clientId)
+    if (cur) cur.maxHr = maxHr
+    else d.garminSettings.push({ id: clientId, clientId, maxHr })
+  })
+}
+
+/** Mode démo (sans serveur) : statut de liaison écrit localement. En ligne, c'est le serveur qui l'écrit. */
+export function setLinkLocal(clientId: string, patch: Partial<GarminLink>): void {
+  mutate((d) => {
+    const cur = d.garminLinks.find((g) => g.clientId === clientId)
+    if (cur) Object.assign(cur, patch)
+    else d.garminLinks.push({ id: clientId, clientId, allowed: false, state: 'non_liee', ...patch })
+  })
+}
+
+// sélecteurs
+export const runsOf = (d: DB, clientId: string): ImportedRun[] => d.importedRuns.filter((r) => r.clientId === clientId)
+export const linkOf = (d: DB, clientId: string): GarminLink | undefined => d.garminLinks.find((g) => g.clientId === clientId)
+export const maxHrSettingOf = (d: DB, clientId: string): number | undefined => d.garminSettings.find((g) => g.clientId === clientId)?.maxHr
+
 /** Date locale pour les tests et le seed. */
 export { todayISO, weekday }
+void pendingRuns

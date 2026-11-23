@@ -12,6 +12,7 @@ import { motion } from 'framer-motion'
 import { setLook, useLook, type Look } from '@/ui/look'
 import { DIST_LABEL } from '@/engine/running'
 import { setRestSound, useRest } from '@/lib/rest'
+import { WatchGroup } from '@/ui/watch'
 
 function InstallGuide({ open, onClose, onGranted }: { open: boolean; onClose: () => void; onGranted: () => void }) {
   const standalone = isStandalone()
@@ -85,6 +86,8 @@ export function ProfileView({ userId }: { userId: string }) {
           <Row onClick={() => setSwitching(true)}><RowIcon name="edit" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">Passer en mode libre</div><div className="text-[13px] text-muted">J'ai déjà mon programme de musculation</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
         </Group>}
       </>)}
+
+      {(!program || program.type !== 'muscu' || libre || db.importedRuns.some((r) => r.clientId === userId)) && <WatchGroup userId={userId} />}
 
       <Group header="Minuteur de repos" footer="Le repos démarre tout seul quand tu valides une série, une partie ou un tour. Le son de fin ne retentit que si l'app est au premier plan.">
         <Row>

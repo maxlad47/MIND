@@ -10,6 +10,7 @@ import { acceptAdaptation, addExtraSession, programOf, refuseAdaptation, startNe
 import { analyzeWeek } from '@/lib/ai'
 import { Button, Card, Carousel, Chip, Cover, EmptyState, Icon, Page, Ring, SectionTitle, SportBadge, SportIcon, spring, toast } from '@/ui/kit'
 import { ExtraSessionSheet } from '@/ui/free'
+import { FitImportSheet, HealthLine, PendingReviewCards } from '@/ui/runs'
 import { BellButton, CheckinSheet, coverSeed, NotificationsSheet, SessionTile, sessionMeta, sessionSubtitle, tintOf, WarningBanner, WeekStrip } from '@/ui/parts'
 
 export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSessions }: { clientId: string; onboardPath?: string; onOpenSessions?: () => void }) {
@@ -20,6 +21,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
   const [checkin, setCheckin] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [extra, setExtra] = useState(false)
+  const [fit, setFit] = useState(false)
 
   if (!program) {
     return <EmptyState icon="sparkle" title="Pas encore de programme" text="Réponds à quelques questions et MIND génère ton programme personnalisé tout de suite."
@@ -72,6 +74,9 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
         </div>
         <WeekStrip start={week.startDate} sessions={week.sessions} today={today} onOpen={(id) => nav(`/session/${id}`)} />
       </Card>
+
+      <HealthLine clientId={clientId} />
+      <PendingReviewCards program={program} />
 
       {libre && (program.libre?.templates.length ?? 0) > 0 && trainingDays(program.libre!.planning).length === 0 && (
         <Card className="p-4 mb-4" style={{ background: 'color-mix(in srgb, var(--muscu) 13%, var(--surface))', boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--muscu) 30%, transparent)' }}>
@@ -164,6 +169,10 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
         <div className="mt-4"><Button full variant="tinted" color="#FF9F0A" onClick={() => { const id = addExtraSession(program.id, 'course'); if (id) nav(`/session/${id}`) }}><SportIcon sport="course" size={18} /> Sortie libre</Button></div>
       )}
 
+      {(program.type !== 'muscu' || libre || db.importedRuns.some((r) => r.clientId === clientId)) && (
+        <div className="mt-4"><Button full variant="tinted" color="#FF9F0A" onClick={() => setFit(true)}><Icon name="refresh" size={17} /> Importer une sortie (.FIT)</Button></div>
+      )}
+
       {lastWeekN >= 1 && !analysis && program.weeks.some((w) => w.n === lastWeekN) && (
         <div className="mt-4">
           <Button variant="secondary" full disabled={busy} onClick={async () => {
@@ -221,6 +230,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
         </Carousel>
       </>)}
 
+      <FitImportSheet open={fit} onClose={() => setFit(false)} clientId={clientId} onDone={(sid) => { if (sid) nav(`/session/${sid}?bilan=1`) }} />
       {libre && <ExtraSessionSheet open={extra} onClose={() => setExtra(false)} program={program} />}
       <CheckinSheet open={!!checkin} onClose={() => setCheckin(null)} clientId={clientId} sessionId={checkin ?? ''} onDone={() => { const id = checkin; setCheckin(null); if (id) nav(`/session/${id}`) }} />
     </>

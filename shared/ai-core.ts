@@ -2,6 +2,7 @@
 // La clé Anthropic n'est JAMAIS dans le front : elle ne vit que côté serveur.
 
 import { z } from 'zod'
+import { stripWatchData } from './garmin/ai-filter.ts'
 
 export const MODEL = 'claude-sonnet-5-5'
 
@@ -77,6 +78,7 @@ export type AIRoute = 'personalize' | 'weekly'
 /** Point d'entrée commun : valide l'entrée, appelle Claude, valide la sortie (Zod). */
 export async function handleAI(route: AIRoute, body: unknown, apiKey: string | undefined): Promise<{ status: number; json: unknown }> {
   if (!apiKey) return { status: 503, json: { error: 'no_key' } }
+  body = stripWatchData(body) // aucune donnée de montre (Garmin, FIT, santé du jour) vers l'IA : un seul filtre, ici
   try {
     if (route === 'personalize') {
       const out = personalizeSchema.safeParse(await callClaude(apiKey, personalizePrompt(body)))

@@ -315,15 +315,17 @@ function applySuggestions(p: Program, today: string, history: Session[] = []): v
 export type ExtraSource = { templateId: string } | 'vide' | 'course'
 
 /** « Séance en plus » : datée d'aujourd'hui, hors planning (elle ne décale rien et ne fait pas avancer la rotation). */
-export function withExtraSession(program: Program, today: string, src: ExtraSource, history?: Session[]): { program: Program; sessionId: string } {
+/** `opts.date` : jour de la sortie (par défaut aujourd'hui) ; `opts.id` : identifiant imposé (rattachement déterministe d'une activité importée). */
+export function withExtraSession(program: Program, today: string, src: ExtraSource, history?: Session[], opts: { date?: string; id?: string } = {}): { program: Program; sessionId: string } {
   const p = structuredClone(program)
   if (isLibre(p)) ensureWeeks(p, today, WEEKS_AHEAD)
-  const w = p.weeks.find((x) => x.startDate === mondayOf(today))
+  const date = opts.date ?? today
+  const w = p.weeks.find((x) => x.startDate === mondayOf(date))
   if (!w) return { program, sessionId: '' } // programme MIND terminé : pas de semaine du jour
   let s: Session
   if (src === 'course') {
     s = {
-      id: uid('s'), weekN: w.n, date: today, sport: 'course', kind: 'ef', title: 'Sortie libre', status: 'prevue', estMinutes: 0, extra: true,
+      id: opts.id ?? uid('s'), weekN: w.n, date, sport: 'course', kind: 'ef', title: 'Sortie libre', status: 'prevue', estMinutes: 0, extra: true,
       run: { warmup: '', blocks: [], cooldown: '', totalKm: 0, estMinutes: 0 },
     }
   } else if (src === 'vide') {

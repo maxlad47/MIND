@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { alternativesFor, EXERCISES, exerciseOf, isAllowed } from '@/engine/exercises'
 import { isFreeRun, isLibre } from '@/engine/libre'
+import { fmtSleep, healthOn, sleepScoreFromMinutes } from '@/engine/runs'
 import { describeBlock } from '@/engine/running'
 import { ZONES, MUSCLE_LABEL, PATTERN_LABEL, type Exercise, type Muscle, type Program, type Session, type Zone } from '@/engine/types'
 import { addDays, DAY_NAMES, DAY_SHORT, fmtKm, parseDate, prettyDate, shortDate, todayISO } from '@/engine/utils'
@@ -135,8 +136,11 @@ export function CheckinSheet({ open, onClose, clientId, sessionId, onDone }: { o
   const db = useDB()
   const libre = isLibre(programOf(db, clientId))
   const [energy, setEnergy] = useState(4)
-  const [sleep, setSleep] = useState(4)
+  const garminNight = healthOn(db.health, clientId, todayISO())?.sleepMinutes
+  const [sleep, setSleep] = useState<number>(garminNight ? sleepScoreFromMinutes(garminNight) : 4)
   const [sore, setSore] = useState(2)
+  // la question « sommeil » est pré-remplie d'après la nuit Garmin ; le client peut corriger
+  useEffect(() => { if (open && garminNight) setSleep(sleepScoreFromMinutes(garminNight)) }, [open, garminNight])
   const [pain, setPain] = useState(false)
   const [zone, setZone] = useState<Zone | undefined>()
   const submit = () => {
@@ -151,7 +155,10 @@ export function CheckinSheet({ open, onClose, clientId, sessionId, onDone }: { o
     <Sheet open={open} onClose={onClose} title="Comment te sens-tu ?" tall>
       <div className="flex flex-col gap-5 pt-1">
         <Scale label="Énergie" value={energy} onChange={setEnergy} low="vide" high="en forme" />
-        <Scale label="Sommeil" value={sleep} onChange={setSleep} low="mauvais" high="excellent" />
+        <div>
+          <Scale label="Sommeil" value={sleep} onChange={setSleep} low="mauvais" high="excellent" />
+          {garminNight ? <div className="text-[12.5px] text-muted mt-1.5">Pré-rempli d'après ta nuit Garmin : {fmtSleep(garminNight)}. Corrige si besoin.</div> : null}
+        </div>
         <Scale label="Courbatures" value={sore} onChange={setSore} low="aucune" high="fortes" />
         <div>
           <div className="flex items-center justify-between">

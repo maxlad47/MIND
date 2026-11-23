@@ -2,6 +2,8 @@
   "imports": {
     "zod": "npm:zod@4.6.7",
     "web-push": "npm:web-push@3.6.7",
-    "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
+    "fit-file-parser": "npm:fit-file-parser@6.2.10",
+    "fflate": "npm:fflate@0.8.3"
   }
 }

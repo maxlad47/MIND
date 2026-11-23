@@ -1,5 +1,9 @@
 // Types du moteur MIND — TypeScript pur, aucune dépendance UI.
 
+export type {
+  ActivityType, GarminLink, GarminSettings, HealthDay, HrPoint, ImportedLap, ImportedRun, ImportedSplit, ImportSource, ImportStatus, RunActivityType, RunData,
+} from '../../shared/garmin/types.ts'
+
 export type Zone = 'epaule' | 'coude' | 'poignet' | 'dos' | 'hanche' | 'genou' | 'cheville'
 export const ZONES: { id: Zone; label: string }[] = [
   { id: 'epaule', label: 'Épaule' },
@@ -251,13 +255,28 @@ export interface RunPlan {
   estMinutes: number
 }
 
+export type RunRespect = 'oui' | 'partiel' | 'non'
+/** Pourquoi la séance n'a pas été respectée (bilan après séance). */
+export type RunReason = 'difficile' | 'fatigue' | 'douleur' | 'temps' | 'motivation' | 'malade' | 'meteo' | 'montre' | 'autre'
+
 export interface RunLog {
   km: number
   seconds: number
+  /** Ressenti 1-10. 0 = pas encore donné (course importée dont le bilan n'est pas rempli). */
   feeling: number
   comment: string
-  source: 'manuel' | 'strava' | 'apple_sante'
+  source: 'manuel' | 'strava' | 'apple_sante' | 'garmin' | 'fit'
   at: string
+  /** Activité importée d'où vient cette course (absent : ancienne saisie manuelle). */
+  importedRunId?: string
+  /** Bilan après séance. `respected` absent = bilan pas encore rempli. */
+  respected?: RunRespect
+  reasons?: RunReason[]
+  reasonNote?: string
+  /** Effort perçu 1-10, distinct du ressenti. */
+  rpe?: number
+  /** Zone de douleur ou de gêne, si elle a été signalée. */
+  painZone?: Zone
 }
 
 export interface Session {

@@ -37,7 +37,7 @@ if (want('session')) {
   await scroll(500); await shot('15-session2', 200)
   await page.getByLabel('Valider la série').first().click(); await page.waitForTimeout(300); await scroll(0); await shot('16-session3', 200)
   await page.goto(base + '/#/session/' + run.id); await shot('17-run'); await scroll(400); await shot('18-run2', 200)
-  await page.getByText('Saisir ma sortie').click(); await shot('19-run-sheet', 700)
+  await page.getByRole('button', { name: 'Saisie rapide' }).click(); await shot('19-run-sheet', 700)
 }
 if (want('coach')) {
   await page.evaluate(() => { const x = JSON.parse(localStorage.getItem('mind.db.v2')); x.sessionUserId = null; localStorage.setItem('mind.db.v2', JSON.stringify(x)) })

@@ -199,7 +199,7 @@ export function suggestVmaUpdate(program: Program): { vma: number; text: string 
   if (done.length < 3) return null
   const faster = done.every((s) => {
     const pace = s.runLog!.seconds / s.runLog!.km
-    return pace < program.paces!.ef * 0.96 && s.runLog!.feeling <= 5
+    return pace < program.paces!.ef * 0.96 && s.runLog!.feeling > 0 && s.runLog!.feeling <= 5 // 0 = bilan pas encore rempli
   })
   if (!faster) return null
   const avg = done.reduce((a, s) => a + s.runLog!.seconds / s.runLog!.km, 0) / done.length
@@ -397,3 +397,53 @@ export function currentWeek(p: Program, today: string) {
 }
 
 export { runClass, weekday }
+
+// ------------------------------------------------------------------ 6. bilan après séance de course : règles (toujours proposées)
+
+export interface RunReview { sessionId: string; date: string; kind: string; quality: boolean; long: boolean; respected?: string; reasons: string[]; rpe?: number; free: boolean }
+
+/** Sorties dont le bilan est rempli, de la plus ancienne à la plus récente. */
+export function runReviews(p: Program): RunReview[] {
+  return allSessions(p).filter((s) => s.sport === 'course' && s.runLog?.respected !== undefined)
+    .map((s) => ({
+      sessionId: s.id, date: s.date, kind: s.kind, quality: isQuality(s.kind) && s.kind !== 'course', long: s.kind === 'longue',
+      respected: s.runLog!.respected, reasons: (s.runLog!.reasons ?? []) as string[], rpe: s.runLog!.rpe,
+      free: !!s.extra || !s.run || s.run.blocks.length === 0, // course libre : aucune règle d'allure
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.sessionId.localeCompare(b.sessionId))
+}
+
+export interface RunRules {
+  /** Allures à la baisse : « trop difficile » ou RPE ≥ 9 sur une séance de qualité, deux fois en 14 jours. */
+  slower?: { vma: number; text: string }
+  /** Hausse prudente : RPE ≤ 3 sur une sortie longue ou de qualité, deux fois de suite, séance respectée. */
+  faster?: { vma: number; text: string }
+  /** Alertes coach (valables aussi en course libre). */
+  coachAlerts: { kind: 'motivation'; text: string }[]
+}
+
+const vmaText = (v: number) => v.toFixed(1).replace('.', ',')
+
+/** Les règles du bilan. Elles ne s'appliquent pas aux sorties libres, sauf les alertes coach. Rien n'est appliqué seul : tout est proposé. */
+export function runReviewRules(p: Program, today: string): RunRules {
+  const all = runReviews(p)
+  const out: RunRules = { coachAlerts: [] }
+  if (all.filter((r) => r.reasons.includes('motivation') && r.date >= addDays(today, -21) && r.date <= today).length >= 3) {
+    out.coachAlerts.push({ kind: 'motivation', text: 'Motivation en baisse : « pas envie » sur 3 sorties en 3 semaines.' })
+  }
+  if (!p.paces) return out
+  const vma = p.paces.vma
+  const paced = all.filter((r) => !r.free)
+  const hard = paced.filter((r) => r.quality && r.date >= addDays(today, -14) && r.date <= today && (r.reasons.includes('difficile') || (r.rpe ?? 0) >= 9))
+  if (hard.length >= 2) {
+    const next = Math.round(vma * 0.97 * 10) / 10
+    out.slower = { vma: next, text: `Tes deux dernières séances de qualité étaient trop difficiles. Passer la VMA à ${vmaText(next)} km/h (allures un peu plus douces) ?` }
+  } else {
+    const last2 = paced.filter((r) => r.quality || r.long).slice(-2)
+    if (last2.length === 2 && last2.every((r) => (r.rpe ?? 99) <= 3 && r.respected === 'oui')) {
+      const next = Math.round(vma * 1.02 * 10) / 10
+      if (next > vma) out.faster = { vma: next, text: `Tes deux dernières sorties clés étaient très faciles (effort ≤ 3/10). Passer la VMA à ${vmaText(next)} km/h (hausse prudente) ?` }
+    }
+  }
+  return out
+}

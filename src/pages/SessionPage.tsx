@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { findSession } from '@/engine/adapt'
 import { conflictsOfWeek } from '@/engine/combine'
 import { exerciseOf, isCustomId, isTimed } from '@/engine/exercises'
@@ -9,12 +9,13 @@ import {
   targetOf,
 } from '@/engine/formats'
 import { diffSessionTemplate, isFreeRun, isLibre } from '@/engine/libre'
+import { needsReview } from '@/engine/runs'
 import { describeBlock, runKindLabel } from '@/engine/running'
 import type { ExerciseGroup, GroupKind, Program, RunBlock, Session, SessionExercise, SetLog } from '@/engine/types'
 import { fmtKm, fmtPace, fmtTime, mondayOf, prettyDate, todayISO } from '@/engine/utils'
 import {
   addComment, addCustomExercise, addExercise, applySessionToTemplate, createGroup, currentUser, customExercisesOf, deleteGroup, finishGroup, finishStrength, lastPerformance, logRound,
-  logRun, logSet, moveSession, removeExercise, replaceExercise, resetGroup, restoreSession, setExerciseFormat, skipSession, startGroup, tallyGroup, unlogRound, unlogSet, updateExercise,
+  logSet, moveSession, removeExercise, replaceExercise, resetGroup, restoreSession, setExerciseFormat, skipSession, startGroup, tallyGroup, unlogRound, unlogSet, updateExercise,
   updateGroup, updateRun, useDB, type Recap,
 } from '@/lib/store'
 import { signalChain, startRest, useNow } from '@/lib/rest'
@@ -22,6 +23,7 @@ import { motion } from 'framer-motion'
 import { Button, Card, Cover, DurationInput, Icon, NumberInput, Page, Ring, SectionTitle, Sheet, SportBadge, spring, toast } from '@/ui/kit'
 import { AddExerciseSheet, FormatChips, formatPatch, GroupParams, GroupTag, PlanEditor, type GroupItem } from '@/ui/formats'
 import { coverSeed, ExercisePicker, sessionMeta, statusLabel, tintOf } from '@/ui/parts'
+import { CorrectSheet, maxHrOf, ReviewLine, ReviewSheet, RunEntry, RunReport } from '@/ui/runs'
 
 const startKey = (id: string) => `mind.start.${id}`
 function getStart(id: string): number | undefined {
@@ -547,17 +549,18 @@ export default function SessionPage() {
   const [finishing, setFinishing] = useState(false)
   const [feeling, setFeeling] = useState(7)
   const [recap, setRecap] = useState<Recap | null>(null)
-  const [runSheet, setRunSheet] = useState(false)
   const [editRun, setEditRun] = useState(false)
+  const [review, setReview] = useState(false)
+  const [correct, setCorrect] = useState(false)
+  const [search, setSearch] = useSearchParams()
   const [moving, setMoving] = useState(false)
   const [newDate, setNewDate] = useState('')
-  const [km, setKm] = useState<number | undefined>(undefined)
-  const [runSeconds, setRunSeconds] = useState<number | undefined>(undefined)
-  const [runFeeling, setRunFeeling] = useState(5)
-  const [runComment, setRunComment] = useState('')
   const [changesOpen, setChangesOpen] = useState(false)
 
-  useEffect(() => { if (session?.run && km === undefined) setKm(session.run.totalKm || undefined) }, [session?.id])
+  // lien « À compléter » (Aujourd'hui, notification) : le bilan s'ouvre tout de suite
+  useEffect(() => {
+    if (search.get('bilan') === '1' && session && needsReview(session)) { setReview(true); setSearch({}, { replace: true }) }
+  }, [session?.id, search])
   // mode libre : ce qui diffère entre la séance saisie et son modèle
   const template = program?.libre?.templates.find((t) => t.id === session?.templateId)
   const changes = useMemo(() => (session && template ? diffSessionTemplate(session, template) : []), [session, template])
@@ -592,14 +595,8 @@ export default function SessionPage() {
     setFinishing(false)
     setRecap(r)
   }
-  const runPace = km && runSeconds ? runSeconds / km : undefined
-  const saveRun = () => {
-    if (!km || !runSeconds) return
-    const r = logRun(program.id, session.id, { km, seconds: runSeconds, feeling: runFeeling, comment: runComment })
-    setRunSheet(false)
-    toast('Sortie enregistrée')
-    if (r.suggestion) setTimeout(() => toast('Une suggestion d\'allures t\'attend dans Aujourd\'hui'), 800)
-  }
+  const runData = session.runLog?.importedRunId ? db.importedRuns.find((r) => r.id === session.runLog!.importedRunId) : undefined
+  const maxHr = maxHrOf(db, program.clientId)
 
   return (
     <Page title={session.title} back tabbed={false} heroHeight={250}
@@ -647,7 +644,24 @@ export default function SessionPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {!freeRun && <RunDetail s={session} />}
-          {session.runLog && (
+          {runData ? (
+            <>
+              {needsReview(session) ? (
+                <Card className="p-4" style={{ background: 'color-mix(in srgb, #FF9F0A 13%, var(--surface))', boxShadow: 'inset 0 0 0 1px color-mix(in srgb, #FF9F0A 30%, transparent)' }}>
+                  <div className="font-bold text-[17px]">À compléter</div>
+                  <p className="text-[14.5px] text-muted mt-0.5 leading-snug">Ta sortie est dans MIND. Dis-nous si la séance a été respectée et quel effort tu as ressenti.</p>
+                  <div className="mt-3"><Button full color="#FF9F0A" onClick={() => setReview(true)}>Remplir mon bilan</Button></div>
+                </Card>
+              ) : (
+                <Card className="p-4">
+                  <div className="flex items-center justify-between mb-2"><div className="font-bold text-[17px]">Bilan de la séance</div><button className="tap text-[14px] font-bold min-h-[44px] min-w-[44px] -my-3" style={{ color: '#FF9F0A' }} onClick={() => setReview(true)}>Modifier</button></div>
+                  <ReviewLine session={session} />
+                </Card>
+              )}
+              <RunReport run={runData} session={session} maxHr={maxHr} />
+              {!locked ? null : <button className="tap text-center text-[14.5px] text-muted font-semibold min-h-[44px]" onClick={() => setCorrect(true)}>Ce n'est pas cette séance ?</button>}
+            </>
+          ) : session.runLog && (
             <Card className="p-4">
               <div className="font-bold text-[17px]">Ta sortie</div>
               <div className="grid grid-cols-3 gap-2 mt-2 text-center">
@@ -660,7 +674,7 @@ export default function SessionPage() {
           )}
           {!locked && session.status !== 'sautee' && (
             <>
-              <Button full onClick={() => setRunSheet(true)} color="#FF9F0A">Saisir ma sortie</Button>
+              <RunEntry program={program} session={session} onImported={() => setReview(true)} />
               {!freeRun && <Button full variant="secondary" onClick={() => setEditRun(true)}><Icon name="edit" size={17} /> Modifier la séance</Button>}
             </>
           )}
@@ -730,18 +744,8 @@ export default function SessionPage() {
         </div>
       </Sheet>
 
-      <Sheet open={runSheet} onClose={() => setRunSheet(false)} title="Ma sortie" tall>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between"><span className="font-semibold">Distance</span><NumberInput value={km} onChange={setKm} step={0.1} max={100} width={50} suffix="km" /></div>
-          <div className="flex items-center justify-between gap-4"><span className="font-semibold">Durée</span>
-            <DurationInput value={runSeconds} onChange={setRunSeconds} compact /></div>
-          <div className="text-center bg-surface2 rounded-[16px] py-3.5"><div className="text-[12px] text-muted font-semibold">Allure moyenne</div><div className="text-[28px] font-extrabold num">{runPace ? `${fmtPace(runPace)} /km` : '—'}</div></div>
-          <div><div className="font-semibold mb-2">Ressenti : {runFeeling}/10</div>
-            <div className="grid grid-cols-5 gap-2">{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <button key={n} onClick={() => setRunFeeling(n)} className="tap h-11 rounded-[14px] font-bold" style={{ background: runFeeling === n ? '#FF9F0A' : 'var(--surface2)', color: runFeeling === n ? '#fff' : 'var(--text)' }}>{n}</button>)}</div></div>
-          <textarea className="w-full h-20 rounded-[14px] bg-surface2 p-3 outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60" placeholder="Commentaire (facultatif)" value={runComment} onChange={(e) => setRunComment(e.target.value)} />
-          <Button full color="#FF9F0A" disabled={!km || !runSeconds} onClick={saveRun}>Enregistrer</Button>
-        </div>
-      </Sheet>
+      {!isMuscu && <ReviewSheet open={review && !!session.runLog} onClose={() => setReview(false)} program={program} session={session} run={runData} maxHr={maxHr} />}
+      {runData && <CorrectSheet open={correct} onClose={() => setCorrect(false)} program={program} session={session} run={runData} />}
 
       {session.run && <RunEditor open={editRun} onClose={() => setEditRun(false)} program={program} session={session} />}
 

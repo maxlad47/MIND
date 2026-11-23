@@ -95,6 +95,27 @@ Un exercice n'est plus limité à « N séries identiques » (qui reste le cas p
 - **Renfo coureur** (`src/engine/renfo.ts`) : question « Ajouter du renfo coureur ? » (Non / 1 / 2 fois par semaine, matériel : sans matériel / élastique et haltères / salle ; désactivé pour un programme existant, 1 fois par semaine proposé pour un nouveau). Course seule : un **circuit de 20 à 30 min** (échauffement mobilité, 4 à 6 exercices × 2 à 4 tours) qui suit les phases (Base : gainage et force ; Développement : + 1 à 2 pliométries ; Spécifique : entretien ; Affûtage : volume ÷ 2, **aucune pliométrie à moins de 10 jours de la course, aucun renfo dans les 3 derniers jours**), +1 tour ou reps/durée en hausse toutes les 2 semaines, allégé avec les semaines allégées. Placement (`combine.ts`) : après une séance de qualité le même jour, ou un jour sans course ; **jamais la veille de la sortie longue ni d'une séance de qualité** (sinon la séance saute avec un `PlanWarning`). Programme mixte : pas de séance à part, 2 ou 3 exercices de coureur ajoutés à la fin des séances de muscu (bas du corps, full body), sans dépasser `maxMinutes`. Course en mode libre : deux modèles « Renfo coureur » tout faits dans « Mes séances ».
 - **Données** : tout vit dans les enregistrements JSON existants (`Program`, `Session`, `SessionTemplate`), aucune migration SQL. La bibliothèque compte ~20 exercices de plus (`unit` secondes, `perSide`, `Equipment` « elastique », `renfo: true` = jamais choisi par le générateur de muscu) ; `supabase/seed.sql` est régénéré par `scripts/gen-seed.ts`.
 
+### Garmin et courses importées
+
+Une course peut arriver de trois façons, et suit toujours **le même chemin** : rattachement automatique à la séance prévue, puis un **bilan en deux réponses** (séance respectée ? effort RPE ?).
+
+- **Sans montre liée** : sur une séance de course, « Fait comme prévu » (une touche), « Saisie rapide » (distance + temps) ou « Importer depuis ma montre (.FIT) » (le `.fit` ou le `.zip` de « Exporter l'original » de Garmin Connect).
+- **Clé API personnelle Garmin** (active) : liaison dans Profil → Montre, activée par le coach client par client ; synchro toutes les 30 min (Edge Function `garmin-personal-sync`). Mise en service : section « Garmin » de [MISE_EN_LIGNE.md](MISE_EN_LIGNE.md).
+- **Accès officiel Starter** (OAuth) : préparé, **désactivé** (`VITE_GARMIN_ENABLED`).
+
+```
+shared/garmin/   types, lecture .fit/.zip (fit-file-parser + fflate), chiffrement AES-GCM, adaptateur Garmin, handlers (liaison, synchro, rappels), Starter, filtre « pas d'IA »
+src/engine/runs.ts   rattachement (même jour → veille/lendemain ±30 % → sortie en plus), tours de travail, allure par km, zones de FC, pré-réponse
+src/engine/adapt.ts  règles du bilan (toujours proposées) : « trop difficile » ×2 en 14 j, motivation ×3 en 21 j, RPE ≤ 3 ×2
+src/ui/runs.tsx, runcharts.tsx, watch.tsx   rapport de séance, bilan, import .FIT, Profil → Montre
+supabase/functions/garmin-*   fonctions ; supabase/garmin.sql   tables `integrations` (chiffrée, sans accès API) et `garmin_access`, tâche planifiée
+```
+
+- **Données** : un nouveau `kind` dans les enregistrements existants (`ir` activité, `hd` santé du jour, `gs` FC max, `gl` statut de liaison écrit par le serveur). Aucune migration pour les activités ; seules `integrations` et `garmin_access` (clés chiffrées, autorisation du coach) demandent `supabase/garmin.sql`.
+- **Zones de FC** : % de la FC max (Z1 < 70, Z2 70–80, Z3 80–87, Z4 87–93, Z5 > 93). FC max : celle du profil, sinon la plus haute vue sur 6 mois, sinon 220 − âge (« estimation »).
+- **Pas d'IA** : les activités Garmin / .fit et la santé du jour sont retirées de toute entrée envoyée à Claude (`shared/garmin/ai-filter.ts`, appliqué dans `handleAI`).
+- **Tests** : `npm test` (Vitest, réponses Garmin simulées), `npm run test:deno` (lecture .fit, chiffrement et liaison sous Deno, l'environnement des Edge Functions), `node scripts/e2e7.mjs` (parcours navigateur ; `scripts/make-fit-fixture.mjs` fabrique le .fit d'exemple).
+
 ### La couche IA (Claude)
 
 L'IA personnalise le programme (note du coach pour chaque semaine, remplacements d'exercices) et produit l'analyse du dimanche avec des suggestions que le client ou le coach **accepte ou refuse**.
