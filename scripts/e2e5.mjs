@@ -80,7 +80,7 @@ await page.getByLabel('Valider la série').first().click(); await page.waitForTi
 await page.getByLabel('Valider la série').first().click(); await page.waitForTimeout(200)
 await page.getByLabel('Modifier', { exact: true }).nth(fc).click(); await page.waitForTimeout(400)
 await page.getByLabel('Augmenter').first().click(); await page.waitForTimeout(200) // une série de plus sur le 1er exercice classique
-ok((await page.getByText('Charge (kg)').count()) === 0, 'mode libre : pas de champ « Charge cible » dans l\'édition')
+ok((await page.getByText('Charge (kg)').count()) === 0 && (await page.getByText('Poids de départ (kg)').count()) > 0, 'mode libre : « Poids de départ (kg) » modifiable dans l\'édition')
 await page.keyboard.press('Escape'); await page.waitForTimeout(500)
 await page.getByLabel('Modifier', { exact: true }).last().click(); await page.waitForTimeout(400)
 await page.getByRole('button', { name: 'Retirer l\'exercice' }).click(); await page.waitForTimeout(400) // retire le dernier exercice

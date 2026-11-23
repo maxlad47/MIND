@@ -29,7 +29,7 @@ const summary = (e: TemplateExercise) => {
   const timed = isTimed(e.exerciseId)
   const side = exerciseOf(e.exerciseId).perSide ? ' / côté' : ''
   const reps = e.repMin === e.repMax ? `${e.repMin}` : `${e.repMin}–${e.repMax}`
-  return `${e.plan?.length ? describePlan(e) : `${e.sets} × ${reps}${timed ? ' s' : ''}${side}`} · repos ${restLabel(e.restSec)}${e.rir !== undefined ? ` · RIR ${e.rir}` : ''}`
+  return `${e.plan?.length ? describePlan(e) : `${e.sets} × ${reps}${timed ? ' s' : ''}${side}`} · repos ${restLabel(e.restSec)}${e.kg ? ` · ${String(e.kg).replace('.', ',')} kg` : ''}`
 }
 
 // ------------------------------------------------------------------ éditeur de séance modèle
@@ -74,16 +74,7 @@ function ExerciseRow({ e, handle, open, onToggle, onChange, onRemove, group, let
               {field(timed ? 'Durée max (s)' : 'Reps max', <NumberInput value={e.repMax} min={1} max={timed ? 300 : 60} step={timed ? 5 : 1} width={48} onChange={(v) => v !== undefined && onChange({ repMax: v, repMin: Math.min(e.repMin, v) })} />)}
             </>)}
           {!group && field('Repos (s)', <NumberInput value={e.restSec} min={15} max={600} step={15} width={48} onChange={(v) => v !== undefined && onChange({ restSec: v })} />)}
-          {field('RIR visé', (
-            <span className="inline-flex items-center gap-2">
-              {e.rir === undefined
-                ? <button className="tap h-12 px-4 rounded-[14px] bg-surface text-[15px] font-semibold text-muted" onClick={() => onChange({ rir: 2 })}>Aucun · ajouter</button>
-                : (<>
-                  <NumberInput value={e.rir} min={0} max={5} width={48} onChange={(v) => onChange({ rir: v })} />
-                  <button className="tap w-11 h-11 rounded-full bg-surface flex items-center justify-center text-muted" aria-label="Retirer le RIR visé" onClick={() => onChange({ rir: undefined })}><Icon name="x" size={16} strokeWidth={2.6} /></button>
-                </>)}
-            </span>
-          ))}
+          {!(e.plan?.length && !group) && field('Poids de départ (kg)', <NumberInput value={e.kg} min={0} max={600} step={2.5} width={48} onChange={(v) => onChange({ kg: v })} />)}
           <input className="w-full h-11 rounded-[12px] bg-surface px-3 outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60 text-[15px]" placeholder="Note (facultatif)" value={e.note ?? ''} aria-label="Note" onChange={(ev) => onChange({ note: ev.target.value || undefined })} />
           <Button full variant="danger" small onClick={onRemove}><Icon name="trash" size={16} /> Retirer de la séance</Button>
         </div>

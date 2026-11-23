@@ -60,14 +60,13 @@ function SetRow({ n, defaults, prev, done, locked, timed, onValidate, onUndo }: 
 }) {
   const [kg, setKg] = useState(String(done?.kg ?? defaults.kg))
   const [reps, setReps] = useState(String(done?.reps ?? defaults.reps))
-  const [rir, setRir] = useState(String(done?.rir ?? defaults.rir))
   const [sec, setSec] = useState(String(done?.seconds ?? defaults.seconds))
   useEffect(() => {
-    if (!done) { setKg(String(defaults.kg)); setReps(String(defaults.reps)); setRir(String(defaults.rir)); setSec(String(defaults.seconds)) }
-  }, [defaults.kg, defaults.reps, defaults.rir, defaults.seconds, done])
+    if (!done) { setKg(String(defaults.kg)); setReps(String(defaults.reps)); setSec(String(defaults.seconds)) }
+  }, [defaults.kg, defaults.reps, defaults.seconds, done])
   const bg = cellBg(!!done)
   return (
-    <div className="grid items-center gap-2 py-1.5" style={{ gridTemplateColumns: timed ? '24px 1fr 76px 44px' : '24px 1fr 62px 52px 46px 44px' }}>
+    <div className="grid items-center gap-2 py-1.5" style={{ gridTemplateColumns: timed ? '24px 1fr 76px 44px' : '24px 1fr 72px 62px 44px' }}>
       <div className="text-[15px] font-bold text-center" style={{ color: done ? '#30D158' : 'var(--muted)' }}>{n}</div>
       <div className="text-[12.5px] text-muted leading-tight num">{prev ?? '—'}</div>
       {timed ? (
@@ -75,9 +74,8 @@ function SetRow({ n, defaults, prev, done, locked, timed, onValidate, onUndo }: 
       ) : (<>
         <input className={cellCls} style={bg} inputMode="decimal" value={kg} disabled={locked} onChange={(e) => setKg(e.target.value)} aria-label="Poids" />
         <input className={cellCls} style={bg} inputMode="numeric" value={reps} disabled={locked} onChange={(e) => setReps(e.target.value)} aria-label="Répétitions" />
-        <input className={cellCls} style={bg} inputMode="numeric" value={rir} disabled={locked} onChange={(e) => setRir(e.target.value)} aria-label="RIR" />
       </>)}
-      <CheckBtn done={!!done} locked={locked} label="la série" onClick={() => (done ? onUndo() : onValidate(timed ? { kg: 0, reps: 0, rir: 0, seconds: Math.round(num(sec)) } : { kg: num(kg), reps: Math.round(num(reps)), rir: Math.round(num(rir)) }))} />
+      <CheckBtn done={!!done} locked={locked} label="la série" onClick={() => (done ? onUndo() : onValidate(timed ? { kg: 0, reps: 0, rir: 0, seconds: Math.round(num(sec)) } : { kg: num(kg), reps: Math.round(num(reps)), rir: defaults.rir }))} />
     </div>
   )
 }
@@ -111,12 +109,11 @@ function PlanSetBlock({ e, n, session, last, refKg, locked, onValidate, onUndo }
   const [touched, setTouched] = useState<boolean[]>(() => parts.map(() => false))
   const [reps, setReps] = useState<string[]>(() => parts.map((p, j) => String(logged(j)?.reps ?? p.reps ?? 0)))
   const [secs, setSecs] = useState<string[]>(() => parts.map((p, j) => String(logged(j)?.seconds ?? p.seconds ?? 0)))
-  const [rirs, setRirs] = useState<string[]>(() => parts.map((p, j) => String(logged(j)?.rir ?? p.rir ?? e.rir)))
   const structure = JSON.stringify(parts)
   useEffect(() => {
     // structure modifiée (autre format, partie ajoutée…) : on repart des valeurs prévues
     setTouched(parts.map(() => false)); setKgs(initKgs()); setReps(parts.map((p, j) => String(logged(j)?.reps ?? p.reps ?? 0)))
-    setSecs(parts.map((p, j) => String(logged(j)?.seconds ?? p.seconds ?? 0))); setRirs(parts.map((p, j) => String(logged(j)?.rir ?? p.rir ?? e.rir)))
+    setSecs(parts.map((p, j) => String(logged(j)?.seconds ?? p.seconds ?? 0)))
   }, [structure, e.exerciseId])
   // la référence d'une série suivante change (partie lourde de la 1re série saisie) : les parties non touchées suivent
   useEffect(() => {
@@ -145,7 +142,7 @@ function PlanSetBlock({ e, n, session, last, refKg, locked, onValidate, onUndo }
           const lastRow = j === parts.length - 1
           return (
             <div key={j}>
-              <div className="grid items-center gap-2 py-1" style={{ gridTemplateColumns: timed ? '1fr 76px 44px' : '1fr 62px 52px 46px 44px' }}>
+              <div className="grid items-center gap-2 py-1" style={{ gridTemplateColumns: timed ? '1fr 76px 44px' : '1fr 72px 62px 44px' }}>
                 <div className="min-w-0">
                   <div className="text-[12.5px] font-semibold leading-tight">{parts.length > 1 ? `Partie ${j + 1}` : 'Cible'}</div>
                   <div className="text-[12.5px] text-muted leading-tight num truncate">{p.kg === undefined && p.pct !== undefined && p.pct !== 100 && !(n === 1 && j === 0) ? `${partText(p)} de la lourde` : partText(p)}</div>
@@ -155,9 +152,8 @@ function PlanSetBlock({ e, n, session, last, refKg, locked, onValidate, onUndo }
                 ) : (<>
                   <input className={cellCls} style={cellBg(!!l)} inputMode="decimal" value={kgs[j] ?? ''} disabled={locked} aria-label={`Poids, partie ${j + 1}`} onChange={(ev) => changeKg(j, ev.target.value)} />
                   <input className={cellCls} style={cellBg(!!l)} inputMode="numeric" value={reps[j] ?? ''} disabled={locked} aria-label={`Répétitions, partie ${j + 1}`} onChange={(ev) => setReps((c) => c.map((x, k) => (k === j ? ev.target.value : x)))} />
-                  <input className={cellCls} style={cellBg(!!l)} inputMode="numeric" value={rirs[j] ?? ''} disabled={locked} aria-label={`RIR, partie ${j + 1}`} onChange={(ev) => setRirs((c) => c.map((x, k) => (k === j ? ev.target.value : x)))} />
                 </>)}
-                <CheckBtn done={!!l} locked={locked} label={`la partie ${j + 1}`} onClick={() => (l ? onUndo(j) : onValidate(j, timed ? { kg: 0, reps: 0, rir: 0, seconds: Math.round(num(secs[j])) } : { kg: num(kgs[j]), reps: Math.round(num(reps[j])), rir: Math.round(num(rirs[j])) }))} />
+                <CheckBtn done={!!l} locked={locked} label={`la partie ${j + 1}`} onClick={() => (l ? onUndo(j) : onValidate(j, timed ? { kg: 0, reps: 0, rir: 0, seconds: Math.round(num(secs[j])) } : { kg: num(kgs[j]), reps: Math.round(num(reps[j])), rir: p.rir ?? e.rir }))} />
               </div>
               {!lastRow && <div className="text-[11.5px] font-semibold pl-1 pb-0.5" style={{ color: 'var(--muscu)' }}>{(p.restAfterSec ?? 0) > 0 ? `↳ pause ${p.restAfterSec} s` : '↳ enchaîne tout de suite'}</div>}
             </div>
@@ -199,7 +195,7 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
           <div className="text-[18px] font-extrabold leading-tight tracking-tight">{ex.name}</div>
           {fmt && <div className="mt-1"><span className="inline-flex items-center h-5 rounded-full px-2 text-[11.5px] font-extrabold tracking-wide" style={{ background: 'color-mix(in srgb, var(--muscu) 18%, transparent)', color: 'var(--muscu)' }} data-format={e.format}>{fmt}</span></div>}
           <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[13px] text-muted mt-0.5 num">
-            <span className="font-semibold text-ink">{detailed ? describePlan(e) : `${e.sets} × ${repsText}`}</span>{!e.noRir && <span>RIR {e.rir}</span>}<span>repos {String(Math.round(e.restSec / 6) / 10).replace('.', ',')} min</span>{e.targetKg ? <span>{libre ? 'suggéré ' : ''}{fmtKm(e.targetKg)} kg</span> : null}
+            <span className="font-semibold text-ink">{detailed ? describePlan(e) : `${e.sets} × ${repsText}`}</span><span>repos {String(Math.round(e.restSec / 6) / 10).replace('.', ',')} min</span>{e.targetKg ? <span>{libre ? 'suggéré ' : ''}{fmtKm(e.targetKg)} kg</span> : null}
           </div>
         </div>
         {!locked && (<>
@@ -209,11 +205,11 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
       </div>
       {!isCustomId(e.exerciseId) && <p className="text-[13px] text-muted mt-2 leading-snug">{ex.cue}</p>}
       {!detailed && (
-        <div className="grid text-[11px] font-semibold uppercase tracking-wide text-faint mt-3.5 px-0" style={{ gridTemplateColumns: timed ? '24px 1fr 76px 44px' : '24px 1fr 62px 52px 46px 44px', gap: 8 }}>
-          {timed ? (<><span /> <span>Dernière</span><span className="text-center">sec</span><span /></>) : (<><span /> <span>Dernière</span><span className="text-center">kg</span><span className="text-center">reps</span><span className="text-center">RIR</span><span /></>)}
+        <div className="grid text-[11px] font-semibold uppercase tracking-wide text-faint mt-3.5 px-0" style={{ gridTemplateColumns: timed ? '24px 1fr 76px 44px' : '24px 1fr 72px 62px 44px', gap: 8 }}>
+          {timed ? (<><span /> <span>Dernière</span><span className="text-center">sec</span><span /></>) : (<><span /> <span>Dernière</span><span className="text-center">kg</span><span className="text-center">reps</span><span /></>)}
         </div>
       )}
-      {detailed && <div className="grid text-[11px] font-semibold uppercase tracking-wide text-faint mt-3.5" style={{ gridTemplateColumns: '1fr 62px 52px 46px 44px', gap: 8 }}><span>Cible</span><span className="text-center">kg</span><span className="text-center">reps</span><span className="text-center">RIR</span><span /></div>}
+      {detailed && <div className="grid text-[11px] font-semibold uppercase tracking-wide text-faint mt-3.5" style={{ gridTemplateColumns: '1fr 72px 62px 44px', gap: 8 }}><span>Cible</span><span className="text-center">kg</span><span className="text-center">reps</span><span /></div>}
       {!detailed && Array.from({ length: e.sets }, (_, i) => i + 1).map((n) => {
         const doneLog = findLog(e.logs, n, 0)
         const before = e.logs.filter((l) => l.n < n).slice(-1)[0]
@@ -222,7 +218,7 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
           // mode libre : la charge suggérée (si activée) passe avant la dernière performance
           kg: before?.kg ?? (libre ? (e.targetKg ?? p?.kg) : (p?.kg ?? e.targetKg)) ?? 0,
           reps: before?.reps ?? p?.reps ?? e.repMin,
-          rir: before?.rir ?? e.rir,
+          rir: e.rir,
           seconds: before?.seconds ?? p?.seconds ?? e.repMin,
         }
         const prevTxt = p ? (timed ? `${p.seconds ?? 0} s` : `${fmtKm(p.kg)} × ${p.reps}`) : undefined
@@ -252,11 +248,11 @@ function ExerciseCard({ program, session, e, locked }: { program: Program; sessi
               return <div key={key} className="flex items-center justify-between"><span className="font-semibold">{label}</span>
                 <NumberInput value={e[key]} min={mn} max={mx} step={st} width={48} onChange={(v) => v !== undefined && updateExercise(program.id, session.id, e.id, { [key]: v })} /></div>
             })}
-          {([['RIR cible', 'rir', 0, 5, 1], ['Repos (s)', 'restSec', 30, 480, 15]] as const).filter(([, key]) => !(libre && key === 'rir')).map(([label, key, mn, mx, st]) => (
+          {([['Repos (s)', 'restSec', 30, 480, 15]] as const).map(([label, key, mn, mx, st]) => (
             <div key={key} className="flex items-center justify-between"><span className="font-semibold">{label}</span>
               <NumberInput value={e[key]} min={mn} max={mx} step={st} width={48} onChange={(v) => v !== undefined && updateExercise(program.id, session.id, e.id, { [key]: v })} /></div>
           ))}
-          {!libre && <div className="flex items-center justify-between"><span className="font-semibold">Charge (kg)</span>
+          {!detailed && <div className="flex items-center justify-between"><span className="font-semibold">{libre ? 'Poids de départ (kg)' : 'Charge (kg)'}</span>
             <NumberInput value={e.targetKg} min={0} max={600} step={2.5} width={48} onChange={(v) => updateExercise(program.id, session.id, e.id, { targetKg: v })} /></div>}
           <Button full variant="danger" onClick={() => { removeExercise(program.id, session.id, e.id); setEdit(false) }}>Retirer l'exercice</Button>
         </div>
@@ -290,7 +286,10 @@ function RoundsGroupBody({ program, session, g, locked }: { program: Program; se
   const prog = roundsProgress(session, g)
   const [draft, setDraft] = useState<Record<string, { kg?: string; reps?: string }>>({})
   const key = (id: string, r: number) => `${id}:${r}`
-  const kgOf = (e: SessionExercise, r: number) => draft[key(e.id, r)]?.kg ?? String(findLog(e.logs, r, 0)?.kg || (e.logs.filter((l) => l.n < r).slice(-1)[0]?.kg || ''))
+  const db = useDB()
+  // dernière charge utilisée sur cet exercice (séance précédente), pour préremplir et rappeler
+  const lastOf = (e: SessionExercise) => lastPerformance(db, program.clientId, e.exerciseId, session.id)?.logs.filter((l) => l.kg > 0).slice(-1)[0]
+  const kgOf = (e: SessionExercise, r: number) => draft[key(e.id, r)]?.kg ?? String(findLog(e.logs, r, 0)?.kg || e.logs.filter((l) => l.n < r).slice(-1)[0]?.kg || lastOf(e)?.kg || e.targetKg || '')
   const repsOf = (e: SessionExercise, r: number) => draft[key(e.id, r)]?.reps ?? String(findLog(e.logs, r, 0)?.seconds ?? findLog(e.logs, r, 0)?.reps ?? e.repMin)
   const setD = (id: string, r: number, p: { kg?: string; reps?: string }) => setDraft((d) => ({ ...d, [key(id, r)]: { ...d[key(id, r)], ...p } }))
   const validate = (e: SessionExercise, r: number) => {
@@ -324,7 +323,7 @@ function RoundsGroupBody({ program, session, g, locked }: { program: Program; se
             <div key={r} className="rounded-[16px] p-1.5" style={isCur ? { boxShadow: `inset 0 0 0 1.5px ${color}` } : undefined}>
               <div className="px-1.5 pt-1 pb-0.5 text-[12px] font-bold uppercase tracking-wide" style={{ color }}>Tour {r}/{g.rounds}</div>
               {members.map((e, i) => (
-                <RoundRow key={e.id} label={`${letterOf(i)}${r}`} name={exerciseOf(e.exerciseId).name} target={targetOf(e)} timed={isTimed(e.exerciseId)} color={color}
+                <RoundRow key={e.id} label={`${letterOf(i)}${r}`} name={exerciseOf(e.exerciseId).name} target={`${targetOf(e)}${lastOf(e) ? ` · dern. ${fmtKm(lastOf(e)!.kg)} kg` : ''}`} timed={isTimed(e.exerciseId)} color={color}
                   kg={kgOf(e, r)} reps={repsOf(e, r)} done={!!findLog(e.logs, r, 0)} locked={locked} current={isCur && prog.next?.seId === e.id}
                   onKg={(v) => setD(e.id, r, { kg: v })} onReps={(v) => setD(e.id, r, { reps: v })}
                   onToggle={() => (findLog(e.logs, r, 0) ? unlogSet(program.id, session.id, e.id, r) : validate(e, r))} />
@@ -376,7 +375,7 @@ function TimedGroupBody({ program, session, g, locked }: { program: Program; ses
           <div key={e.id} className="flex items-center gap-2.5 min-h-[40px]" style={es && !es.finished && es.seId === e.id ? { background: `color-mix(in srgb, ${color} 14%, transparent)`, borderRadius: 12 } : undefined}>
             <span className="w-8 h-8 rounded-[10px] flex items-center justify-center text-[13px] font-extrabold shrink-0" style={{ background: `color-mix(in srgb, ${color} 22%, transparent)`, color }}>{letterOf(i)}</span>
             <span className="flex-1 min-w-0 text-[15px] font-semibold truncate">{exerciseOf(e.exerciseId).name}</span>
-            <span className="text-[14px] font-bold num text-muted">{targetOf(e)}{g.kind === 'chrono' && g.rounds > 1 ? ` × ${g.rounds}` : ''}</span>
+            <span className="text-[14px] font-bold num text-muted">{targetOf(e)}{e.targetKg ? ` · ${fmtKm(e.targetKg)} kg` : ''}{g.kind === 'chrono' && g.rounds > 1 ? ` × ${g.rounds}` : ''}</span>
           </div>
         ))}
       </div>
@@ -465,11 +464,16 @@ function GroupCard({ program, session, g, locked }: { program: Program; session:
         <div className="flex flex-col gap-3">
           <GroupParams spec={g} names={members.map((e) => exerciseOf(e.exerciseId).name)} onChange={(p) => updateGroup(program.id, session.id, g.id, p)} onUngroup={() => { deleteGroup(program.id, session.id, g.id); setEdit(false) }} />
           {members.map((e, i) => (
-            <div key={e.id} className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-[10px] flex items-center justify-center text-[13px] font-extrabold shrink-0" style={{ background: `color-mix(in srgb, ${color} 22%, transparent)`, color }}>{letterOf(i)}</span>
-              <span className="flex-1 min-w-0 text-[14.5px] font-semibold truncate">{exerciseOf(e.exerciseId).name}</span>
-              <NumberInput value={e.repMin} min={1} max={isTimed(e.exerciseId) ? 300 : 60} width={48} onChange={(v) => v !== undefined && updateExercise(program.id, session.id, e.id, { repMin: v, repMax: v })} />
-              <button className="tap hit w-11 h-11 rounded-full bg-surface2 flex items-center justify-center text-muted shrink-0" aria-label={`Retirer ${exerciseOf(e.exerciseId).name}`} onClick={() => removeExercise(program.id, session.id, e.id)}><Icon name="trash" size={16} /></button>
+            <div key={e.id} className="rounded-[16px] bg-surface2 p-3 flex flex-col gap-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-[10px] flex items-center justify-center text-[13px] font-extrabold shrink-0" style={{ background: `color-mix(in srgb, ${color} 22%, transparent)`, color }}>{letterOf(i)}</span>
+                <span className="flex-1 min-w-0 text-[15px] font-semibold truncate">{exerciseOf(e.exerciseId).name}</span>
+                <button className="tap hit w-11 h-11 rounded-full bg-surface flex items-center justify-center text-muted shrink-0" aria-label={`Retirer ${exerciseOf(e.exerciseId).name}`} onClick={() => removeExercise(program.id, session.id, e.id)}><Icon name="trash" size={16} /></button>
+              </div>
+              <div className="flex items-center justify-between gap-2"><span className="text-[14px] font-semibold">{isTimed(e.exerciseId) ? 'Secondes' : 'Reps'}</span>
+                <NumberInput value={e.repMin} min={1} max={isTimed(e.exerciseId) ? 300 : 60} width={48} onChange={(v) => v !== undefined && updateExercise(program.id, session.id, e.id, { repMin: v, repMax: v })} /></div>
+              <div className="flex items-center justify-between gap-2"><span className="text-[14px] font-semibold">Poids (kg)</span>
+                <NumberInput value={e.targetKg} min={0} max={600} step={2.5} width={48} onChange={(v) => updateExercise(program.id, session.id, e.id, { targetKg: v })} /></div>
             </div>
           ))}
         </div>

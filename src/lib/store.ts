@@ -393,6 +393,7 @@ export function replaceExercise(programId: string, sessionId: string, seId: stri
     const from = exerciseOf(e.exerciseId).name
     e.exerciseId = exerciseId
     e.targetKg = undefined
+    e.fixedKg = undefined
     e.logs = []
     return `${from} remplacé par ${exerciseOf(exerciseId).name} dans « ${s.title} ».`
   })
@@ -431,6 +432,7 @@ export function updateExercise(programId: string, sessionId: string, seId: strin
     if (!e) return
     const { sets, plan, format, ...rest } = patch
     Object.assign(e, rest)
+    if ('targetKg' in patch) e.fixedKg = patch.targetKg !== undefined ? true : undefined
     if ('plan' in patch) {
       // nouvelle structure de séries : le format et le nombre de séries suivent
       if (plan?.length) Object.assign(e, { plan, format: format ?? e.format, sets: plan.length, ...repRangeOf(plan) })

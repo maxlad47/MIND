@@ -31,7 +31,7 @@ export function defaultWeekNote(phase: Phase, light: boolean, n: number, q: Ques
   if (phase === 'Musculation') {
     const pos = cyclePosition(n)
     if (pos === 8) return 'Semaine de décharge : moins de séries et plus de marge. Ton corps assimile le travail des semaines précédentes.'
-    if (pos <= 2) return 'On démarre le cycle avec de la marge (RIR 3) pour soigner la technique et poser les charges.'
+    if (pos <= 2) return 'On démarre le cycle avec de la marge (reps en réserve) pour soigner la technique et poser les charges.'
     if (pos >= 6) return 'Fin de cycle : on pousse plus près de l\'échec, avec des charges qui doivent monter.'
     return 'Progression par paliers : quand toutes les séries atteignent le haut de la fourchette, on monte la charge.'
   }

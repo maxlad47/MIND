@@ -217,6 +217,8 @@ export interface SessionExercise {
   rir: number
   restSec: number
   targetKg?: number
+  /** `targetKg` saisi à la main (ou venu du modèle) : les suggestions de charge ne le remplacent pas. */
+  fixedKg?: boolean
   logs: SetLog[]
   note?: string
   /** Mode libre : le client n'a pas fixé de RIR visé (on n'affiche pas « RIR 2 » par défaut). */
@@ -331,6 +333,8 @@ export interface TemplateExercise {
   repMax: number
   restSec: number
   rir?: number
+  /** Poids de départ (kg), facultatif. */
+  kg?: number
   note?: string
   /** Séries détaillées et format (voir `SessionExercise`). */
   plan?: PlannedSet[]

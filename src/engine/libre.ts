@@ -53,6 +53,7 @@ function exercisesFromTemplate(t: SessionTemplate, sessionId: string): { exercis
     id: `${sessionId}.${te.id}`, exerciseId: te.exerciseId, order: i, sets: te.sets, repMin: te.repMin, repMax: te.repMax,
     rir: te.rir ?? 2, restSec: te.restSec, logs: [],
     ...(te.rir === undefined ? { noRir: true } : {}), ...(te.note ? { note: te.note } : {}),
+    ...(te.kg ? { targetKg: te.kg, fixedKg: true } : {}),
     ...(te.plan?.length ? { plan: structuredClone(te.plan), format: te.format } : {}),
   }))
   const groups: ExerciseGroup[] = (t.groups ?? []).map((g) => ({ ...g, id: `${sessionId}.${g.id}`, exerciseIds: g.exerciseIds.map((x) => `${sessionId}.${x}`) }))
@@ -301,7 +302,7 @@ function applySuggestions(p: Program, today: string, history: Session[] = []): v
   for (const s of allOf(p)) {
     if (s.status !== 'prevue' || s.date < today) continue
     for (const e of s.exercises ?? []) {
-      if (e.logs.length) continue
+      if (e.logs.length || e.fixedKg) continue
       const inst = on ? last.get(e.exerciseId) : undefined
       const res = inst ? nextLoad(inst[inst.length - 1], inst.length > 1 ? inst[0] : undefined) : null
       e.targetKg = res && res.kg > 0 ? res.next : undefined
@@ -427,6 +428,7 @@ export function templateFromSession(s: Session, t: SessionTemplate): SessionTemp
       id, exerciseId: se.exerciseId, sets: se.sets, repMin: se.repMin, repMax: se.repMax, restSec: se.restSec,
       ...(pair ? (pair.te.rir !== undefined ? { rir: pair.te.rir } : {}) : (se.noRir ? {} : { rir: se.rir })),
       ...(pair?.te.note ? { note: pair.te.note } : se.note ? { note: se.note } : {}),
+      ...(pair?.te.kg ? { kg: pair.te.kg } : {}),
       ...(se.plan?.length ? { plan: withoutKg(se.plan), format: se.format } : {}),
     }
   })
