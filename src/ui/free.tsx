@@ -241,14 +241,21 @@ export function FreeSessionsView({ clientId }: { clientId: string }) {
   return (
     <div>
       {plan.templates.length === 0 ? (
-        <>
-          <EmptyState icon="program" color={MUSCU} title="Crée ta première séance" text="Ajoute les exercices de ta séance (ex. Push), puis règle ton planning. MIND te montre ce que tu as fait la dernière fois." action={<Button color={MUSCU} onClick={() => setEditing('new')}><Icon name="plus" size={18} strokeWidth={2.4} /> Créer ma première séance</Button>} />
-          <div className="flex flex-col gap-2.5 mt-2">
-            {[['1', 'Crée tes séances', 'Un nom, des exercices, des séries.'], ['2', 'Règle ton planning', 'Jours fixes, ou à la suite (Push → Pull → Legs…).'], ['3', 'Entraîne-toi', 'Même écran qu\'habituellement, avec ta dernière performance.']].map(([n, t, s]) => (
-              <div key={n} className="flex gap-3.5 bg-surface rounded-[18px] p-3.5"><div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shrink-0" style={{ background: MUSCU }}>{n}</div><div><div className="font-semibold">{t}</div><div className="text-[14px] text-muted">{s}</div></div></div>
+        <div className="flex flex-col items-center text-center pt-1">
+          <div className="w-[56px] h-[56px] rounded-[19px] flex items-center justify-center mb-3" style={{ background: 'linear-gradient(145deg, color-mix(in srgb, var(--muscu) 30%, transparent), color-mix(in srgb, var(--muscu) 10%, transparent))', color: MUSCU }}><Icon name="program" size={26} /></div>
+          <div className="t-title3">Crée ta première séance</div>
+          <p className="text-muted text-[14.5px] max-w-[290px] leading-snug mt-1.5">Ajoute les exercices de ta séance (ex. Push), puis règle ton planning. MIND te montre ce que tu as fait la dernière fois.</p>
+          <div className="mt-4"><Button color={MUSCU} onClick={() => setEditing('new')}><Icon name="plus" size={18} strokeWidth={2.4} /> Créer ma première séance</Button></div>
+          <div className="w-full bg-surface rounded-[18px] mt-5 text-left" style={{ boxShadow: 'var(--shadow-card)' }}>
+            {[['1', 'Crée tes séances', 'Un nom, des exercices, des séries'], ['2', 'Règle ton planning', 'Jours fixes, ou à la suite (Push → Pull → Legs…)'], ['3', 'Entraîne-toi', 'Avec ta dernière performance sous les yeux']].map(([n, t, sub], i) => (
+              <div key={n} className="flex items-center gap-3 px-3.5 py-2.5 relative">
+                <div className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0" style={{ background: MUSCU }}>{n}</div>
+                <div className="min-w-0"><div className="font-semibold text-[15px] leading-tight">{t}</div><div className="text-[12.5px] text-muted leading-snug truncate">{sub}</div></div>
+                {i < 2 && <span className="absolute bottom-0 right-0 h-px bg-sep" style={{ left: 54 }} />}
+              </div>
             ))}
           </div>
-        </>
+        </div>
       ) : (
         <>
           {noPlanning && (
