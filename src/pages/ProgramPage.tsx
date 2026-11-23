@@ -11,7 +11,7 @@ import { addDays, DAY_NAMES, shortDate, todayISO, weekday } from '@/engine/utils
 import { moveSession, programOf, restoreSession, undoAdaptationById, useDB } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { Button, Card, Chip, Cover, EmptyState, Icon, Sheet, SectionTitle, SportIcon, spring, toast } from '@/ui/kit'
-import { coverSeed, sessionMeta, statusLabel } from '@/ui/parts'
+import { coverSeed, sessionMeta, statusLabel, tintOf } from '@/ui/parts'
 import { PHASE_COLOR } from '@/ui/cover'
 
 
@@ -24,7 +24,7 @@ function SessionRow({ s, canEdit, onOpen, onMenu, dragging }: { s: Session; canE
       className="flex items-center gap-3 bg-surface rounded-[18px] p-2.5 pr-1 select-none"
       style={{ opacity: isDragging && !dragging ? 0.3 : 1, WebkitTouchCallout: 'none', WebkitUserSelect: 'none', boxShadow: dragging ? '0 18px 40px rgba(0,0,0,.45)' : 'var(--shadow-card)', transform: dragging ? 'scale(1.03) rotate(-0.6deg)' : undefined }}>
       <button onClick={onOpen} className="tap flex items-center gap-3 flex-1 min-w-0 text-left">
-        <Cover seed={coverSeed(s)} sports={[s.sport]} kind={s.kind} scrim={false} className="rounded-[13px] shrink-0" style={{ width: 54, height: 54 }}>
+        <Cover seed={coverSeed(s)} sports={[tintOf(s)]} kind={s.kind} scrim={false} className="rounded-[13px] shrink-0" style={{ width: 54, height: 54 }}>
           <div className="absolute inset-0 flex items-center justify-center"><SportIcon sport={s.sport} size={23} color="#fff" /></div>
         </Cover>
         <div className="min-w-0">

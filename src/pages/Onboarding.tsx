@@ -3,8 +3,9 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DIST_KM, DIST_LABEL, PREP, assessTarget, pacesFromQuestionnaire, leadIn, phasePlan, predictRaceSeconds, prepWarnings, recommendedStartMode, referencesOf, startModeOf, volumeOutlook } from '@/engine/running'
 import { estimateLiftsFromHistory } from '@/engine/libre'
+import { KIT_LABEL } from '@/engine/renfo'
 import { SPLIT_DESC, SPLIT_LABEL, isUpperOnly, recommendedSplit, splitOptions } from '@/engine/strength'
-import { ZONES, type Goal, type Level, type Muscle, type Priority, type ProgramType, type Questionnaire, type RaceDistance, type RecentDistance, type SplitKey, type Zone } from '@/engine/types'
+import { ZONES, type Goal, type Level, type Muscle, type Priority, type ProgramType, type Questionnaire, type RaceDistance, type RecentDistance, type RenfoKit, type RenfoSettings, type SplitKey, type Zone } from '@/engine/types'
 import { DAY_NAMES, DAY_SHORT, diffDays, fmtPace, fmtTime, mondayOf, todayISO, addDays } from '@/engine/utils'
 import { clientSessions, currentUser, programOf, questionnaireOf, saveDraft, submitQuestionnaire, useDB } from '@/lib/store'
 import { personalizeInBackground } from '@/lib/ai'
@@ -116,6 +117,8 @@ export default function Onboarding() {
   const setR = (p: Partial<Questionnaire['run']>) => set({ run: { ...m.run, ...p } })
 
   const libre = m.mode === 'libre'
+  /** Renfo coureur : désactivé pour un programme existant, proposé à 1 fois par semaine pour un nouveau programme. */
+  const renfoOf = (x: Questionnaire): RenfoSettings => x.run.renfo ?? (edit ? { perWeek: 0, kit: 'nu' } : { perWeek: 1, kit: 'nu' })
   const hasM = m.programType !== 'course'
   const hasR = m.programType !== 'muscu'
   const today = todayISO()
@@ -410,10 +413,32 @@ export default function Onboarding() {
               </div>)}
           </div>)
       } },
+    { id: 'renfo', title: 'Ajouter du renfo coureur ?', sub: 'Un circuit de gainage, de force et de pliométrie pour être plus solide sur tes sorties : 20 à 30 minutes, placé autour de tes séances de course.', when: () => hasR,
+      render: () => {
+        const cur = renfoOf(m)
+        const kits: RenfoKit[] = ['nu', 'elastique', 'salle']
+        return (
+          <div className="flex flex-col gap-3">
+            <Big>
+              {([[0, 'Non', 'Juste mes séances de course.'], [1, '1 fois par semaine', 'Le minimum utile pour un coureur.'], [2, '2 fois par semaine', 'Plus de travail de fond, si tes jours le permettent.']] as [0 | 1 | 2, string, string][]).map(([v, t, sub]) =>
+                <Option key={v} accent="#FF9F0A" active={cur.perWeek === v} title={t} sub={sub} onClick={() => setR({ renfo: { perWeek: v, kit: cur.kit } })} />)}
+            </Big>
+            {cur.perWeek > 0 && (
+              <div className="flex flex-col gap-3 mt-1">
+                <div className="text-[13px] uppercase tracking-wide text-muted font-medium px-1">Quel matériel ?</div>
+                <Big>{kits.map((k) => <Option key={k} accent="#FF9F0A" active={cur.kit === k} title={KIT_LABEL[k]} onClick={() => setR({ renfo: { perWeek: cur.perWeek, kit: k } })} />)}</Big>
+                <p className="text-[13px] text-muted bg-surface rounded-xl p-3 leading-snug">
+                  {m.programType === 'mixte' && !libre
+                    ? 'Ton programme mélange muscu et course : pas de séance à part. MIND ajoute 2 ou 3 exercices de coureur (mollets en excentrique, gainage latéral, un exercice unilatéral) à la fin de tes séances de muscu.'
+                    : 'Le renfo se place après une séance de qualité, ou un jour sans course : jamais la veille de ta sortie longue ni d\'une séance difficile. Il s\'allège avec l\'affûtage, sans pliométrie dans les 10 jours avant la course.'}
+                </p>
+              </div>)}
+          </div>)
+      } },
   ]
 
   // Mode libre : seulement l'identité et les blessures ; toutes les étapes de génération sont sautées
-  const LIBRE_STEPS = ['mode', 'name', 'birth', 'body', 'injuries', 'librerun', ...(hasR ? ['rsess', 'rdays', 'longday', 'dur', 'dist', 'date', 'rlevel', 'refs', 'obj', 'vol', 'startmode', 'peak'] : [])]
+  const LIBRE_STEPS = ['mode', 'name', 'birth', 'body', 'injuries', 'librerun', ...(hasR ? ['rsess', 'rdays', 'longday', 'dur', 'dist', 'date', 'rlevel', 'refs', 'obj', 'vol', 'startmode', 'peak', 'renfo'] : [])]
   const active = steps.filter((s) => (!libre || LIBRE_STEPS.includes(s.id)) && (!s.when || s.when(q)))
   const cur = active[Math.min(idx, active.length - 1)]
   const isLast = idx >= active.length - 1
@@ -424,6 +449,7 @@ export default function Onboarding() {
     setBusy(true)
     const full = merged(q)
     full.run.raceDate = full.run.raceDate || addDays(today, 84)
+    if (hasR) full.run.renfo = renfoOf(m)
     if (full.run.objective === 'finir') full.run.targetSeconds = undefined
     full.strength.split = full.strength.split
     full.startDate = today
@@ -444,7 +470,7 @@ export default function Onboarding() {
   const progress = (idx + 1) / (active.length + 1)
   const hasProgram = !!programOf(db, me.id)
   const MUSCU_STEPS = ['mdays', 'excl', 'msess', 'goal', 'mlevel', 'lifts', 'split']
-  const RUN_STEPS = ['rdays', 'longday', 'rsess', 'dist', 'date', 'rlevel', 'refs', 'obj', 'vol', 'startmode', 'peak']
+  const RUN_STEPS = ['rdays', 'longday', 'rsess', 'dist', 'date', 'rlevel', 'refs', 'obj', 'vol', 'startmode', 'peak', 'renfo']
   const glowSports: ('muscu' | 'course')[] = MUSCU_STEPS.includes(cur.id) ? ['muscu'] : RUN_STEPS.includes(cur.id) ? ['course'] : ['muscu', 'course']
 
   return (

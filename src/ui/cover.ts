@@ -44,7 +44,7 @@ const PAL: Record<Look, Record<PalKey, Stops>> = {
 type Temp = 'hot' | 'warm' | 'mild' | 'cold' | 'muscu'
 const TEMP_OF: Record<string, Temp> = {
   vma: 'hot', cotes: 'hot', fartlek: 'hot', test: 'hot', course: 'hot',
-  seuil: 'warm', specifique: 'warm',
+  seuil: 'warm', specifique: 'warm', renfo: 'warm',
   longue: 'mild',
   ef: 'cold', recup: 'cold',
   fullbody: 'muscu', haut: 'muscu', bas: 'muscu', push: 'muscu', pull: 'muscu', jambes: 'muscu',

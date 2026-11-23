@@ -2,11 +2,12 @@
 // Générées à l'ouverture de l'app, relatives à la date du jour.
 
 import { adjustLoadsAfterSession, allSessions } from '@/engine/adapt'
-import { EXERCISE_BY_ID, makeCustomExercise, registerCustomExercises } from '@/engine/exercises'
+import { EXERCISE_BY_ID, isTimed, makeCustomExercise, registerCustomExercises } from '@/engine/exercises'
+import { applyFormat, defaultGroup, plannedSetsOf, relativeKg } from '@/engine/formats'
 import { newLibreProgram, newTemplate, newTemplateExercise, syncFree } from '@/engine/libre'
 import { generateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
-import type { LibrePlanning, Program, Questionnaire, SessionTemplate } from '@/engine/types'
+import type { LibrePlanning, Program, Questionnaire, SessionExercise, SessionTemplate } from '@/engine/types'
 import { addDays, hash, mondayOf, todayISO, uid } from '@/engine/utils'
 import { COACH_EMAIL, getDB, hashPw, mutate, type DB, type Profile } from './store'
 
@@ -35,6 +36,27 @@ function defaultKg(exId: string): number {
   return ex.compound ? 40 : 22
 }
 
+/**
+ * Saisit les séries d'un exercice de la démo, partie par partie : charge de référence `kg` sur la partie lourde, parties relatives
+ * en % (arrondi à 0,5 kg), durées pour un exercice en secondes. Une série classique n'a qu'une partie.
+ */
+function fillLogs(e: SessionExercise, kg: number, o: { week: number; key: string; date: string; at: string; bonus?: number }): void {
+  const timed = isTimed(e.exerciseId)
+  plannedSetsOf(e).forEach((set, i) => {
+    const n = i + 1
+    set.parts.forEach((p, j) => {
+      const h = hash(o.key + o.date + e.exerciseId + n + j)
+      const partKg = p.kg ?? (p.pct !== undefined && kg > 0 ? relativeKg(kg, p.pct) : kg)
+      const top = p.repMax ?? p.reps ?? e.repMax
+      const reps = timed ? 0 : Math.min(top, (p.reps ?? e.repMin) + (p.repMax !== undefined ? o.week + (h % 2) + (o.bonus ?? 0) : 0))
+      e.logs.push({
+        n, ...(j > 0 || set.parts.length > 1 ? { part: j } : {}), kg: partKg, reps, rir: Math.max(0, (p.rir ?? e.rir) + (h % 2) - (n === e.sets && j === set.parts.length - 1 ? 1 : 0)), at: o.at,
+        ...(timed ? { seconds: (p.seconds ?? e.repMin) + (h % 3) * 5 } : {}),
+      })
+    })
+  })
+}
+
 function simulate(program: Program, today: string, adherence: number, key: string, stopAfter?: string): { program: Program; prs: DB['records'] } {
   let p = program
   const prs: DB['records'] = []
@@ -51,11 +73,7 @@ function simulate(program: Program, today: string, adherence: number, key: strin
       for (const e of s.exercises) {
         const kg = e.targetKg ?? defaultKg(e.exerciseId)
         const week = Math.floor(idx / 3)
-        for (let n = 1; n <= e.sets; n++) {
-          const h = hash(key + s.date + e.exerciseId + n)
-          const reps = Math.min(e.repMax, e.repMin + week + (h % 2) + (idx > 4 ? 1 : 0))
-          e.logs.push({ n, kg, reps, rir: Math.max(0, e.rir + (h % 2) - (n === e.sets ? 1 : 0)), at: s.doneAt })
-        }
+        fillLogs(e, kg, { week, key, date: s.date, at: s.doneAt, bonus: idx > 4 ? 1 : 0 })
         const best = e.logs.reduce((a, b) => (epley(b.kg, b.reps) > epley(a.kg, a.reps) ? b : a))
         const prev = Math.max(0, ...allSessions(p).filter((x) => x.status === 'faite' && x.date < s.date).flatMap((x) => x.exercises ?? [])
           .filter((x) => x.exerciseId === e.exerciseId).flatMap((x) => x.logs).map((l) => epley(l.kg, l.reps)))
@@ -93,7 +111,13 @@ function addNina(db: DB, today: string): Profile {
   const te = (exId: string, sets: number, repMin: number, repMax: number, restSec: number, rir?: number) =>
     Object.assign(newTemplateExercise(exId), { sets, repMin, repMax, restSec, ...(rir !== undefined ? { rir } : {}) })
   const tpl = (name: string, ...ex: ReturnType<typeof te>[]): SessionTemplate => Object.assign(newTemplate(name), { exercises: ex })
-  const push = tpl('Push', te('dev_couche_barre', 4, 6, 8, 150, 2), te('dev_incline_halteres', 3, 8, 12, 90), te('dev_epaules_halteres', 3, 8, 12, 90), te('elev_lat_halteres', 3, 12, 15, 60), te('ext_triceps_poulie', 3, 10, 15, 60))
+  // Push : développé couché en COMBO (1 rep lourde puis 6 reps à −20 %, 3 séries) et un SUPERSET élévations latérales + face pull
+  const bench = Object.assign(te('dev_couche_barre', 3, 1, 6, 150, 2), (() => { const r = applyFormat('combo', { sets: 3, repMin: 6, repMax: 10, rir: 2 }); return { plan: r.plan, format: r.format, sets: r.sets, repMin: r.repMin, repMax: r.repMax } })())
+  const lat = te('elev_lat_halteres', 3, 12, 15, 60)
+  const face = te('face_pull', 3, 12, 15, 60)
+  const push = Object.assign(tpl('Push', bench, te('dev_incline_halteres', 3, 8, 12, 90), te('dev_epaules_halteres', 3, 8, 12, 90), lat, face, te('ext_triceps_poulie', 3, 10, 15, 60)), {
+    groups: [{ ...defaultGroup('superset', [lat.id, face.id]), rounds: 3, restBetweenSec: 10, restAfterRoundSec: 75 }],
+  })
   const pull = tpl('Pull', te('tirage_vertical', 4, 8, 10, 120, 2), te('rowing_haltere', 3, 8, 12, 90), te('face_pull', 3, 12, 15, 60), te('curl_halteres', 3, 10, 12, 60), te(custom.id, 3, 10, 15, 60))
   const legs = tpl('Legs', te('squat_barre', 4, 6, 8, 180, 2), te('rdl_barre', 3, 8, 10, 120), te('presse_cuisses', 3, 10, 12, 120), te('leg_curl_assis', 3, 10, 15, 75), te('mollets_debout', 4, 12, 15, 60))
   const planning: LibrePlanning = { mode: 'rotation', days: [0, 1, 3, 4], order: [push.id, pull.id, legs.id] } // lundi, mardi, jeudi, vendredi
@@ -111,11 +135,9 @@ function addNina(db: DB, today: string): Profile {
     s.durationMin = Math.max(35, s.estMinutes - 4 + (hash('nina' + s.id) % 8))
     for (const e of s.exercises ?? []) {
       const [base, step] = NINA_KG[e.exerciseId] ?? [20, 0]
-      const kg = base + step * (s.weekN - 1)
-      for (let n = 1; n <= e.sets; n++) {
-        const h = hash('nina' + s.date + e.exerciseId + n)
-        e.logs.push({ n, kg, reps: Math.min(e.repMax, e.repMin + (h % 3) + (s.weekN > 1 ? 1 : 0)), rir: Math.max(0, 2 - (n === e.sets ? 1 : 0) + (h % 2)), at: s.doneAt })
-      }
+      // combo : la rep lourde est un maximum à 1 rep (≈ 125 % de la charge de travail), les 6 reps suivantes à −20 %
+      const kg = e.plan ? Math.round((base * 1.25 + step * (s.weekN - 1)) / 2.5) * 2.5 : base + step * (s.weekN - 1)
+      fillLogs(e, kg, { week: s.weekN > 1 ? 1 : 0, key: 'nina', date: s.date, at: s.doneAt })
       const best = e.logs.reduce((a, b) => (epley(b.kg, b.reps) > epley(a.kg, a.reps) ? b : a))
       const prev = Math.max(0, ...allSessions(prog).filter((x) => x.status === 'faite' && x.date < s.date).flatMap((x) => x.exercises ?? [])
         .filter((x) => x.exerciseId === e.exerciseId).flatMap((x) => x.logs).map((l) => epley(l.kg, l.reps)))
@@ -157,7 +179,8 @@ export function buildSeed(today = todayISO()): DB {
   Object.assign(qc, {
     programType: 'mixte', muscuSessions: 3, runSessions: 3, priority: 'course', availableDays: [0, 1, 2, 4, 5, 6],
     strength: { goal: 'hypertrophie', level: 'intermediaire', lifts: { squat: { kg: 70, reps: 6 }, bench: { kg: 45, reps: 8 }, deadlift: { kg: 85, reps: 5 } } },
-    run: { distance: 'semi', raceDate: addDays(mondayOf(today), 7 * 9 + 6), objective: 'chrono', targetSeconds: 6000 + 600, level: 'intermediaire', weeklyKm: 28, longestKm: 14, recent: { distance: '10k', seconds: 52 * 60, date: addDays(today, -30) } },
+    run: { distance: 'semi', raceDate: addDays(mondayOf(today), 7 * 9 + 6), objective: 'chrono', targetSeconds: 6000 + 600, level: 'intermediaire', weeklyKm: 28, longestKm: 14, recent: { distance: '10k', seconds: 52 * 60, date: addDays(today, -30) },
+      renfo: { perWeek: 2, kit: 'salle' } }, // programme mixte : compléments de coureur dans 2 séances de muscu par semaine
   })
   const pc = add(camille, qc, 0.9)
 
@@ -177,7 +200,8 @@ export function buildSeed(today = todayISO()): DB {
   const ql = baseQ(today)
   Object.assign(ql, {
     programType: 'course', runSessions: 4, maxMinutes: 90,
-    run: { distance: 'marathon', raceDate: addDays(mondayOf(today), 7 * 13 + 6), objective: 'chrono', targetSeconds: 3 * 3600 + 50 * 60, level: 'intermediaire', weeklyKm: 35, longestKm: 16, recent: { distance: 'semi', seconds: 108 * 60, date: addDays(today, -40) } },
+    run: { distance: 'marathon', raceDate: addDays(mondayOf(today), 7 * 13 + 6), objective: 'chrono', targetSeconds: 3 * 3600 + 50 * 60, level: 'intermediaire', weeklyKm: 35, longestKm: 16, recent: { distance: 'semi', seconds: 108 * 60, date: addDays(today, -40) },
+      renfo: { perWeek: 1, kit: 'nu' } }, // renfo coureur : 1 fois par semaine, sans matériel
   })
   const pl = add(lea, ql, 0.95)
   const nextWeek = pl.weeks.find((w) => w.startDate === addDays(mondayOf(today), 7))

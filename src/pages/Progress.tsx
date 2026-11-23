@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { allSessions } from '@/engine/adapt'
 import { exerciseOf } from '@/engine/exercises'
+import { doneSetsOf, groupStats } from '@/engine/formats'
 import { isLibre } from '@/engine/libre'
 import { epley } from '@/engine/strength'
 import { MUSCLE_LABEL, type Muscle, type Session } from '@/engine/types'
@@ -117,7 +118,7 @@ export function ProgressView({ clientId }: { clientId: string }) {
       arr.push({ date: s.date, kg: Math.max(...e.logs.map((l) => l.kg)), e1: Math.round(epley(best.kg, best.reps) * 10) / 10 })
       exStats.set(e.exerciseId, arr)
       const m = exerciseOf(e.exerciseId).muscle
-      setsByMuscle[m] = (setsByMuscle[m] ?? 0) + e.logs.length
+      setsByMuscle[m] = (setsByMuscle[m] ?? 0) + doneSetsOf(e) // une série à parties compte pour une série
       const k = mondayOf(s.date)
       tonnageByWeek.set(k, (tonnageByWeek.get(k) ?? 0) + e.logs.reduce((a, l) => a + l.kg * l.reps, 0))
     }
@@ -128,6 +129,8 @@ export function ProgressView({ clientId }: { clientId: string }) {
   const muscleWeeks = Math.max(1, weeks.length)
   const muscleData = (Object.entries(setsByMuscle) as [Muscle, number][]).map(([m, n]) => ({ name: MUSCLE_LABEL[m], series: Math.round((n / muscleWeeks) * 10) / 10 })).sort((a, b) => b.series - a.series)
   const tonnage = [...tonnageByWeek.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => ({ name: shortDate(k), kg: Math.round(v) }))
+  const gstats = groupStats(muscu)
+  const hasGroups = gstats.circuitRounds + gstats.supersetRounds + gstats.amrap.count + gstats.emom.count + gstats.chrono.count > 0
   const records = db.records.filter((r) => r.clientId === clientId && (filter === 'all' || r.date >= addDays(today, filter === '4w' ? -28 : -56))).sort((a, b) => b.date.localeCompare(a.date))
 
   // ---- course
@@ -242,6 +245,18 @@ export function ProgressView({ clientId }: { clientId: string }) {
             </ResponsiveContainer>
           </div>
         </ChartCard>
+
+        {hasGroups && (
+          <ChartCard title="Circuits, AMRAP et chronos" sub="sans effet sur le tonnage">
+            <div className="grid grid-cols-2 gap-2.5">
+              {gstats.circuitRounds > 0 && <StatTile label="Circuits" value={String(gstats.circuitRounds)} sub={`tour${gstats.circuitRounds > 1 ? 's' : ''} terminé${gstats.circuitRounds > 1 ? 's' : ''}`} color={MUSCU} />}
+              {gstats.supersetRounds > 0 && <StatTile label="Supersets" value={String(gstats.supersetRounds)} sub={`tour${gstats.supersetRounds > 1 ? 's' : ''} terminé${gstats.supersetRounds > 1 ? 's' : ''}`} color={MUSCU} />}
+              {gstats.amrap.count > 0 && <StatTile label="AMRAP" value={String(gstats.amrap.bestRounds)} sub={`tours au mieux · ${gstats.amrap.count} bloc${gstats.amrap.count > 1 ? 's' : ''}`} color={MUSCU} />}
+              {gstats.emom.count > 0 && <StatTile label="EMOM" value={String(gstats.emom.minutes)} sub={`minutes · ${gstats.emom.count} bloc${gstats.emom.count > 1 ? 's' : ''}`} color={MUSCU} />}
+              {gstats.chrono.count > 0 && <StatTile label="Chrono" value={fmtTime(gstats.chrono.bestSeconds ?? 0)} sub={`meilleur temps · ${gstats.chrono.count} bloc${gstats.chrono.count > 1 ? 's' : ''}`} color={MUSCU} />}
+            </div>
+          </ChartCard>
+        )}
 
         {records.length > 0 && (<>
           <SectionTitle className="!mt-7">Records personnels</SectionTitle>

@@ -43,16 +43,18 @@ await go('/app/program'); await page.waitForTimeout(700); await shot('52-nina-ag
 // éditeur : modifier le Push (5 séries au développé couché) → propagé aux séances futures vierges seulement
 await go('/app/sessions'); await page.waitForTimeout(500)
 await page.getByText('Push', { exact: true }).first().click(); await page.waitForTimeout(600); await shot('53-editeur')
-await page.locator('[data-exercise]').first().getByRole('button').nth(1).click(); await page.waitForTimeout(300); await shot('54-editeur-ouvert')
+// le 1er exercice du Push est un combo (1 + 6) : on règle les séries du développé incliné, un exercice classique
+await page.locator('[data-exercise="dev_incline_halteres"]').getByRole('button').nth(1).click(); await page.waitForTimeout(300); await shot('54-editeur-ouvert')
 await page.getByLabel('Augmenter').first().click(); await page.waitForTimeout(200)
 await page.getByRole('button', { name: 'Enregistrer', exact: true }).click(); await page.waitForTimeout(600)
 d = await db(); prog = activeOf(d, nina.id)
 const pushTpl = prog.libre.templates.find((t) => t.name === 'Push')
-ok(pushTpl.exercises[0].sets === 5, 'éditeur : le modèle Push passe à 5 séries')
+const inclineOf = (e) => e.find((x) => x.exerciseId === 'dev_incline_halteres')
+ok(inclineOf(pushTpl.exercises).sets === 4 && pushTpl.exercises[0].format === 'combo', 'éditeur : le développé incliné du modèle Push passe à 4 séries (le combo reste intact)')
 const futurePush = sessionsOf(prog).filter((s) => s.templateId === pushTpl.id && s.status === 'prevue' && s.date >= iso && !s.extra)
-ok(futurePush.length > 0 && futurePush.every((s) => s.exercises[0].sets === 5), `les ${futurePush.length} séances Push futures vierges sont à jour`)
+ok(futurePush.length > 0 && futurePush.every((s) => inclineOf(s.exercises).sets === 4), `les ${futurePush.length} séances Push futures vierges sont à jour`)
 const donePush = sessionsOf(prog).filter((s) => s.templateId === pushTpl.id && s.status === 'faite')
-ok(donePush.length > 0 && donePush.every((s) => s.exercises[0].sets === 4), 'les séances Push déjà faites n\'ont pas bougé')
+ok(donePush.length > 0 && donePush.every((s) => inclineOf(s.exercises).sets === 3), 'les séances Push déjà faites n\'ont pas bougé')
 
 // planning : passer en jours fixes puis revenir en rotation
 await page.getByText('Modifier le planning').click(); await page.waitForTimeout(500); await shot('55-planning-rotation')
@@ -64,20 +66,23 @@ ok(prog.libre.planning.mode === 'rotation' && prog.libre.planning.days.length ==
 
 // séance : on modifie la séance (série en plus + exercice retiré) et on la termine → feuille « Tu as changé N choses »
 const next = sessionsOf(prog).filter((s) => s.status === 'prevue' && s.date >= iso && !s.extra).sort((a, b) => a.date.localeCompare(b.date))[0]
+// le Push commence par un combo (1 + 6) : on règle alors le 2e exercice, le premier à séries classiques (scénario détaillé du Push : e2e6.mjs)
+const fc = next.exercises[0].plan ? 1 : 0
+const setsBefore = next.exercises[fc].sets
 await go('/session/' + next.id); await page.waitForTimeout(800); await shot('57-seance-libre')
 const targets = await page.getByText(/suggéré/).count()
 ok(targets === 0, 'suggestions de charge désactivées : aucune charge cible affichée')
 // cellules « Dernière » (kg × reps) : exactement « 55 × 8 », sans confusion avec l'en-tête « 5 × 6–8 »
-const lastCells = () => page.locator('div.num.text-muted').filter({ hasText: /^\d+(,\d)? × \d+$/ }).count()
+const lastCells = async () => (await page.locator('div.num.text-muted').filter({ hasText: /^\d+(,\d)? × \d+$/ }).count()) + (await page.getByText(/^Dernière : /).count())
 const lastPerf = await lastCells()
 ok(lastPerf >= 10, `« Dernière » performance affichée (${lastPerf} lignes)`)
 await page.getByLabel('Valider la série').first().click(); await page.waitForTimeout(200)
 await page.getByLabel('Valider la série').first().click(); await page.waitForTimeout(200)
-await page.getByLabel('Modifier').first().click(); await page.waitForTimeout(400)
-await page.getByLabel('Augmenter').first().click(); await page.waitForTimeout(200) // une série de plus sur le 1er exercice
+await page.getByLabel('Modifier', { exact: true }).nth(fc).click(); await page.waitForTimeout(400)
+await page.getByLabel('Augmenter').first().click(); await page.waitForTimeout(200) // une série de plus sur le 1er exercice classique
 ok((await page.getByText('Charge (kg)').count()) === 0, 'mode libre : pas de champ « Charge cible » dans l\'édition')
 await page.keyboard.press('Escape'); await page.waitForTimeout(500)
-await page.getByLabel('Modifier').last().click(); await page.waitForTimeout(400)
+await page.getByLabel('Modifier', { exact: true }).last().click(); await page.waitForTimeout(400)
 await page.getByRole('button', { name: 'Retirer l\'exercice' }).click(); await page.waitForTimeout(400) // retire le dernier exercice
 await page.getByText(/Terminer la séance/).click(); await page.waitForTimeout(400)
 await page.getByRole('button', { name: 'Terminer', exact: true }).click(); await page.waitForTimeout(600); await shot('58-recap')
@@ -87,11 +92,11 @@ ok((await page.getByText(/Les garder pour tes prochains/).count()) > 0, 'fin de 
 await page.getByRole('button', { name: 'Oui, mettre à jour mon modèle' }).click(); await page.waitForTimeout(700)
 d = await db(); prog = activeOf(d, nina.id)
 const tplAfter = prog.libre.templates.find((t) => t.id === next.templateId)
-ok(tplAfter.exercises.length === 4 && tplAfter.exercises[0].sets === 6, 'modèle mis à jour : 4 exercices, 6 séries sur le premier')
+ok(tplAfter.exercises.length === next.exercises.length - 1 && tplAfter.exercises[fc].sets === setsBefore + 1, `modèle mis à jour : ${next.exercises.length - 1} exercices, ${setsBefore + 1} séries sur le premier exercice classique`)
 const fut = sessionsOf(prog).filter((s) => s.templateId === next.templateId && s.status === 'prevue' && s.date > next.date && !s.extra)
-ok(fut.length > 0 && fut.every((s) => s.exercises.length === 4), 'les séances futures vierges suivent le modèle')
+ok(fut.length > 0 && fut.every((s) => s.exercises.length === next.exercises.length - 1), 'les séances futures vierges suivent le modèle')
 const finished = sessionsOf(prog).find((s) => s.id === next.id)
-ok(finished.status === 'faite' && finished.exercises.length === 4, 'séance terminée enregistrée')
+ok(finished.status === 'faite' && finished.exercises.length === next.exercises.length - 1, 'séance terminée enregistrée')
 
 // rotation : la séance suivante est bien le modèle d'après
 const order = prog.libre.planning.order
@@ -207,7 +212,7 @@ ok(d.programs.filter((p) => p.clientId === cam.id && p.status === 'archive').len
 ok(camLibre.libre.planning.mode === 'fixe' && camLibre.libre.planning.days.some(Boolean), 'planning en jours fixes correspondant')
 ok(camLibre.type === 'mixte' && sessionsOf(camLibre).some((s) => s.sport === 'course' && s.status === 'prevue'), 'le plan de course MIND de Camille est conservé')
 // l'historique reste visible : « Dernière » performance sur une séance libre
-const camNext = sessionsOf(camLibre).filter((s) => s.status === 'prevue' && !s.extra && s.sport === 'muscu').sort((a, b) => a.date.localeCompare(b.date))[0]
+const camNext = sessionsOf(camLibre).filter((s) => s.status === 'prevue' && !s.extra && s.sport === 'muscu' && s.kind !== 'renfo').sort((a, b) => a.date.localeCompare(b.date))[0]
 await go('/session/' + camNext.id); await page.waitForTimeout(800); await shot('91-camille-libre-seance')
 const camPerf = await lastCells()
 ok(camDone.length > 0 && camPerf > 0, `l'historique est conservé : « Dernière » performance retrouvée (${camPerf})`)
@@ -267,7 +272,7 @@ await page.getByRole('button', { name: 'Accéder à mes séances' }).click(); aw
 d = await db(); const leo = profileOf(d, 'Léo'); let lp = activeOf(d, leo.id)
 ok(lp.mode === 'libre' && lp.type === 'mixte' && !!lp.paces && !!lp.raceDate, 'libre + course : carnet libre avec plan de course MIND (allures, date de course)')
 ok(sessionsOf(lp).filter((x) => x.sport === 'course').length >= 8, `plan de course généré (${sessionsOf(lp).filter((x) => x.sport === 'course').length} sorties)`)
-ok(sessionsOf(lp).filter((x) => x.sport === 'muscu').length === 0, 'aucune séance de muscu générée (muscu 100 % libre)')
+ok(sessionsOf(lp).filter((x) => x.sport === 'muscu' && x.kind !== 'renfo').length === 0, 'aucune séance de muscu générée (muscu 100 % libre) : seul le renfo coureur, rattaché à la course MIND')
 await go('/app/today'); await page.waitForTimeout(800); await shot('101-hybride-today')
 ok((await page.getByText('Créer ma première séance').count()) === 0 || true, 'Aujourd\'hui affiché')
 await go('/app/sessions'); await page.waitForTimeout(600)

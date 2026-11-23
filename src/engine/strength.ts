@@ -1,8 +1,9 @@
 // Moteur de musculation : split, volumes, séries/reps/RIR, charges, cycle de 8 semaines.
 
 import { EXERCISE_BY_ID, candidates } from './exercises'
+import { applyFormat, defaultGroup, extraPartsSeconds, groupSeconds, pairOpposites, syncRoundsFromMembers } from './formats'
 import type {
-  Exercise, Goal, Level, Muscle, Pattern, Questionnaire, Session, SessionExercise, SplitKey, StrengthKind, Zone,
+  Exercise, ExerciseGroup, Goal, GroupSpec, Level, Muscle, Pattern, Questionnaire, Session, SessionExercise, SetFormat, SplitKey, StrengthKind, Zone,
 } from './types'
 import { LOWER_MUSCLES } from './types'
 import { MAX_WEEKLY_SETS } from './guardrails'
@@ -168,6 +169,7 @@ const TEMPLATES: Record<StrengthKind, { title: string; slots: Slot[] }> = {
   push: { title: 'Push', slots: PUSH },
   pull: { title: 'Pull', slots: PULL },
   jambes: { title: 'Jambes', slots: BAS },
+  renfo: { title: 'Renfo coureur', slots: [] }, // séance construite par `renfo.ts`
 }
 
 // ------------------------------------------------------------------ volumes
@@ -282,15 +284,24 @@ export interface StrengthOpts {
   maintenance: boolean
   minLegRir: number
   injuries: Zone[]
+  /** Semaine allégée du plan (course) : pas de dégressive. La semaine de décharge du cycle de muscu (S8) l'est toujours. */
+  light: boolean
 }
-export const DEFAULT_OPTS: StrengthOpts = { legFactor: 1, maintenance: false, minLegRir: 0, injuries: [] }
+export const DEFAULT_OPTS: StrengthOpts = { legFactor: 1, maintenance: false, minLegRir: 0, injuries: [], light: false }
 
-export function estimateSessionMinutes(exs: SessionExercise[]): number {
-  const sec = exs.reduce((a, e) => a + e.sets * (40 + e.restSec) + 30, 0)
+/** Durée estimée d'une séance : séries (parties enchaînées comprises), repos, et groupes (supersets, circuits, EMOM…). */
+export function estimateSessionMinutes(exs: SessionExercise[], groups: GroupSpec[] = []): number {
+  const inGroup = new Set(groups.flatMap((g) => g.exerciseIds))
+  let sec = exs.filter((e) => !inGroup.has(e.id)).reduce((a, e) => a + e.sets * (40 + e.restSec) + 30 + extraPartsSeconds(e.plan), 0)
+  for (const g of groups) sec += groupSeconds(g, exs.filter((e) => g.exerciseIds.includes(e.id)))
   return Math.round(sec / 60) + 8
 }
 
 interface Built {
+  /** Id stable de l'exercice de séance (les groupes s'y réfèrent). */
+  seId?: string
+  /** Format de série voulu (série lourde, dégressive…), appliqué quand la séance est assemblée. */
+  fmt?: SetFormat
   ex: Exercise; sets: number; slotIdx: number; scheme: Scheme
   /** Priorité de suppression si la séance dépasse la durée max : 0 = saute en premier, 9 = jamais supprimé. */
   rank: number
@@ -456,7 +467,14 @@ export function buildStrengthWeek(ctx: StrengthCtx, weekN: number, opts: Partial
       b.scheme = schemeFor(ctx.goal, b.ex, i === 0, isBig)
     })
 
+    built.forEach((b) => { b.seId ??= uid('se') })
     let restScale = 1
+    let pairs: [Built, Built][] = []
+    const groupsNow = (): GroupSpec[] => pairs.filter(([a, b]) => built.includes(a) && built.includes(b)).map(([a, b]) => ({
+      ...defaultGroup('superset', [a.seId!, b.seId!], `g_${a.seId}`),
+      rounds: Math.max(1, Math.min(a.sets, b.sets)), restBetweenSec: 15,
+      restAfterRoundSec: Math.max(45, Math.round((Math.max(a.scheme.restSec, b.scheme.restSec) * restScale * 0.75) / 5) * 5),
+    }))
     const toExercises = (): SessionExercise[] =>
       built.map((b, i) => {
         const iso = !b.ex.compound
@@ -468,11 +486,18 @@ export function buildStrengthWeek(ctx: StrengthCtx, weekN: number, opts: Partial
         }
         if (o.maintenance) rir = Math.max(rir, 3)
         if (LOWER_MUSCLES.includes(b.ex.muscle)) rir = Math.max(rir, o.minLegRir)
-        return {
-          id: uid('se'), exerciseId: b.ex.id, order: i, sets: b.sets,
-          repMin: b.scheme.repMin, repMax: b.scheme.repMax, rir, restSec: Math.max(45, Math.round((b.scheme.restSec * restScale) / 5) * 5),
+        // exercice en durée (planche…) : la cible est en secondes
+        const timed = b.ex.unit === 'sec'
+        const e: SessionExercise = {
+          id: b.seId!, exerciseId: b.ex.id, order: i, sets: b.sets,
+          repMin: timed ? 30 : b.scheme.repMin, repMax: timed ? 45 : b.scheme.repMax, rir, restSec: Math.max(45, Math.round((b.scheme.restSec * restScale) / 5) * 5),
           targetKg: targetKgFor(b.ex.id, ctx.rms, b.scheme.repMin, rir, ctx.level), logs: [],
         }
+        if (b.fmt && !timed) {
+          const r = applyFormat(b.fmt, { sets: b.sets, repMin: e.repMin, repMax: e.repMax, rir })
+          if (r.plan) { e.plan = r.plan; e.format = r.format; e.sets = r.sets } // repMin / repMax gardent la fourchette nominale de l'exercice
+        }
+        return e
       })
 
     // 4) tenir dans la durée max, dans cet ordre : abdos → séries des petits muscles → petits muscles →
@@ -487,8 +512,28 @@ export function buildStrengthWeek(ctx: StrengthCtx, weekN: number, opts: Partial
       if (drop === undefined) break
       built.splice(drop, 1)
     }
+    // 3 bis) séance courte dont le volume ne tient pas : exercices opposés en supersets (jamais chez le débutant ni en entretien)
+    const canFormat = ctx.level !== 'debutant' && !o.maintenance
+    if (canFormat && ctx.maxMinutes <= 60 && estimateSessionMinutes(toExercises()) > ctx.maxMinutes) {
+      pairs = pairOpposites(built.map((b) => ({ id: b.seId!, pattern: b.ex.pattern, muscle: b.ex.muscle, compound: b.ex.compound, sets: b.sets })))
+        .map(([x, y]) => [built.find((b) => b.seId === x)!, built.find((b) => b.seId === y)!] as [Built, Built])
+      for (const [a, b] of pairs) { const k = Math.max(1, Math.min(a.sets, b.sets)); a.sets = k; b.sets = k }
+    }
+    // 3 ter) formats de série : série lourde + séries allégées (force), dégressive sur la dernière série d'1 ou 2 isolations (hypertrophie)
+    const paired = new Set(pairs.flat())
+    if (canFormat) {
+      if (ctx.goal === 'force') {
+        const main = built.find((b) => b.scheme.kind === 'main' && b.ex.compound && b.ex.unit !== 'sec' && !paired.has(b) && b.sets >= 3)
+        if (main) main.fmt = 'lourde'
+      } else if (ctx.goal === 'hypertrophie' && pos !== 8 && !o.light) {
+        const isos = built.filter((b) => !b.ex.compound && !['core', 'calf', 'shrug'].includes(b.ex.pattern) && b.ex.unit !== 'sec' && !paired.has(b) && b.sets >= 3).reverse()
+        const picked: Built[] = []
+        for (const b of isos) if (!picked.some((x) => x.ex.muscle === b.ex.muscle)) picked.push(b)
+        for (const b of picked.slice(0, isos.length >= 3 ? 2 : 1)) b.fmt = 'degressive'
+      }
+    }
     let guard = 0
-    while (estimateSessionMinutes(toExercises()) > ctx.maxMinutes && guard++ < 300) {
+    while (estimateSessionMinutes(toExercises(), groupsNow()) > ctx.maxMinutes && guard++ < 300) {
       const n = built.length
       let i: number
       if (n > minEx && (i = lastIdx((b) => b.core)) >= 0) { built.splice(i, 1); continue }
@@ -501,6 +546,9 @@ export function buildStrengthWeek(ctx: StrengthCtx, weekN: number, opts: Partial
       if (restScale > 0.55) { restScale -= 0.15; continue }
       break
     }
+    const groups = groupsNow()
+    // les deux exercices d'un superset font le même nombre de tours
+    for (const g of groups) for (const b of built) if (g.exerciseIds.includes(b.seId!)) b.sets = g.rounds
     const exs = toExercises()
     built.forEach((b) => { usedInWeek.add(b.ex.id); weeklySets[b.ex.muscle] = (weeklySets[b.ex.muscle] ?? 0) + b.sets })
 
@@ -511,7 +559,7 @@ export function buildStrengthWeek(ctx: StrengthCtx, weekN: number, opts: Partial
       .reduce((a, e) => a + e.sets, 0)
     sessions.push({
       id: uid('s'), weekN, date: '', sport: 'muscu', kind, title: tpl.title + suffix, status: 'prevue',
-      estMinutes: estimateSessionMinutes(exs), exercises: exs,
+      estMinutes: estimateSessionMinutes(exs, groups), exercises: exs, ...(groups.length ? { groups: groups as ExerciseGroup[] } : {}),
       legLoad: legSets >= 6 ? 'heavy' : legSets >= 3 ? 'light' : 'none',
     })
   })
@@ -528,7 +576,8 @@ export function buildStrengthWeek(ctx: StrengthCtx, weekN: number, opts: Partial
       weeklySets[m] = (weeklySets[m] ?? 0) - 1
     }
   }
-  for (const s of sessions) s.estMinutes = estimateSessionMinutes(s.exercises ?? [])
+  // le garde-fou ci-dessus a pu retirer une série à un seul exercice d'un superset : les tours suivent le plus petit
+  for (const s of sessions) { syncRoundsFromMembers(s); s.estMinutes = estimateSessionMinutes(s.exercises ?? [], s.groups) }
   return sessions
 }
 

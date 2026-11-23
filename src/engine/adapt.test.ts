@@ -49,7 +49,8 @@ describe('charges selon RIR', () => {
   it('met à jour la charge des séances futures, sans dépasser +10 %', () => {
     const p = gen(P_FORCE_EPAULE)
     const first = allSessions(p).sort((a, b) => a.date.localeCompare(b.date))[0]
-    const e = first.exercises![0]
+    // double progression : un exercice à séries classiques (la série lourde du premier exercice a sa propre règle, voir generation.test.ts)
+    const e = first.exercises!.find((x) => !x.plan && x.targetKg)!
     const kg = e.targetKg!
     first.status = 'faite'
     e.logs = Array.from({ length: e.sets }, (_, i) => ({ n: i + 1, kg, reps: e.repMax, rir: e.rir + 3, at: '' }))

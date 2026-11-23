@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { currentUser, runDailyJobs, useDB } from './lib/store'
 import { useLook } from './ui/look'
 import { Toaster } from './ui/kit'
+import { RestBanner } from './ui/rest'
 import { PagePush, Splash } from './ui/motion'
 import Auth from './pages/Auth'
 import Onboarding from './pages/Onboarding'
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/session/:id" element={<PagePush><SessionPage /></PagePush>} />
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>
+      <RestBanner />
       <Toaster />
       <Splash />
     </>

@@ -1,4 +1,4 @@
--- Généré par scripts/gen-seed.ts — bibliothèque d'exercices de salle (103)
+-- Généré par scripts/gen-seed.ts — bibliothèque d'exercices de salle (123)
 insert into public.exercises (id,name,muscle,secondary,pattern,equipment,level,contra,compound,cue) values
 ('dev_couche_barre','Développé couché barre','pectoraux',array['triceps','epaules']::text[],'push_h','barre','intermediaire',array['epaule','poignet']::text[],true,'Omoplates serrées, barre sur le bas des pecs, pieds ancrés.'),
 ('dev_couche_halteres','Développé couché haltères','pectoraux',array['triceps','epaules']::text[],'push_h','halteres','debutant',array['epaule']::text[],true,'Coudes à 45°, amplitude complète, contrôle à la descente.'),
@@ -102,5 +102,25 @@ insert into public.exercises (id,name,muscle,secondary,pattern,equipment,level,c
 ('sdt_sumo','Soulevé de terre sumo','ischios',array['fessiers','quadriceps','dos']::text[],'hinge','barre','intermediaire',array['dos','hanche']::text[],true,'Écartez les pieds, poussez les genoux vers l''extérieur.'),
 ('hip_thrust_unilateral','Hip thrust unilatéral','fessiers',array['ischios']::text[],'hip_thrust','poids_du_corps','intermediaire',array[]::text[],true,'Une jambe, bassin stable, serrez en haut.'),
 ('mollets_unilateral','Mollets unilatéraux à la marche','mollets',array[]::text[],'calf','poids_du_corps','debutant',array['cheville']::text[],false,'Sur une marche, amplitude maximale, lent.'),
-('tirage_poitrine_large','Tirage poitrine prise large','dos',array['biceps']::text[],'pull_v','poulie','debutant',array['epaule']::text[],true,'Prise large, tirez vers le haut de la poitrine.')
+('tirage_poitrine_large','Tirage poitrine prise large','dos',array['biceps']::text[],'pull_v','poulie','debutant',array['epaule']::text[],true,'Prise large, tirez vers le haut de la poitrine.'),
+('planche_laterale','Planche latérale','abdos',array[]::text[],'core','poids_du_corps','debutant',array['epaule']::text[],false,'Corps aligné sur l''avant-bras, hanche haute, serrez les abdos (tenue en secondes, par côté).'),
+('copenhague','Planche Copenhague','abdos',array['fessiers']::text[],'core','poids_du_corps','intermediaire',array['hanche']::text[],false,'Jambe du haut sur un banc ou une chaise, bassin haut : le travail est dans l''adducteur (tenue, par côté).'),
+('dead_bug','Dead bug','abdos',array[]::text[],'core','poids_du_corps','debutant',array[]::text[],false,'Dos plaqué au sol, bras et jambe opposés qui s''éloignent lentement, sans cambrer.'),
+('bird_dog','Bird dog','abdos',array['dos','fessiers']::text[],'core','poids_du_corps','debutant',array['poignet']::text[],false,'À quatre pattes, étendez le bras et la jambe opposés, bassin stable.'),
+('pont_unilateral','Pont fessier unilatéral','fessiers',array['ischios']::text[],'hip_thrust','poids_du_corps','debutant',array[]::text[],true,'Une jambe tendue, poussez avec le talon d''appui, bassin à l''horizontale.'),
+('hip_thrust_halteres','Hip thrust haltère','fessiers',array['ischios']::text[],'hip_thrust','halteres','debutant',array[]::text[],true,'Haltère sur les hanches, menton rentré, extension complète en haut.'),
+('pont_elastique','Pont fessier avec élastique','fessiers',array['ischios']::text[],'hip_thrust','elastique','debutant',array[]::text[],true,'Élastique au-dessus des genoux, poussez les genoux vers l''extérieur en montant.'),
+('chaise','Chaise (isométrique)','quadriceps',array['fessiers']::text[],'squat','poids_du_corps','debutant',array['genou']::text[],true,'Dos contre le mur, cuisses à l''horizontale, tenez la position.'),
+('nordic','Nordic curl','ischios',array[]::text[],'leg_curl','poids_du_corps','avance',array[]::text[],false,'Genoux calés, descendez le buste le plus lentement possible, remontez en vous aidant des mains.'),
+('mollets_excentrique','Mollets debout en excentrique','mollets',array[]::text[],'calf','poids_du_corps','debutant',array['cheville']::text[],false,'Montez sur deux pieds, descendez sur un seul en 3 secondes, talon sous la marche.'),
+('mollets_fleche','Mollets genou fléchi','mollets',array[]::text[],'calf','halteres','debutant',array['cheville']::text[],false,'Genoux fléchis à 90°, montée lente : cible le soléaire, le muscle d''endurance du coureur.'),
+('fente_laterale','Fente latérale','quadriceps',array['fessiers']::text[],'lunge','poids_du_corps','debutant',array['genou','hanche']::text[],true,'Grand pas sur le côté, fessier en arrière, jambe tendue de l''autre côté.'),
+('squat_jump','Squat jump','quadriceps',array['fessiers','mollets']::text[],'plyo','poids_du_corps','intermediaire',array['genou','hanche','cheville']::text[],true,'Descendez en squat, explosez vers le haut, réception souple et silencieuse.'),
+('bonds','Bonds alternés','quadriceps',array['fessiers','mollets']::text[],'plyo','poids_du_corps','intermediaire',array['genou','hanche','cheville']::text[],true,'Grandes foulées bondissantes, un appui à la fois, cherchez la hauteur et la longueur.'),
+('skipping','Skipping','mollets',array['quadriceps']::text[],'plyo','poids_du_corps','debutant',array['cheville']::text[],false,'Genoux hauts, appuis rapides sur l''avant du pied, bras qui accompagnent.'),
+('pogo','Pogo jumps','mollets',array[]::text[],'plyo','poids_du_corps','intermediaire',array['cheville','genou']::text[],false,'Petits sauts raides sur l''avant du pied, chevilles verrouillées, contact au sol très court.'),
+('sauts_lateraux','Sauts latéraux','quadriceps',array['fessiers']::text[],'plyo','poids_du_corps','debutant',array['genou','cheville']::text[],false,'Sautez d''un pied sur l''autre de côté, réception stable avant de repartir.'),
+('monster_walk','Monster walk (élastique)','fessiers',array['quadriceps']::text[],'glute_iso','elastique','debutant',array[]::text[],false,'Élastique aux chevilles ou au-dessus des genoux, pas latéraux larges, genoux fléchis.'),
+('abduction_elastique','Abduction à l''élastique','fessiers',array[]::text[],'glute_iso','elastique','debutant',array[]::text[],false,'Debout, élastique aux chevilles, écartez la jambe sur le côté sans pencher le buste.'),
+('clamshell','Palourde (élastique)','fessiers',array[]::text[],'glute_iso','elastique','debutant',array[]::text[],false,'Sur le côté, pieds joints, ouvrez le genou du haut sans basculer le bassin.')
 on conflict (id) do update set name=excluded.name, muscle=excluded.muscle, secondary=excluded.secondary, pattern=excluded.pattern, equipment=excluded.equipment, level=excluded.level, contra=excluded.contra, compound=excluded.compound, cue=excluded.cue;

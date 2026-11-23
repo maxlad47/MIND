@@ -44,7 +44,7 @@ describe('mode libre : bascule et historique', () => {
     expect(created.libre!.templates.length).toBeGreaterThan(0)
     // « Dernière performance » retrouve la série saisie dans l'ancien programme
     const later = c.adapt.allSessions(created).filter((x) => x.exercises?.some((e) => e.exerciseId === exerciseId)).sort((a, b) => b.date.localeCompare(a.date))[0]
-    expect(c.s.lastPerformance(d, me.id, exerciseId, later.id)).toEqual({ date: first.date, logs: [expect.objectContaining({ kg: 62.5, reps: 8 })] })
+    expect(c.s.lastPerformance(d, me.id, exerciseId, later.id)).toMatchObject({ date: first.date, logs: [expect.objectContaining({ kg: 62.5, reps: 8 })] })
     // et la fiche du coach garde la dernière séance
     expect(c.s.summarizeClient(d, d.profiles.find((p) => p.id === me.id)!, addDays(first.date, 2)).lastDone).toBe(first.date)
     // le dernier questionnaire est en mode libre

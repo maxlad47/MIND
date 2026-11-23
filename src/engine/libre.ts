@@ -4,10 +4,11 @@
 
 import { nextLoad, weekStats } from './adapt'
 import { generateProgram } from './program'
-import { exerciseOf } from './exercises'
+import { exerciseOf, isTimed } from './exercises'
+import { describePlan, FORMAT_LABEL, GROUP_LABEL, normalizeGroups } from './formats'
 import { epley, estimateSessionMinutes } from './strength'
 import type {
-  LibrePlan, LibrePlanning, Program, Questionnaire, Session, SessionExercise, SessionTemplate, TemplateExercise,
+  ExerciseGroup, GroupSpec, LibrePlan, LibrePlanning, PlannedSet, Program, Questionnaire, Session, SessionExercise, SessionTemplate, TemplateExercise,
 } from './types'
 import { addDays, DAY_NAMES, mondayOf, uid, weekday } from './utils'
 
@@ -31,39 +32,63 @@ export function newTemplate(name = ''): SessionTemplate {
 /** Un exercice de modèle avec des valeurs de départ raisonnables (modifiables par le client). */
 export function newTemplateExercise(exerciseId: string): TemplateExercise {
   const ex = exerciseOf(exerciseId)
+  // exercice en durée (gainage…) : la cible est en secondes
+  if (isTimed(exerciseId)) return { id: uid('te'), exerciseId, sets: 3, repMin: 30, repMax: 45, restSec: 60 }
   return { id: uid('te'), exerciseId, sets: 3, repMin: ex.compound ? 6 : 10, repMax: ex.compound ? 10 : 15, restSec: ex.compound ? 120 : 75 }
 }
 
 export function duplicateTemplate(t: SessionTemplate): SessionTemplate {
-  return { id: uid('tpl'), name: `${t.name} (copie)`, exercises: t.exercises.map((e) => ({ ...e, id: uid('te') })) }
+  const ids = new Map(t.exercises.map((e) => [e.id, uid('te')]))
+  return {
+    id: uid('tpl'), name: `${t.name} (copie)`, exercises: t.exercises.map((e) => ({ ...structuredClone(e), id: ids.get(e.id)! })),
+    ...(t.groups?.length ? { groups: t.groups.map((g) => ({ ...g, id: uid('g'), exerciseIds: g.exerciseIds.map((x) => ids.get(x) ?? x) })) } : {}),
+  }
 }
 
-function exercisesFromTemplate(t: SessionTemplate, sessionId: string): SessionExercise[] {
-  return t.exercises.map((te, i) => ({
+/** Séries détaillées d'un modèle, sans charge absolue : les charges ne sont jamais copiées d'une séance à l'autre. */
+const withoutKg = (plan: PlannedSet[]): PlannedSet[] => plan.map((set) => ({ parts: set.parts.map(({ kg: _kg, ...p }) => p) }))
+
+function exercisesFromTemplate(t: SessionTemplate, sessionId: string): { exercises: SessionExercise[]; groups: ExerciseGroup[] } {
+  const exercises: SessionExercise[] = t.exercises.map((te, i) => ({
     id: `${sessionId}.${te.id}`, exerciseId: te.exerciseId, order: i, sets: te.sets, repMin: te.repMin, repMax: te.repMax,
     rir: te.rir ?? 2, restSec: te.restSec, logs: [],
     ...(te.rir === undefined ? { noRir: true } : {}), ...(te.note ? { note: te.note } : {}),
+    ...(te.plan?.length ? { plan: structuredClone(te.plan), format: te.format } : {}),
   }))
+  const groups: ExerciseGroup[] = (t.groups ?? []).map((g) => ({ ...g, id: `${sessionId}.${g.id}`, exerciseIds: g.exerciseIds.map((x) => `${sessionId}.${x}`) }))
+  return { exercises, groups }
+}
+
+/** Séance (exercices + groupes) à partir d'un modèle ; les groupes sont remis en cohérence (nombre de tours, exercices manquants). */
+function buildFromTemplate(t: SessionTemplate, sessionId: string): { exercises: SessionExercise[]; groups?: ExerciseGroup[] } {
+  const { exercises, groups } = exercisesFromTemplate(t, sessionId)
+  const tmp: Session = { id: sessionId, weekN: 0, date: '', sport: 'muscu', kind: 'fullbody', title: '', status: 'prevue', estMinutes: 0, exercises, ...(groups.length ? { groups } : {}) }
+  normalizeGroups(tmp)
+  return { exercises, ...(tmp.groups ? { groups: tmp.groups } : {}) }
 }
 
 export function templateMinutes(t: SessionTemplate): number {
-  return estimateSessionMinutes(exercisesFromTemplate(t, 'x'))
+  const b = buildFromTemplate(t, 'x')
+  return estimateSessionMinutes(b.exercises, b.groups)
 }
 
 export function sessionFromTemplate(t: SessionTemplate, date: string, weekN: number, extra = false): Session {
   const id = uid('s')
-  const exercises = exercisesFromTemplate(t, id)
+  const { exercises, groups } = buildFromTemplate(t, id)
   return {
     id, weekN, date, sport: 'muscu', kind: 'fullbody', title: t.name || 'Séance', status: 'prevue',
-    estMinutes: estimateSessionMinutes(exercises), exercises, templateId: t.id, ...(extra ? { extra: true } : {}),
+    estMinutes: estimateSessionMinutes(exercises, groups), exercises, ...(groups ? { groups } : {}), templateId: t.id, ...(extra ? { extra: true } : {}),
   }
 }
 
 function refresh(s: Session, t: SessionTemplate): void {
   s.templateId = t.id
   s.title = t.name || 'Séance'
-  s.exercises = exercisesFromTemplate(t, s.id)
-  s.estMinutes = estimateSessionMinutes(s.exercises)
+  const b = buildFromTemplate(t, s.id)
+  s.exercises = b.exercises
+  if (b.groups) s.groups = b.groups
+  else delete s.groups
+  s.estMinutes = estimateSessionMinutes(s.exercises, s.groups)
 }
 
 // ------------------------------------------------------------------ programme libre
@@ -317,7 +342,7 @@ export const isFreeRun = (s: Session): boolean => s.sport === 'course' && !!s.ex
 
 // ------------------------------------------------------------------ différences séance / modèle
 
-export interface TemplateChange { kind: 'ajoute' | 'retire' | 'remplace' | 'ordre' | 'series' | 'reps' | 'repos'; text: string }
+export interface TemplateChange { kind: 'ajoute' | 'retire' | 'remplace' | 'ordre' | 'series' | 'reps' | 'repos' | 'format' | 'groupe'; text: string }
 
 const fmtRest = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
 const repsLabel = (min: number, max: number) => (min === max ? `${min}` : `${min}–${max}`)
@@ -336,8 +361,22 @@ function pairUp(s: Session, t: SessionTemplate): Pairing {
   return { pairs, added, removed: free }
 }
 
+/** Structure des séries (parties, reps, durées, % de charge, repos entre parties) : sans les charges saisies ni le RIR. */
+const planSig = (plan?: PlannedSet[]): string =>
+  plan?.length ? JSON.stringify(plan.map((set) => set.parts.map((p) => [p.reps, p.repMax, p.seconds, p.pct, p.restAfterSec]))) : ''
+
+interface GroupView { kind: GroupSpec['kind']; ids: string[]; sig: string; spec: GroupSpec }
+const groupViews = (groups: GroupSpec[] | undefined, exercises: { id: string; exerciseId: string }[]): GroupView[] =>
+  (groups ?? []).map((g) => {
+    const ids = g.exerciseIds.map((id) => exercises.find((e) => e.id === id)?.exerciseId).filter((x): x is string => !!x)
+    return { kind: g.kind, ids, spec: g, sig: [g.kind, ids.join(','), g.rounds, g.restBetweenSec, g.restAfterRoundSec, g.durationMin ?? ''].join('|') }
+  }).filter((g) => g.ids.length > 0)
+const groupText = (g: GroupView) => `${GROUP_LABEL[g.kind]} ${g.ids.map((id) => exerciseOf(id).name).join(' + ')}`
+const groupParams = (g: GroupSpec) => (g.kind === 'emom' || g.kind === 'amrap' ? `${g.durationMin ?? '?'} min` : `${g.rounds} tour${g.rounds > 1 ? 's' : ''}`)
+
 /**
- * Ce qui diffère entre la séance saisie et son modèle : exercice ajouté, retiré, remplacé ou réordonné, séries, reps ou repos changés.
+ * Ce qui diffère entre la séance saisie et son modèle : exercice ajouté, retiré, remplacé ou réordonné, séries, reps ou repos changés,
+ * format ou structure des séries (combo, dégressive…), groupes (superset, circuit, EMOM…).
  * Les charges saisies (et le RIR) ne comptent jamais comme des changements.
  */
 export function diffSessionTemplate(s: Session, t: SessionTemplate): TemplateChange[] {
@@ -350,27 +389,55 @@ export function diffSessionTemplate(s: Session, t: SessionTemplate): TemplateCha
   for (const te of removed.slice(n)) out.push({ kind: 'retire', text: `${name(te.exerciseId)} retiré` })
   for (const { se, te } of pairs) {
     const nm = name(se.exerciseId)
+    const fa = te.format ?? 'classique'
+    const fb = se.format ?? 'classique'
+    const structured = !!(se.plan?.length || te.plan?.length)
     if (se.sets !== te.sets) out.push({ kind: 'series', text: `${nm} : ${te.sets} → ${se.sets} séries` })
-    if (se.repMin !== te.repMin || se.repMax !== te.repMax) out.push({ kind: 'reps', text: `${nm} : ${repsLabel(te.repMin, te.repMax)} → ${repsLabel(se.repMin, se.repMax)} reps` })
+    if (fa !== fb) out.push({ kind: 'format', text: `${nm} : format ${FORMAT_LABEL[fa]} → ${FORMAT_LABEL[fb]}` })
+    else if (structured && se.sets === te.sets && planSig(se.plan) !== planSig(te.plan)) out.push({ kind: 'format', text: `${nm} : séries modifiées (${describePlan(te)} → ${describePlan(se)})` })
+    if (!structured && (se.repMin !== te.repMin || se.repMax !== te.repMax)) out.push({ kind: 'reps', text: `${nm} : ${repsLabel(te.repMin, te.repMax)} → ${repsLabel(se.repMin, se.repMax)} ${isTimed(se.exerciseId) ? 's' : 'reps'}` })
     if (se.restSec !== te.restSec) out.push({ kind: 'repos', text: `${nm} : repos ${fmtRest(te.restSec)} → ${fmtRest(se.restSec)}` })
   }
   const idx = pairs.map((x) => t.exercises.indexOf(x.te))
   if (idx.some((v, i) => i > 0 && v < idx[i - 1])) out.push({ kind: 'ordre', text: 'Ordre des exercices modifié' })
+  // groupes : retirés, ajoutés ou modifiés (tours, repos, durée, ordre)
+  const sg = groupViews(s.groups, s.exercises ?? [])
+  const tg = groupViews(t.groups, t.exercises)
+  const key = (g: GroupView) => [...g.ids].sort().join(',')
+  const left = [...tg]
+  for (const g of sg) {
+    const i = left.findIndex((x) => key(x) === key(g))
+    if (i < 0) { out.push({ kind: 'groupe', text: `${groupText(g)} : groupe ajouté` }); continue }
+    const old = left.splice(i, 1)[0]
+    if (old.sig !== g.sig) out.push({ kind: 'groupe', text: `${groupText(g)} : ${old.kind !== g.kind ? `${GROUP_LABEL[old.kind]} → ${GROUP_LABEL[g.kind]}` : `${groupParams(old.spec)} → ${groupParams(g.spec)}`}` })
+  }
+  for (const g of left) out.push({ kind: 'groupe', text: `${groupText(g)} : groupe retiré` })
   return out
 }
 
 /** Le modèle reprend la séance saisie (exercices, ordre, séries, reps, repos). Les charges ne sont jamais copiées. */
 export function templateFromSession(s: Session, t: SessionTemplate): SessionTemplate {
   const { pairs } = pairUp(s, t)
+  const teId = new Map<string, string>()
   const exercises: TemplateExercise[] = (s.exercises ?? []).map((se) => {
     const pair = pairs.find((x) => x.se.id === se.id)
+    const id = pair?.te.id ?? uid('te')
+    teId.set(se.id, id)
     return {
-      id: pair?.te.id ?? uid('te'), exerciseId: se.exerciseId, sets: se.sets, repMin: se.repMin, repMax: se.repMax, restSec: se.restSec,
+      id, exerciseId: se.exerciseId, sets: se.sets, repMin: se.repMin, repMax: se.repMax, restSec: se.restSec,
       ...(pair ? (pair.te.rir !== undefined ? { rir: pair.te.rir } : {}) : (se.noRir ? {} : { rir: se.rir })),
       ...(pair?.te.note ? { note: pair.te.note } : se.note ? { note: se.note } : {}),
+      ...(se.plan?.length ? { plan: withoutKg(se.plan), format: se.format } : {}),
     }
   })
-  return { ...t, exercises }
+  // groupes : les ids d'exercices de la séance redeviennent ceux du modèle ; l'id du groupe reprend celui du modèle s'il en vient
+  const prefix = `${s.id}.`
+  const groups: GroupSpec[] = (s.groups ?? []).map((g) => ({
+    id: g.id.startsWith(prefix) ? g.id.slice(prefix.length) : g.id, kind: g.kind, exerciseIds: g.exerciseIds.map((x) => teId.get(x)).filter((x): x is string => !!x),
+    rounds: g.rounds, restBetweenSec: g.restBetweenSec, restAfterRoundSec: g.restAfterRoundSec, ...(g.durationMin !== undefined ? { durationMin: g.durationMin } : {}),
+  })).filter((g) => g.exerciseIds.length > 0)
+  const { groups: _old, ...rest } = t
+  return { ...rest, exercises, ...(groups.length ? { groups } : {}) }
 }
 
 // ------------------------------------------------------------------ passage d'un mode à l'autre
@@ -391,12 +458,15 @@ export function libreFromProgram(p: Program, today: string): { templates: Sessio
     if (s.sport !== 'muscu' || s.status === 'sautee' || !s.exercises?.length) continue
     let t = templates.find((x) => x.name === s.title)
     if (!t) {
+      const ids = new Map(s.exercises.map((e) => [e.id, uid('te')]))
       t = {
         id: uid('tpl'), name: s.title,
         exercises: s.exercises.map((e) => ({
-          id: uid('te'), exerciseId: e.exerciseId, sets: e.sets, repMin: e.repMin, repMax: e.repMax, restSec: e.restSec, rir: e.rir,
+          id: ids.get(e.id)!, exerciseId: e.exerciseId, sets: e.sets, repMin: e.repMin, repMax: e.repMax, restSec: e.restSec, rir: e.rir,
           ...(e.note ? { note: e.note } : {}),
+          ...(e.plan?.length ? { plan: withoutKg(e.plan), format: e.format } : {}),
         })),
+        ...(s.groups?.length ? { groups: s.groups.map((g) => ({ id: uid('g'), kind: g.kind, exerciseIds: g.exerciseIds.map((x) => ids.get(x)!).filter(Boolean), rounds: g.rounds, restBetweenSec: g.restBetweenSec, restAfterRoundSec: g.restAfterRoundSec, ...(g.durationMin !== undefined ? { durationMin: g.durationMin } : {}) })) } : {}),
       }
       templates.push(t)
     }

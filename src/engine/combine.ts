@@ -13,6 +13,8 @@ export function runClass(s: Session): RunClass {
   return 'easy'
 }
 const heavyLegs = (s: Session) => s.sport === 'muscu' && s.legLoad === 'heavy'
+/** Séance de renfo coureur : une séance de muscu à part, qui suit les règles de la course. */
+export const isRenfo = (s: Session): boolean => s.kind === 'renfo'
 
 export interface Item { s: Session; day: number }
 export interface Carry { prevSundayLong?: boolean; nextMondayLong?: boolean; longDayChosen?: boolean }
@@ -46,6 +48,17 @@ export function evaluate(items: Item[], carry: Carry = {}): Evaluation {
       }
     }
     for (const { s } of here) {
+      if (isRenfo(s)) {
+        // jamais la veille de la sortie longue ni d'une séance de qualité (ni de la course)
+        if (has(d + 1, (x) => runClass(x) === 'long' || runClass(x) === 'quality') || (d === 6 && carry.nextMondayLong)) {
+          cost += 1000
+          msgs.push(`« ${s.title} » le ${DAY_NAMES[d]} : la veille d'une sortie longue ou d'une séance de qualité.`)
+        }
+        // de préférence après une séance de qualité le même jour, ou un jour sans course
+        if (has(d, (x) => runClass(x) === 'quality')) cost -= 90
+        else if (has(d, (x) => runClass(x) === 'long')) cost += 400
+        else if (has(d, (x) => runClass(x) === 'easy')) cost += 70
+      }
       if (heavyLegs(s)) {
         // règles dures
         if (has(d + 1, (x) => runClass(x) === 'quality' || runClass(x) === 'long')) {
@@ -94,6 +107,7 @@ const PRIORITY = (s: Session): number => {
   if (s.kind === 'course') return 0
   if (rc === 'long') return 1
   if (rc === 'quality') return 2
+  if (isRenfo(s)) return 6 // placé en dernier, autour des séances de course
   if (heavyLegs(s)) return 3
   if (s.sport === 'muscu') return 4
   return 5
@@ -101,7 +115,7 @@ const PRIORITY = (s: Session): number => {
 
 /** Jours possibles pour une séance : ceux choisis pour son sport (sinon tous les jours disponibles), la sortie longue sur son jour. */
 export function daysFor(s: Session, allowed: number[], prefs: DayPrefs = {}): number[] {
-  const own = s.sport === 'muscu' ? prefs.muscu : prefs.run
+  const own = s.sport === 'muscu' && !isRenfo(s) ? prefs.muscu : prefs.run
   const ok = (own ?? []).filter((d) => allowed.includes(d))
   const list = ok.length ? ok : allowed
   if (runClass(s) === 'long' && prefs.longRun !== undefined && allowed.includes(prefs.longRun)) return [prefs.longRun]

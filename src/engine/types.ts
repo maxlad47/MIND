@@ -24,7 +24,7 @@ export const LOWER_MUSCLES: Muscle[] = ['quadriceps', 'ischios', 'fessiers', 'mo
 export type Pattern =
   | 'push_h' | 'push_inc' | 'push_v' | 'pull_v' | 'pull_h' | 'squat' | 'hinge' | 'lunge'
   | 'leg_ext' | 'leg_curl' | 'fly' | 'lat_raise' | 'rear_delt' | 'curl' | 'tri_ext'
-  | 'calf' | 'core' | 'hip_thrust' | 'glute_iso' | 'shrug'
+  | 'calf' | 'core' | 'hip_thrust' | 'glute_iso' | 'shrug' | 'plyo'
 
 export const PATTERN_LABEL: Record<Pattern, string> = {
   push_h: 'Poussée horizontale', push_inc: 'Poussée inclinée', push_v: 'Poussée verticale',
@@ -32,11 +32,14 @@ export const PATTERN_LABEL: Record<Pattern, string> = {
   lunge: 'Fente / unilatéral', leg_ext: 'Extension de jambe', leg_curl: 'Flexion de jambe', fly: 'Écarté',
   lat_raise: 'Élévation latérale', rear_delt: 'Deltoïde postérieur', curl: 'Flexion de coude',
   tri_ext: 'Extension de coude', calf: 'Mollets', core: 'Gainage / abdos', hip_thrust: 'Poussée de hanche',
-  glute_iso: 'Isolation fessiers', shrug: 'Trapèzes',
+  glute_iso: 'Isolation fessiers', shrug: 'Trapèzes', plyo: 'Pliométrie',
 }
 
 export type Level = 'debutant' | 'intermediaire' | 'avance'
-export type Equipment = 'barre' | 'halteres' | 'machine' | 'poulie' | 'poids_du_corps' | 'smith'
+export type Equipment = 'barre' | 'halteres' | 'machine' | 'poulie' | 'poids_du_corps' | 'smith' | 'elastique'
+
+/** Unité de la cible d'un exercice : répétitions (par défaut) ou secondes (gainage, chaise, skipping…). */
+export type ExerciseUnit = 'reps' | 'sec'
 
 export interface Exercise {
   id: string
@@ -50,6 +53,12 @@ export interface Exercise {
   alts: string[]
   cue: string
   compound: boolean
+  /** Unité de la cible. Absent = répétitions. */
+  unit?: ExerciseUnit
+  /** Exercice unilatéral : la cible s'entend « par côté ». */
+  perSide?: boolean
+  /** Exercice de renfo coureur : jamais choisi par le générateur de muscu, mais disponible dans le sélecteur. */
+  renfo?: boolean
 }
 
 export type Goal = 'hypertrophie' | 'force' | 'mixte'
@@ -66,6 +75,10 @@ export interface Lift { kg: number; reps: number }
 
 /** « genere » : MIND crée le programme. « libre » : le client suit son propre programme, MIND sert de carnet. Absent = « genere ». */
 export type ProgramMode = 'genere' | 'libre'
+
+/** Matériel du renfo coureur : à la maison sans matériel, avec élastique et haltères, ou en salle. */
+export type RenfoKit = 'nu' | 'elastique' | 'salle'
+export interface RenfoSettings { perWeek: 0 | 1 | 2; kit: RenfoKit }
 
 export interface Questionnaire {
   /** Mode d'utilisation. Absent = « genere » (anciens programmes). */
@@ -110,6 +123,8 @@ export interface Questionnaire {
     peakKm?: number
     /** Démarrage : tout de suite (fractionné dès le début) ou progressif (endurance d'abord). Absent = avis de MIND. */
     startMode?: 'direct' | 'progressif'
+    /** Renfo coureur. Absent ou `perWeek: 0` = désactivé (programmes existants). */
+    renfo?: RenfoSettings
   }
   startDate: string
 }
@@ -117,10 +132,80 @@ export interface Questionnaire {
 export type SessionStatus = 'prevue' | 'faite' | 'manquee' | 'sautee'
 export type RunKind =
   | 'ef' | 'longue' | 'vma' | 'seuil' | 'specifique' | 'cotes' | 'fartlek' | 'recup' | 'test' | 'course'
-export type StrengthKind = 'fullbody' | 'haut' | 'bas' | 'push' | 'pull' | 'jambes' | 'pecs' | 'dos' | 'epaules' | 'bras'
+export type StrengthKind = 'fullbody' | 'haut' | 'bas' | 'push' | 'pull' | 'jambes' | 'pecs' | 'dos' | 'epaules' | 'bras' | 'renfo'
 export type Phase = 'Base' | 'Développement' | 'Spécifique' | 'Affûtage' | 'Musculation'
 
-export interface SetLog { n: number; kg: number; reps: number; rir: number; at: string }
+/**
+ * Une entrée du carnet. `n` = numéro de la série (1…N) ; `part` = indice de la partie enchaînée dans la série (absent = 0) ;
+ * `seconds` = durée tenue pour un exercice en secondes (alors `reps` vaut 0).
+ */
+export interface SetLog { n: number; kg: number; reps: number; rir: number; at: string; part?: number; seconds?: number }
+
+// ------------------------------------------------------------------ formats de série (brique A)
+
+/**
+ * Cible d'une partie d'une série. Une série est une suite de parties enchaînées (combo, dégressive, rest-pause) ;
+ * une série classique n'a qu'une partie.
+ */
+export interface SetPart {
+  /** Répétitions visées (ou bas de la fourchette). */
+  reps?: number
+  /** Haut de la fourchette de répétitions. */
+  repMax?: number
+  /** Durée visée en secondes (exercice en durée) ; remplace `reps`. */
+  seconds?: number
+  /** Charge absolue (kg). Prioritaire sur `pct`. */
+  kg?: number
+  /** Charge relative en % de la charge de référence : 100 = identique, 80 = −20 %. */
+  pct?: number
+  /** RIR visé. */
+  rir?: number
+  /** Repos après cette partie : 0 = enchaîné ; 10–20 s en rest-pause. Pour la dernière partie : repos de la série (par défaut `restSec` de l'exercice). */
+  restAfterSec?: number
+}
+export interface PlannedSet { parts: SetPart[] }
+
+/** Format d'un exercice (étiquette sous son nom). Absent ou « classique » = N séries identiques. */
+export type SetFormat = 'classique' | 'pyramide' | 'lourde' | 'degressive' | 'rest_pause' | 'combo'
+
+// ------------------------------------------------------------------ groupes d'exercices (brique B)
+
+export type GroupKind = 'superset' | 'triset' | 'circuit' | 'emom' | 'amrap' | 'chrono'
+
+/** Structure d'un groupe, sans résultats : c'est ce que garde une séance modèle. */
+export interface GroupSpec {
+  id: string
+  kind: GroupKind
+  /** Ids des exercices du groupe, dans l'ordre de passage (A, B, C…). */
+  exerciseIds: string[]
+  /** Nombre de tours (superset, triset, circuit, chrono). */
+  rounds: number
+  /** Repos entre deux exercices d'un même tour (0 = enchaîné). */
+  restBetweenSec: number
+  /** Repos entre deux tours, et après le groupe. */
+  restAfterRoundSec: number
+  /** Durée totale en minutes (EMOM, AMRAP). */
+  durationMin?: number
+}
+
+export interface GroupResult {
+  /** AMRAP : tours complets. */
+  rounds?: number
+  /** AMRAP : répétitions de la dernière série incomplète. */
+  extraReps?: number
+  /** Chrono : temps final en secondes. */
+  seconds?: number
+  /** EMOM : minutes réussies. */
+  minutesDone?: number
+  at: string
+}
+export interface ExerciseGroup extends GroupSpec {
+  /** Horodatage (ms) du démarrage d'un EMOM / AMRAP / chrono : le décompte survit à un rechargement. */
+  startedAt?: number
+  /** AMRAP : tours comptés pendant l'effort (le résultat final les reprend). */
+  tally?: number
+  result?: GroupResult
+}
 
 export interface SessionExercise {
   id: string
@@ -136,6 +221,12 @@ export interface SessionExercise {
   note?: string
   /** Mode libre : le client n'a pas fixé de RIR visé (on n'affiche pas « RIR 2 » par défaut). */
   noRir?: boolean
+  /** Séries détaillées (séries différentes, parties enchaînées). Absent = `sets` × `repMin`–`repMax`. Quand présent, `sets` = `plan.length`. */
+  plan?: PlannedSet[]
+  /** Format affiché sous le nom de l'exercice. */
+  format?: SetFormat
+  /** Ajouté par MIND pour le coureur dans une séance de muscu (programme mixte). */
+  renfo?: boolean
 }
 
 export interface RunBlock {
@@ -178,6 +269,10 @@ export interface Session {
   status: SessionStatus
   estMinutes: number
   exercises?: SessionExercise[]
+  /** Groupes d'exercices (supersets, circuits, EMOM…). Les exercices d'un groupe restent dans `exercises`. */
+  groups?: ExerciseGroup[]
+  /** Échauffement (séance de renfo coureur). */
+  warmup?: string
   run?: RunPlan
   runLog?: RunLog
   legLoad?: 'heavy' | 'light' | 'none'
@@ -217,6 +312,7 @@ export interface Paces {
 export type WarningCode =
   | 'prepa_trop_courte' | 'chrono_irrealiste' | 'prepa_longue' | 'muscu_prioritaire_course'
   | 'conflit_placement' | 'blessure' | 'jours_insuffisants' | 'duree_courte' | 'chrono_a_confirmer' | 'muscles_exclus' | 'pic_non_atteint'
+  | 'renfo_placement'
 
 export interface PlanWarning {
   code: WarningCode
@@ -236,6 +332,9 @@ export interface TemplateExercise {
   restSec: number
   rir?: number
   note?: string
+  /** Séries détaillées et format (voir `SessionExercise`). */
+  plan?: PlannedSet[]
+  format?: SetFormat
 }
 
 /** Séance modèle créée par le client (ex. Push, Pull, Legs). */
@@ -243,6 +342,8 @@ export interface SessionTemplate {
   id: string
   name: string
   exercises: TemplateExercise[]
+  /** Groupes d'exercices (ids = ceux de `exercises`). */
+  groups?: GroupSpec[]
 }
 
 /**

@@ -10,7 +10,7 @@ import { acceptAdaptation, addExtraSession, programOf, refuseAdaptation, startNe
 import { analyzeWeek } from '@/lib/ai'
 import { Button, Card, Carousel, Chip, Cover, EmptyState, Icon, Page, Ring, SectionTitle, SportBadge, SportIcon, spring, toast } from '@/ui/kit'
 import { ExtraSessionSheet } from '@/ui/free'
-import { BellButton, CheckinSheet, coverSeed, NotificationsSheet, SessionTile, sessionMeta, sessionSubtitle, WarningBanner, WeekStrip } from '@/ui/parts'
+import { BellButton, CheckinSheet, coverSeed, NotificationsSheet, SessionTile, sessionMeta, sessionSubtitle, tintOf, WarningBanner, WeekStrip } from '@/ui/parts'
 
 export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSessions }: { clientId: string; onboardPath?: string; onOpenSessions?: () => void }) {
   const db = useDB()
@@ -112,9 +112,9 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
         <div className="flex flex-col gap-4">
           {todays.map((s, i) => (
             <motion.div key={s.id} initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ ...spring, delay: i * 0.06 }}>
-              <Cover seed={coverSeed(s)} sports={[s.sport]} kind={s.kind} className="rounded-[28px]" style={{ height: 340, boxShadow: 'var(--shadow-cover)' }}>
+              <Cover seed={coverSeed(s)} sports={[tintOf(s)]} kind={s.kind} className="rounded-[28px]" style={{ height: 340, boxShadow: 'var(--shadow-cover)' }}>
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                  <SportBadge sports={[s.sport]} label={isFreeRun(s) ? 'Sortie libre' : s.extra ? 'Séance en plus' : s.sport === 'muscu' ? 'Musculation' : 'Course'} slot={s.slot ? (s.slot === 'am' ? 'matin' : 'soir') : undefined} />
+                  <SportBadge sports={[s.sport]} label={isFreeRun(s) ? 'Sortie libre' : s.extra ? 'Séance en plus' : s.kind === 'renfo' ? 'Renfo coureur' : s.sport === 'muscu' ? 'Musculation' : 'Course'} slot={s.slot ? (s.slot === 'am' ? 'matin' : 'soir') : undefined} />
                   {s.estMinutes > 0 && <div className="rounded-full glass-dark px-3 h-8 flex items-center gap-1.5 text-white text-[13px] font-semibold border border-white/10"><Icon name="clock" size={15} /> {s.estMinutes} min</div>}
                 </div>
                 <div className="absolute bottom-0 inset-x-0 p-5 text-white">
@@ -146,7 +146,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
             <p className="text-muted text-[15px] mt-1.5 max-w-[260px]">Ton corps progresse pendant la récupération. Profites-en.</p>
             {upcoming[0] && (
               <motion.button whileTap={{ scale: 0.97 }} transition={spring} onClick={() => nav(`/session/${upcoming[0].id}`)} className="mt-4 flex items-center gap-3 rounded-[18px] bg-surface2/80 p-2 pr-4 text-left">
-                <Cover seed={coverSeed(upcoming[0])} sports={[upcoming[0].sport]} kind={upcoming[0].kind} className="rounded-[12px] shrink-0" style={{ width: 48, height: 48 }} scrim={false}>
+                <Cover seed={coverSeed(upcoming[0])} sports={[tintOf(upcoming[0])]} kind={upcoming[0].kind} className="rounded-[12px] shrink-0" style={{ width: 48, height: 48 }} scrim={false}>
                   <div className="absolute inset-0 flex items-center justify-center"><SportIcon sport={upcoming[0].sport} size={20} color="#fff" /></div>
                 </Cover>
                 <div className="min-w-0"><div className="text-[12px] text-muted font-semibold">Prochaine séance · <span className="cap-first inline-block">{prettyDate(upcoming[0].date)}</span></div><div className="font-bold truncate">Voir « {upcoming[0].title} »</div></div>

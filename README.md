@@ -48,7 +48,7 @@ Le bouton « Réinitialiser les données de démo » (Profil) remet tout à zér
 ## 3. Les tests du moteur
 
 ```bash
-npm test           # moteur (bibliothèque, allures, 5 profils types, adaptations), mode libre, store, synchronisation
+npm test           # moteur (bibliothèque, allures, 5 profils types, adaptations), mode libre, formats, renfo, minuteur, store, synchronisation
 npm run typecheck  # vérification TypeScript
 ```
 
@@ -83,6 +83,17 @@ Au premier écran du formulaire, le client choisit entre « MIND me crée mon pr
 - Aucun décalage automatique, aucune semaine allégée, aucun remplacement d'exercice. Restent actifs : alertes douleur / « décroche » / commentaires, et un bilan du dimanche sans suggestion de structure.
 - **Passer d'un mode à l'autre** (Profil, ou fiche client côté coach) : l'ancien programme est archivé, l'historique (`lastPerformance`, Progrès) est conservé.
 - **Données** : tout vit dans l'enregistrement `Program` (`mode`, `libre`), donc synchronisé avec le coach comme le reste ; aucune migration SQL. Code : `src/engine/libre.ts` (pur), écrans `src/ui/free.tsx`.
+
+### Formats de séance, minuteur de repos et renfo coureur
+
+Un exercice n'est plus limité à « N séries identiques » (qui reste le cas par défaut : un ancien programme, un ancien modèle ou un ancien `SetLog` s'affichent et se saisissent exactement comme avant).
+
+- **Séries différentes et parties enchaînées** (`plan` sur `SessionExercise` / `TemplateExercise`, facultatif) : chaque série prévue a ses parties (reps ou durée, charge **relative en %** de la partie lourde ou absolue en kg, RIR, `restAfterSec` : 0 = enchaîné, 15 s en rest-pause). `SetLog` reçoit `part` et `seconds`. Le sélecteur **« Format »** préremplit : Classique · Pyramide (12/10/8/6) · Série lourde + séries allégées · Dégressive · Rest-pause · **Combo** (défaut : 1 rep lourde → 6 reps à −20 %, 3 séries). La charge relative se précalcule depuis la partie lourde saisie (arrondi 0,5 kg, modifiable).
+- **Groupes d'exercices** (`Session.groups`, `SessionTemplate.groups`) : superset, triset, circuit, EMOM, AMRAP, chrono, avec tours, repos entre exercices, repos entre tours et durée. L'écran guide l'ordre (« Superset · Tour 2/4 », « A2 puis B2, puis repos » ; « Tour 2/3 · 3/5 Fentes arrière » ; « Minute 4/12 · Pogo jumps ×20 » ; décompte AMRAP et chronomètre qui survivent à un rechargement : tout se déduit d'un horodatage de départ). Étiquettes **A1/A2, B1/B2** (lettre = exercice, chiffre = tour) et liseré de couleur par type de groupe.
+- **Minuteur de repos** (`src/lib/rest.ts`, bandeau `src/ui/rest.tsx`) : démarre à la validation d'une série, d'une partie ou d'un tour avec le bon repos (`restAfter` dans `src/engine/formats.ts`) ; enchaîné = signal « Enchaîne » sans minuteur. Il se base sur un **horodatage de fin** (écran verrouillé, retour d'arrière-plan, rechargement), −15 s / +15 s / Passer, son court à la fin si l'app est au premier plan (réglage dans le Profil), vibration seulement si elle existe (iOS Safari n'en a pas).
+- **Génération (`strength.ts`)** : séance courte (≤ 60 min) dont le volume ne tient pas → supersets d'exercices opposés (jamais squat + soulevé de terre) ; hypertrophie intermédiaire / avancé → dégressive sur la dernière série d'1 ou 2 isolations (pas en semaine allégée) ; force intermédiaire / avancé → série lourde + séries allégées sur l'exercice principal ; **débutant : séries classiques uniquement** ; EMOM, AMRAP et chrono ne sont jamais générés. Progression d'une série lourde / combo / dégressive : toutes les parties atteignent leurs reps avec le RIR visé → +2,5 kg sur la partie lourde (+1 kg haltères ou isolation) ; la double progression reste réservée aux séries classiques.
+- **Renfo coureur** (`src/engine/renfo.ts`) : question « Ajouter du renfo coureur ? » (Non / 1 / 2 fois par semaine, matériel : sans matériel / élastique et haltères / salle ; désactivé pour un programme existant, 1 fois par semaine proposé pour un nouveau). Course seule : un **circuit de 20 à 30 min** (échauffement mobilité, 4 à 6 exercices × 2 à 4 tours) qui suit les phases (Base : gainage et force ; Développement : + 1 à 2 pliométries ; Spécifique : entretien ; Affûtage : volume ÷ 2, **aucune pliométrie à moins de 10 jours de la course, aucun renfo dans les 3 derniers jours**), +1 tour ou reps/durée en hausse toutes les 2 semaines, allégé avec les semaines allégées. Placement (`combine.ts`) : après une séance de qualité le même jour, ou un jour sans course ; **jamais la veille de la sortie longue ni d'une séance de qualité** (sinon la séance saute avec un `PlanWarning`). Programme mixte : pas de séance à part, 2 ou 3 exercices de coureur ajoutés à la fin des séances de muscu (bas du corps, full body), sans dépasser `maxMinutes`. Course en mode libre : deux modèles « Renfo coureur » tout faits dans « Mes séances ».
+- **Données** : tout vit dans les enregistrements JSON existants (`Program`, `Session`, `SessionTemplate`), aucune migration SQL. La bibliothèque compte ~20 exercices de plus (`unit` secondes, `perSide`, `Equipment` « elastique », `renfo: true` = jamais choisi par le générateur de muscu) ; `supabase/seed.sql` est régénéré par `scripts/gen-seed.ts`.
 
 ### La couche IA (Claude)
 

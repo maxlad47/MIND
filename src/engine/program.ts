@@ -7,7 +7,8 @@ import {
   assessTarget, buildRunWeek, DIST_KM, DIST_LABEL, leadIn as leadInOf, pacesFromQuestionnaire, phasePlan, prepWarnings, startModeOf, sessionsForVolume, volumeOutlook, weeklyVolumes,
 } from './running'
 import { buildStrengthWeek, cyclePosition, isUpperOnly, makeStrengthCtx, SPLIT_LABEL } from './strength'
-import { placeWeek, runClass } from './combine'
+import { isRenfo, placeWeek, runClass } from './combine'
+import { addRunnerExtras, buildRenfoSession, daysBeforeRace, renfoAllowed, stripRunnerExtras } from './renfo'
 import { addDays, diffDays, fmtPace, mondayOf, uid, weekday, fmtTime, todayISO } from './utils'
 
 export const WEEKS_PER_CYCLE = 8
@@ -44,12 +45,50 @@ export function defaultWeekNote(phase: Phase, light: boolean, n: number, q: Ques
 
 function dropOrder(s: Session): number {
   // plus la valeur est grande, plus la séance saute facilement
+  if (isRenfo(s)) return 6
   if (s.kind === 'course') return 0
   if (s.kind === 'longue') return 1
   if (runClass(s) === 'quality') return 2
   if (s.sport === 'muscu' && s.legLoad === 'heavy') return 3
   if (s.sport === 'muscu') return 4
   return 5
+}
+
+/**
+ * Dernière passe du renfo coureur, une fois toutes les séances datées :
+ *  - jamais la veille de la sortie longue, d'une séance de qualité ou de la course (y compris d'une semaine à l'autre) : la séance saute, avec un `PlanWarning` ;
+ *  - aucun renfo dans les 3 derniers jours avant la course, aucune pliométrie dans les 10 jours avant : la séance est reconstruite d'après sa date ;
+ *  - programme mixte : les compléments de coureur disparaissent des séances de muscu à moins de 3 jours de la course.
+ */
+function finalizeRenfo(weeks: Week[], q: Questionnaire, renfo: NonNullable<Questionnaire['run']['renfo']>, type: Program['type'], warnings: PlanWarning[]): void {
+  const raceDate = q.run.raceDate
+  const all = weeks.flatMap((w) => w.sessions)
+  const dropped: number[] = []
+  for (const w of weeks) {
+    w.sessions = w.sessions.flatMap((s) => {
+      if (type === 'mixte' && s.sport === 'muscu' && s.exercises?.some((e) => e.renfo) && !renfoAllowed(daysBeforeRace(s.date, raceDate))) {
+        stripRunnerExtras(s)
+        return [s]
+      }
+      if (!isRenfo(s)) return [s]
+      const d = daysBeforeRace(s.date, raceDate)
+      if (!renfoAllowed(d)) return []
+      const next = addDays(s.date, 1)
+      if (all.some((x) => x.date === next && x.status !== 'sautee' && (runClass(x) === 'long' || runClass(x) === 'quality'))) { dropped.push(w.n); return [] }
+      // contenu définitif : la pliométrie dépend de la distance à la course
+      const fresh = buildRenfoSession({ kit: renfo.kit, level: q.run.level, injuries: q.injuries, phase: w.phase, weekN: w.n, light: w.light, daysToRace: d })
+      if (!fresh) return []
+      return [{ ...s, exercises: fresh.exercises, groups: fresh.groups, estMinutes: fresh.estMinutes, warmup: fresh.warmup, note: fresh.note }]
+    })
+  }
+  if (dropped.length) {
+    const list = [...new Set(dropped)]
+    warnings.push({
+      code: 'renfo_placement',
+      message: `Semaine${list.length > 1 ? 's' : ''} ${list.slice(0, 4).join(', ')}${list.length > 4 ? '…' : ''} : pas de jour libre pour le renfo coureur. Il n'est jamais placé la veille de la sortie longue ni d'une séance de qualité : la séance est retirée.`,
+      suggestion: 'Ajoute un jour disponible, ou choisis 1 séance de renfo par semaine.',
+    })
+  }
 }
 
 export interface GenerateOptions { now?: string; clientId?: string }
@@ -96,6 +135,8 @@ export function generateProgram(q: Questionnaire, opts: GenerateOptions = {}): P
   const volumes = hasRun && paces ? weeklyVolumes(q.run, phases, runSessions, paces, priorityFactor) : []
   const sCtx = hasStrength ? makeStrengthCtx(q) : undefined
   const { legFactor, minLegRir } = legFactorFor(q)
+  // renfo coureur : séances à part pour une course seule, compléments dans les séances de muscu pour un programme mixte
+  const renfo = hasRun && q.run.renfo && q.run.renfo.perWeek > 0 ? q.run.renfo : undefined
 
   if (type === 'mixte' && q.priority === 'muscu' && q.run.objective === 'chrono') {
     warnings.push({
@@ -151,9 +192,21 @@ export function generateProgram(q: Questionnaire, opts: GenerateOptions = {}): P
       list.push(...(isRaceWeek ? runs.filter((s) => s.kind !== 'longue') : runs))
     }
     if (hasStrength && sCtx) {
-      list.push(...buildStrengthWeek(sCtx, w, {
-        legFactor, minLegRir, maintenance: phase === 'Affûtage', injuries: q.injuries,
-      }))
+      const strength = buildStrengthWeek(sCtx, w, {
+        legFactor, minLegRir, maintenance: phase === 'Affûtage', injuries: q.injuries, light,
+      })
+      if (renfo && type === 'mixte') {
+        addRunnerExtras(strength, {
+          kit: renfo.kit, perWeek: renfo.perWeek as 1 | 2, level: q.strength.level, injuries: q.injuries, maxMinutes: q.maxMinutes, weekN: w, light, excluded: q.excludedMuscles,
+        })
+      }
+      list.push(...strength)
+    }
+    if (renfo && type === 'course') {
+      for (let k = 0; k < renfo.perWeek; k++) {
+        const r = buildRenfoSession({ kit: renfo.kit, level: q.run.level, injuries: q.injuries, phase, weekN: w, light })
+        if (r) list.push(r)
+      }
     }
 
     // jours autorisés cette semaine (semaine de départ partielle, semaine de course)
@@ -207,6 +260,8 @@ export function generateProgram(q: Questionnaire, opts: GenerateOptions = {}): P
       note: defaultWeekNote(phase, light, w, q, isRaceWeek, progressive ? (w <= lead.noQuality ? 'endurance' : w <= lead.weeks ? 'intro' : undefined) : undefined),
     })
   }
+
+  if (renfo) finalizeRenfo(weeks, q, renfo, type, warnings)
 
   if (hasRun && paces && q.run.peakKm && q.run.peakKm > 0) {
     const o = volumeOutlook(q.run, phases, runSessions, priorityFactor)

@@ -4,6 +4,7 @@
 import { alternativesFor, exerciseOf } from './exercises'
 import { bestDayFor, daysFor, runClass } from './combine'
 import { capLoad } from './guardrails'
+import { nextLoadPlan, resizeSets, syncRoundsFromMembers } from './formats'
 import { computePaces, isQuality } from './running'
 import type { Adaptation, AdaptationKind, Checkin, Paces, Program, RunPlan, Session, SessionExercise, Zone } from './types'
 import { LOWER_MUSCLES } from './types'
@@ -108,6 +109,11 @@ export interface NextLoad { kg: number; next: number; verdict: Verdict; why: str
  */
 export function nextLoad(e: SessionExercise, prev?: SessionExercise): NextLoad | null {
   if (!e.logs.length) return null
+  // séries détaillées (série lourde, combo, dégressive…) : +2,5 kg (+1 kg haltères / isolation) si TOUTES les parties atteignent leurs reps ; pas de double progression
+  if (e.plan?.length) {
+    const r = nextLoadPlan(e)
+    return r ? { kg: r.kg, next: r.next, verdict: r.verdict, why: r.why } : null
+  }
   const kg = Math.max(...e.logs.map((l) => l.kg))
   const prevFailed = !!prev && prev.logs.some((l) => l.reps < prev.repMin) && prev.logs.every((l) => l.kg === kg || l.kg <= kg)
   const verdict = judgeExercise(e.logs, e.repMin, e.repMax, e.rir, prevFailed)
@@ -254,6 +260,7 @@ export function applyCheckin(program: Program, sessionId: string, c: Checkin, to
         replaced.push(`${ex.name} → ${alt.name}`)
         return [{ ...e, exerciseId: alt.id, targetKg: undefined, logs: [] }]
       })
+      syncRoundsFromMembers(s)
       if (replaced.length) {
         adaptations.push(adapt(p, 'remplacement',
           `Douleur signalée (${c.painZone}) : ${replaced.join(', ')}.`, today, before, { payload: { notifyCoach: true } }))
@@ -267,7 +274,8 @@ export function applyCheckin(program: Program, sessionId: string, c: Checkin, to
   } else if (score <= 2.5 && !s.lighten) {
     s.lighten = true
     if (s.exercises) {
-      s.exercises = s.exercises.map((e) => ({ ...e, sets: Math.max(1, Math.round(e.sets * 0.7)) }))
+      s.exercises = s.exercises.map((e) => { const c = structuredClone(e); resizeSets(c, Math.max(1, Math.round(e.sets * 0.7))); return c })
+      syncRoundsFromMembers(s)
       s.estMinutes = Math.round(s.estMinutes * 0.75)
     }
     if (s.run) lightenRun(s)
@@ -305,7 +313,8 @@ export function applyScale(program: Program, weekN: number, factor: number): Pro
   if (!w) return p
   for (const s of w.sessions) {
     if (s.status !== 'prevue') continue
-    for (const e of s.exercises ?? []) e.sets = Math.max(1, Math.round(e.sets * factor))
+    for (const e of s.exercises ?? []) resizeSets(e, Math.max(1, Math.round(e.sets * factor)))
+    syncRoundsFromMembers(s)
     if (s.run && s.kind !== 'course') {
       s.run.blocks.forEach((b) => { if (b.meters) b.meters = Math.round(b.meters * factor) })
       s.run.totalKm = Math.round(s.run.totalKm * factor * 10) / 10

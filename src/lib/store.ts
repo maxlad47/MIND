@@ -6,17 +6,24 @@ import {
   applyCheckin, applySuggestion, adjustLoadsAfterSession, allSessions, findSession, handleMissed,
   ruleBasedWeeklyAnalysis, scalePaces, suggestVmaUpdate, undoAdaptation,
 } from '@/engine/adapt'
-import { CUSTOM_PREFIX, exerciseOf, makeCustomExercise, registerCustomExercises } from '@/engine/exercises'
+import { CUSTOM_PREFIX, exerciseOf, isTimed, makeCustomExercise, registerCustomExercises } from '@/engine/exercises'
+import {
+  applyFormat, applyGroupDefaults, doneSetsOf, nominalReps, syncRoundsFromMembers, FORMAT_DEFAULT_SETS, groupLogsBySet, groupMembers, isRoundsKind, isTimedKind, normalizeGroups, partOf, resizeSets, clearPlan, repRangeOf,
+  type LastSet,
+} from '@/engine/formats'
+import { renfoTemplates } from '@/engine/renfo'
 import {
   applyRunPlan, isLibre, libreFromProgram, newLibreProgram, syncFree, templateFromSession, withExtraSession, weekRecap, type ExtraSource,
 } from '@/engine/libre'
 import { generateProgram, nextStrengthCycle, regenerateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
 import type {
-  Adaptation, Checkin, Exercise, LibrePlanning, Muscle, Program, Questionnaire, RunBlock, RunLog, Session, SessionExercise, SessionTemplate, SetLog,
+  Adaptation, Checkin, Exercise, ExerciseGroup, GroupResult, GroupSpec, LibrePlanning, Muscle, PlannedSet, Program, Questionnaire, RunBlock, RunLog, Session,
+  SessionExercise, SessionTemplate, SetFormat, SetLog,
 } from '@/engine/types'
 import { vmaFromRecent } from '@/engine/running'
 import { addDays, fmtKm, mondayOf, todayISO, uid, weekday } from '@/engine/utils'
+import { skipRest } from './rest'
 import { REMOTE } from './supabase'
 
 export const COACH_EMAIL = (import.meta.env.VITE_COACH_EMAIL as string | undefined)?.toLowerCase() || 'coach@mind.app'
@@ -155,7 +162,7 @@ export function signIn(email: string, password: string): { ok: boolean; error?: 
   mutate((d) => { d.sessionUserId = u.id })
   return { ok: true }
 }
-export function signOut(): void { mutate((d) => { d.sessionUserId = null }) }
+export function signOut(): void { skipRest(); mutate((d) => { d.sessionUserId = null }) } // le repos en cours s'arrête avec la session
 
 export function updateProfile(id: string, patch: Partial<Profile>): void {
   mutate((d) => {
@@ -222,7 +229,8 @@ export function clientSessions(d: DB, clientId: string): Session[] {
   return d.programs.filter((p) => p.clientId === clientId).flatMap(allSessions)
 }
 
-export function lastPerformance(d: DB, clientId: string, exerciseId: string, beforeSessionId: string): { date: string; logs: SetLog[] } | undefined {
+/** Dernière performance d'un exercice : les logs, et les séries regroupées partie par partie (« 1 × 100 kg + 6 × 80 kg »). */
+export function lastPerformance(d: DB, clientId: string, exerciseId: string, beforeSessionId: string): { date: string; logs: SetLog[]; sets: LastSet[] } | undefined {
   const all = clientSessions(d, clientId)
   const cur = all.find((s) => s.id === beforeSessionId)
   const found = all
@@ -230,7 +238,7 @@ export function lastPerformance(d: DB, clientId: string, exerciseId: string, bef
     .sort((a, b) => b.date.localeCompare(a.date))
     .map((s) => ({ s, e: s.exercises?.find((x) => x.exerciseId === exerciseId && x.logs.length) }))
     .find((x) => x.e)
-  return found ? { date: found.s.date, logs: found.e!.logs } : undefined
+  return found ? { date: found.s.date, logs: found.e!.logs, sets: groupLogsBySet(found.e!.logs) } : undefined
 }
 
 /** Exercices perso d'un client (tous programmes confondus, sans doublon). */
@@ -389,30 +397,143 @@ export function replaceExercise(programId: string, sessionId: string, seId: stri
     return `${from} remplacé par ${exerciseOf(exerciseId).name} dans « ${s.title} ».`
   })
 }
-export function addExercise(programId: string, sessionId: string, exerciseId: string): void {
+/** Ajoute un exercice à la séance et renvoie son id. `format` préremplit les séries (série lourde, combo, dégressive…). */
+export function addExercise(programId: string, sessionId: string, exerciseId: string, format?: SetFormat): string {
+  const id = uid('se')
   withSession(programId, sessionId, (s) => {
     const ex = exerciseOf(exerciseId)
+    const timed = isTimed(exerciseId)
     const e: SessionExercise = {
-      id: uid('se'), exerciseId, order: (s.exercises?.length ?? 0), sets: 3, repMin: ex.compound ? 6 : 10, repMax: ex.compound ? 10 : 15,
-      rir: 2, restSec: ex.compound ? 120 : 75, logs: [],
+      id, exerciseId, order: (s.exercises?.length ?? 0), sets: 3, repMin: timed ? 30 : ex.compound ? 6 : 10, repMax: timed ? 45 : ex.compound ? 10 : 15,
+      rir: 2, restSec: timed ? 60 : ex.compound ? 120 : 75, logs: [],
+    }
+    if (format && format !== 'classique') {
+      const r = applyFormat(format, { sets: FORMAT_DEFAULT_SETS[format], repMin: e.repMin, repMax: e.repMax, rir: e.rir }, timed)
+      if (r.plan) Object.assign(e, { plan: r.plan, format: r.format, sets: r.sets, repMin: r.repMin, repMax: r.repMax })
     }
     s.exercises = [...(s.exercises ?? []), e]
     return `${ex.name} ajouté à « ${s.title} ».`
   })
+  return id
 }
 export function removeExercise(programId: string, sessionId: string, seId: string): void {
   withSession(programId, sessionId, (s) => {
     const e = s.exercises?.find((x) => x.id === seId)
     s.exercises = (s.exercises ?? []).filter((x) => x.id !== seId)
+    normalizeGroups(s)
     return e ? `${exerciseOf(e.exerciseId).name} retiré de « ${s.title} ».` : undefined
   })
 }
-export function updateExercise(programId: string, sessionId: string, seId: string, patch: Partial<Pick<SessionExercise, 'sets' | 'repMin' | 'repMax' | 'rir' | 'restSec' | 'targetKg'>>): void {
+type ExercisePatch = Partial<Pick<SessionExercise, 'sets' | 'repMin' | 'repMax' | 'rir' | 'restSec' | 'targetKg' | 'plan' | 'format'>>
+export function updateExercise(programId: string, sessionId: string, seId: string, patch: ExercisePatch): void {
   withSession(programId, sessionId, (s) => {
     const e = s.exercises?.find((x) => x.id === seId)
     if (!e) return
-    Object.assign(e, patch)
-    return `${exerciseOf(e.exerciseId).name} modifié dans « ${s.title} » (${e.sets}×${e.repMin}-${e.repMax}${e.targetKg ? `, ${fmtKm(e.targetKg)} kg` : ''}).`
+    const { sets, plan, format, ...rest } = patch
+    Object.assign(e, rest)
+    if ('plan' in patch) {
+      // nouvelle structure de séries : le format et le nombre de séries suivent
+      if (plan?.length) Object.assign(e, { plan, format: format ?? e.format, sets: plan.length, ...repRangeOf(plan) })
+      else clearPlan(e)
+      if (plan === undefined && sets !== undefined) e.sets = sets
+    } else if (sets !== undefined) resizeSets(e, sets)
+    if ('format' in patch && !('plan' in patch)) e.format = format
+    if (s.groups?.length) syncRoundsFromMembers(s)
+    return `${exerciseOf(e.exerciseId).name} modifié dans « ${s.title} » (${e.plan?.length ? `${e.sets} séries, ${e.format ?? 'séries détaillées'}` : `${e.sets}×${e.repMin}-${e.repMax}`}${e.targetKg ? `, ${fmtKm(e.targetKg)} kg` : ''}).`
+  })
+}
+/** Applique un format prêt à l'emploi (série lourde, combo, dégressive…) à un exercice de la séance. */
+export function setExerciseFormat(programId: string, sessionId: string, seId: string, format: SetFormat): void {
+  withSession(programId, sessionId, (s) => {
+    const e = s.exercises?.find((x) => x.id === seId)
+    if (!e) return
+    // la fourchette de départ ne dépend pas du format précédent (un combo 1–6 ne doit pas devenir la base d'une dégressive)
+    const base = e.plan?.length ? nominalReps(e.exerciseId) : { repMin: e.repMin, repMax: e.repMax }
+    const r = applyFormat(format, { sets: format === 'classique' ? e.sets : FORMAT_DEFAULT_SETS[format], ...base, rir: e.noRir ? undefined : e.rir }, isTimed(e.exerciseId))
+    if (r.plan) Object.assign(e, { plan: r.plan, format: r.format, sets: r.sets, repMin: r.repMin, repMax: r.repMax })
+    else { clearPlan(e); e.sets = r.sets; e.repMin = r.repMin; e.repMax = r.repMax }
+    e.logs = []
+    return `${exerciseOf(e.exerciseId).name} : format « ${r.format} » dans « ${s.title} ».`
+  })
+}
+
+// ------------------------------------------------------------------ groupes d'exercices
+
+/** Crée un groupe (superset, triset, circuit, EMOM, AMRAP, chrono) avec des exercices déjà dans la séance. */
+export function createGroup(programId: string, sessionId: string, spec: GroupSpec): void {
+  withSession(programId, sessionId, (s) => {
+    const used = new Set((s.groups ?? []).flatMap((g) => g.exerciseIds))
+    const ids = spec.exerciseIds.filter((id) => !used.has(id) && s.exercises?.some((e) => e.id === id))
+    s.groups = [...(s.groups ?? []), { ...spec, exerciseIds: ids }]
+    applyGroupDefaults(spec.kind, (s.exercises ?? []).filter((e) => ids.includes(e.id)))
+    normalizeGroups(s)
+    const g = s.groups?.find((x) => x.id === spec.id)
+    return g ? `Groupe « ${g.kind} » créé dans « ${s.title} » (${groupMembers(s, g).map((e) => exerciseOf(e.exerciseId).name).join(', ')}).` : undefined
+  })
+}
+export function updateGroup(programId: string, sessionId: string, groupId: string, patch: Partial<Omit<GroupSpec, 'id'>>): void {
+  withSession(programId, sessionId, (s) => {
+    const g = s.groups?.find((x) => x.id === groupId)
+    if (!g) return
+    Object.assign(g, patch)
+    normalizeGroups(s)
+    return `Groupe « ${g.kind} » modifié dans « ${s.title} ».`
+  })
+}
+/** Sépare un groupe : ses exercices restent dans la séance, comme des exercices seuls. */
+export function deleteGroup(programId: string, sessionId: string, groupId: string): void {
+  withSession(programId, sessionId, (s) => {
+    const g = s.groups?.find((x) => x.id === groupId)
+    if (!g) return
+    s.groups = s.groups!.filter((x) => x.id !== groupId)
+    if (!s.groups.length) delete s.groups
+    return `Groupe « ${g.kind} » défait dans « ${s.title} ».`
+  })
+}
+/** EMOM / AMRAP / chrono : démarre (ou relance) le décompte. L'horodatage de départ survit à un rechargement. */
+export function startGroup(programId: string, sessionId: string, groupId: string, now = Date.now()): void {
+  withSession(programId, sessionId, (s) => {
+    const g = s.groups?.find((x) => x.id === groupId)
+    if (g && isTimedKind(g.kind)) { g.startedAt = now; g.tally = 0; delete g.result }
+  })
+}
+/** AMRAP : +1 / −1 tour compté pendant l'effort. */
+export function tallyGroup(programId: string, sessionId: string, groupId: string, delta: number): void {
+  withSession(programId, sessionId, (s) => {
+    const g = s.groups?.find((x) => x.id === groupId)
+    if (g) g.tally = Math.max(0, (g.tally ?? 0) + delta)
+  })
+}
+export function finishGroup(programId: string, sessionId: string, groupId: string, result: Omit<GroupResult, 'at'>): void {
+  withSession(programId, sessionId, (s) => {
+    const g = s.groups?.find((x) => x.id === groupId)
+    if (g) g.result = { ...result, at: new Date().toISOString() }
+  })
+}
+export function resetGroup(programId: string, sessionId: string, groupId: string): void {
+  withSession(programId, sessionId, (s) => {
+    const g = s.groups?.find((x) => x.id === groupId)
+    if (g) { delete g.startedAt; delete g.result; delete g.tally }
+  })
+}
+/** « Tour N fait » : valide d'un coup tous les exercices du tour qui n'ont pas encore de série saisie (charges et reps facultatives). */
+export function logRound(programId: string, sessionId: string, groupId: string, round: number, entries: Record<string, { kg?: number; reps?: number }> = {}): void {
+  withSession(programId, sessionId, (s) => {
+    const g = s.groups?.find((x) => x.id === groupId)
+    if (!g || !isRoundsKind(g.kind)) return
+    for (const e of groupMembers(s, g)) {
+      if (e.logs.some((l) => l.n === round)) continue
+      const v = entries[e.id] ?? {}
+      const timed = isTimed(e.exerciseId)
+      e.logs = [...e.logs, { n: round, kg: v.kg ?? 0, reps: timed ? 0 : v.reps ?? e.repMin, rir: e.rir, at: new Date().toISOString(), ...(timed ? { seconds: v.reps ?? e.repMin } : {}) }].sort((a, b) => a.n - b.n)
+    }
+  })
+}
+export function unlogRound(programId: string, sessionId: string, groupId: string, round: number): void {
+  withSession(programId, sessionId, (s) => {
+    const g = s.groups?.find((x) => x.id === groupId)
+    if (!g) return
+    for (const e of groupMembers(s, g)) e.logs = e.logs.filter((l) => l.n !== round)
   })
 }
 export function updateRun(programId: string, sessionId: string, patch: { km?: number; blocks?: RunBlock[]; warmup?: string; cooldown?: string }): void {
@@ -434,17 +555,19 @@ export function updateRun(programId: string, sessionId: string, patch: { km?: nu
 
 // ------------------------------------------------------------------ séance en cours
 
+/** Enregistre une série, ou une partie d'une série (`set.part`). */
 export function logSet(programId: string, sessionId: string, seId: string, set: SetLog): void {
   withSession(programId, sessionId, (s) => {
     const e = s.exercises?.find((x) => x.id === seId)
     if (!e) return
-    e.logs = e.logs.filter((l) => l.n !== set.n).concat(set).sort((a, b) => a.n - b.n)
+    e.logs = e.logs.filter((l) => !(l.n === set.n && partOf(l) === partOf(set))).concat(set).sort((a, b) => a.n - b.n || partOf(a) - partOf(b))
   })
 }
-export function unlogSet(programId: string, sessionId: string, seId: string, n: number): void {
+/** Annule une partie (`part`), ou toute la série `n` si `part` est absent. */
+export function unlogSet(programId: string, sessionId: string, seId: string, n: number, part?: number): void {
   withSession(programId, sessionId, (s) => {
     const e = s.exercises?.find((x) => x.id === seId)
-    if (e) e.logs = e.logs.filter((l) => l.n !== n)
+    if (e) e.logs = e.logs.filter((l) => !(l.n === n && (part === undefined || partOf(l) === part)))
   })
 }
 
@@ -460,8 +583,11 @@ export function finishStrength(programId: string, sessionId: string, feeling: nu
     s.feeling = feeling
     s.durationMin = minutes
     s.doneAt = new Date().toISOString()
+    for (const g of s.groups ?? []) if (isTimedKind(g.kind) && g.result) recap.sets += 1 // un EMOM, un AMRAP ou un chrono compte pour un bloc
+    const timedMembers = new Set((s.groups ?? []).filter((g) => isTimedKind(g.kind)).flatMap((g) => g.exerciseIds))
     for (const e of s.exercises ?? []) {
-      for (const l of e.logs) { recap.tonnage += l.kg * l.reps; recap.sets += 1 }
+      for (const l of e.logs) recap.tonnage += l.kg * l.reps
+      if (!timedMembers.has(e.id)) recap.sets += doneSetsOf(e)
       if (!e.logs.length) continue
       const best = e.logs.reduce((a, b) => (epley(b.kg, b.reps) > epley(a.kg, a.reps) ? b : a))
       const e1 = epley(best.kg, best.reps)
@@ -687,6 +813,20 @@ export function setSuggestLoads(programId: string, on: boolean): void {
     if (!p?.libre) return
     p.libre.suggestLoads = on
     syncLibre(d, p)
+  })
+}
+
+/** Ajoute à « Mes séances » les 2 modèles tout faits « Renfo coureur » (sans matériel, avec élastique) qui n'y sont pas déjà. */
+export function addRenfoTemplates(programId: string): void {
+  mutate((d) => {
+    const p = libreOf(d, programId)
+    if (!p?.libre) return
+    const have = new Set(p.libre.templates.map((t) => t.name))
+    const add = renfoTemplates().filter((t) => !have.has(t.name))
+    if (!add.length) return
+    p.libre.templates.push(...add) // pas dans la rotation : le client place ces séances où il veut
+    syncLibre(d, p)
+    libreEdited(d, p, 'a ajouté des séances de renfo coureur', `Séances modèles « ${add.map((t) => t.name).join(' », « ')} » ajoutées.`)
   })
 }
 

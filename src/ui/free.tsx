@@ -2,15 +2,16 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { allSessions } from '@/engine/adapt'
-import { exerciseOf } from '@/engine/exercises'
+import { exerciseOf, isTimed } from '@/engine/exercises'
+import { applyGroupDefaults, clearPlan, defaultGroup, describePlan, formatLabel, GROUP_COLOR, groupMembers, groupOf, letterOf, normalizeGroups } from '@/engine/formats'
 import {
   describePlanning, duplicateTemplate, newTemplate, newTemplateExercise, previewPlanning, templateMinutes, trainingDays,
 } from '@/engine/libre'
-import type { LibrePlanning, Program, SessionTemplate, TemplateExercise } from '@/engine/types'
+import type { GroupSpec, LibrePlanning, Program, SessionTemplate, TemplateExercise } from '@/engine/types'
 import { DAY_NAMES, DAY_SHORT, prettyDate, todayISO, weekday } from '@/engine/utils'
-import { addCustomExercise, addExtraSession, customExercisesOf, deleteTemplate, programOf, saveTemplate, setPlanning, useDB } from '@/lib/store'
+import { addCustomExercise, addExtraSession, addRenfoTemplates, customExercisesOf, deleteTemplate, programOf, saveTemplate, setPlanning, useDB } from '@/lib/store'
 import { Button, Card, Cover, EmptyState, Icon, NumberInput, Segmented, SectionTitle, Sheet, SportIcon, toast } from './kit'
-import { ExercisePicker } from './parts'
+import { AddExerciseSheet, FormatChips, formatPatch, GroupParams, GroupTag, PlanEditor } from './formats'
 import { GripHandle, SortableList } from './sortable'
 
 const MUSCU = 'var(--muscu)'
@@ -24,21 +25,37 @@ function TemplateCover({ t, size = 56 }: { t: SessionTemplate; size?: number }) 
 }
 
 const restLabel = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
-const summary = (e: TemplateExercise) => `${e.sets} × ${e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`} · repos ${restLabel(e.restSec)}${e.rir !== undefined ? ` · RIR ${e.rir}` : ''}`
+const summary = (e: TemplateExercise) => {
+  const timed = isTimed(e.exerciseId)
+  const side = exerciseOf(e.exerciseId).perSide ? ' / côté' : ''
+  const reps = e.repMin === e.repMax ? `${e.repMin}` : `${e.repMin}–${e.repMax}`
+  return `${e.plan?.length ? describePlan(e) : `${e.sets} × ${reps}${timed ? ' s' : ''}${side}`} · repos ${restLabel(e.restSec)}${e.rir !== undefined ? ` · RIR ${e.rir}` : ''}`
+}
 
 // ------------------------------------------------------------------ éditeur de séance modèle
 
-function ExerciseRow({ e, handle, open, onToggle, onChange, onRemove }: {
+function ExerciseRow({ e, handle, open, onToggle, onChange, onRemove, group, letter, names, onGroupChange, onUngroup }: {
   e: TemplateExercise; handle: Parameters<typeof GripHandle>[0]['handle']; open: boolean; onToggle: () => void; onChange: (p: Partial<TemplateExercise>) => void; onRemove: () => void
+  /** Groupe auquel appartient l'exercice (superset, circuit…), sa lettre (A, B…) et les noms des exercices du groupe. */
+  group?: GroupSpec; letter?: string; names?: string[]; onGroupChange?: (p: Partial<GroupSpec>) => void; onUngroup?: () => void
 }) {
   const ex = exerciseOf(e.exerciseId)
+  const timed = isTimed(e.exerciseId)
   const field = (label: string, node: ReactNode) => <div className="flex items-center justify-between gap-3"><span className="font-semibold text-[15px]">{label}</span>{node}</div>
+  const fmt = formatLabel(e)
+  const color = group ? GROUP_COLOR[group.kind] : undefined
   return (
-    <div className="bg-surface2 rounded-[18px]" data-exercise={e.exerciseId}>
+    <div className="bg-surface2 rounded-[18px]" data-exercise={e.exerciseId} style={color ? { boxShadow: `inset 4px 0 0 ${color}` } : undefined}>
       <div className="flex items-center pl-1 pr-1">
         <GripHandle handle={handle} label={`Réordonner ${ex.name}`} />
-        <button onClick={onToggle} aria-expanded={open} className="tap flex-1 min-w-0 min-h-[56px] text-left flex items-center gap-2 pr-2">
+        <button onClick={onToggle} aria-expanded={open} className="tap flex-1 min-w-0 min-h-[56px] py-2 text-left flex items-center gap-2 pr-2">
           <div className="min-w-0 flex-1">
+            {(group || fmt) && (
+              <div className="flex items-center gap-1.5 mb-0.5">
+                {group && <GroupTag kind={group.kind} letter={letter} />}
+                {fmt && <span className="inline-flex items-center h-5 rounded-full px-2 text-[11px] font-extrabold tracking-wide" style={{ background: 'color-mix(in srgb, var(--muscu) 18%, transparent)', color: MUSCU }}>{fmt}</span>}
+              </div>
+            )}
             <div className="font-bold text-[16px] leading-tight truncate">{ex.name}</div>
             <div className="text-[13px] text-muted num mt-0.5 truncate">{summary(e)}</div>
           </div>
@@ -47,10 +64,16 @@ function ExerciseRow({ e, handle, open, onToggle, onChange, onRemove }: {
       </div>
       {open && (
         <div className="px-4 pb-4 pt-1 flex flex-col gap-3">
-          {field('Séries', <NumberInput value={e.sets} min={1} max={10} width={48} onChange={(v) => v !== undefined && onChange({ sets: v })} />)}
-          {field('Reps min', <NumberInput value={e.repMin} min={1} max={50} width={48} onChange={(v) => v !== undefined && onChange({ repMin: v, repMax: Math.max(e.repMax, v) })} />)}
-          {field('Reps max', <NumberInput value={e.repMax} min={1} max={60} width={48} onChange={(v) => v !== undefined && onChange({ repMax: v, repMin: Math.min(e.repMin, v) })} />)}
-          {field('Repos (s)', <NumberInput value={e.restSec} min={15} max={600} step={15} width={48} onChange={(v) => v !== undefined && onChange({ restSec: v })} />)}
+          {group && names && onGroupChange && onUngroup && <GroupParams spec={group} names={names} onChange={onGroupChange} onUngroup={onUngroup} />}
+          {!group && <FormatChips exerciseId={e.exerciseId} value={e.format} onChange={(f) => onChange(formatPatch(e, f))} />}
+          {e.plan?.length && !group
+            ? <PlanEditor value={e} onChange={(p) => onChange(p)} />
+            : (<>
+              {!group && field('Séries', <NumberInput value={e.sets} min={1} max={10} width={48} onChange={(v) => v !== undefined && onChange({ sets: v })} />)}
+              {field(timed ? 'Durée min (s)' : 'Reps min', <NumberInput value={e.repMin} min={1} max={timed ? 300 : 50} step={timed ? 5 : 1} width={48} onChange={(v) => v !== undefined && onChange({ repMin: v, repMax: Math.max(e.repMax, v) })} />)}
+              {field(timed ? 'Durée max (s)' : 'Reps max', <NumberInput value={e.repMax} min={1} max={timed ? 300 : 60} step={timed ? 5 : 1} width={48} onChange={(v) => v !== undefined && onChange({ repMax: v, repMin: Math.min(e.repMin, v) })} />)}
+            </>)}
+          {!group && field('Repos (s)', <NumberInput value={e.restSec} min={15} max={600} step={15} width={48} onChange={(v) => v !== undefined && onChange({ restSec: v })} />)}
           {field('RIR visé', (
             <span className="inline-flex items-center gap-2">
               {e.rir === undefined
@@ -76,7 +99,29 @@ export function TemplateEditor({ open, onClose, program, template }: { open: boo
   const [pick, setPick] = useState(false)
   useEffect(() => { if (open) { setDraft(structuredClone(template ?? newTemplate())); setOpenId(null) } }, [open])
   const customs = customExercisesOf(db, program.clientId)
-  const set = (id: string, p: Partial<TemplateExercise>) => setDraft((d) => ({ ...d, exercises: d.exercises.map((e) => (e.id === id ? { ...e, ...p } : e)) }))
+  const set = (id: string, patch: Partial<TemplateExercise>) => setDraft((d) => {
+    const next = structuredClone(d)
+    const e = next.exercises.find((x) => x.id === id)
+    if (!e) return d
+    if ('plan' in patch) clearPlan(e)
+    Object.assign(e, patch)
+    if (e.plan?.length) e.sets = e.plan.length
+    normalizeGroups(next)
+    return next
+  })
+  const setGroup = (gid: string, patch: Partial<GroupSpec>) => setDraft((d) => {
+    const next = structuredClone(d)
+    const g = next.groups?.find((x) => x.id === gid)
+    if (g) Object.assign(g, patch)
+    normalizeGroups(next)
+    return next
+  })
+  const removeExercise = (id: string) => setDraft((d) => {
+    const next = structuredClone(d)
+    next.exercises = next.exercises.filter((x) => x.id !== id)
+    normalizeGroups(next)
+    return next
+  })
   const valid = draft.name.trim().length > 0 && draft.exercises.length > 0
   const save = () => {
     saveTemplate(program.id, { ...draft, name: draft.name.trim() })
@@ -89,13 +134,20 @@ export function TemplateEditor({ open, onClose, program, template }: { open: boo
         <div className="flex flex-col gap-4">
           <input className="w-full h-14 rounded-[16px] bg-surface2 px-4 outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60 text-[19px] font-bold" placeholder="Nom (ex. Push, Pull, Legs)" aria-label="Nom de la séance" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
           {draft.exercises.length === 0
-            ? <p className="text-muted text-[14.5px] leading-snug px-1">Ajoute les exercices de cette séance dans l'ordre où tu les fais. Tu pourras régler les séries, les reps et le repos de chacun.</p>
+            ? <p className="text-muted text-[14.5px] leading-snug px-1">Ajoute les exercices de cette séance dans l'ordre où tu les fais. Tu pourras régler les séries, les reps et le repos de chacun, et choisir un format (série lourde, combo, dégressive…) ou un groupe (superset, circuit, EMOM…).</p>
             : (
               <SortableList items={draft.exercises} onChange={(exercises) => setDraft({ ...draft, exercises })}>
-                {(e, { handle }) => (
-                  <ExerciseRow e={e} handle={handle} open={openId === e.id} onToggle={() => setOpenId(openId === e.id ? null : e.id)} onChange={(p) => set(e.id, p)}
-                    onRemove={() => setDraft({ ...draft, exercises: draft.exercises.filter((x) => x.id !== e.id) })} />
-                )}
+                {(e, { handle }) => {
+                  const g = groupOf(draft, e.id)
+                  return (
+                    <ExerciseRow e={e} handle={handle} open={openId === e.id} onToggle={() => setOpenId(openId === e.id ? null : e.id)} onChange={(p) => set(e.id, p)}
+                      onRemove={() => removeExercise(e.id)}
+                      group={g} letter={g ? letterOf(g.exerciseIds.indexOf(e.id)) : undefined}
+                      names={g ? groupMembers(draft, g).map((m) => exerciseOf(m.exerciseId).name) : undefined}
+                      onGroupChange={g ? (p) => setGroup(g.id, p) : undefined}
+                      onUngroup={g ? () => setDraft((d) => ({ ...d, groups: (d.groups ?? []).filter((x) => x.id !== g.id) })) : undefined} />
+                  )
+                }}
               </SortableList>
             )}
           <Button variant="tinted" color={MUSCU} full onClick={() => setPick(true)}><Icon name="plus" size={18} strokeWidth={2.4} /> Ajouter un exercice</Button>
@@ -109,9 +161,26 @@ export function TemplateEditor({ open, onClose, program, template }: { open: boo
           )}
         </div>
       </Sheet>
-      <ExercisePicker open={pick} onClose={() => setPick(false)} title="Ajouter un exercice" injuries={[]} warn={program.q.injuries} customs={customs}
+      <AddExerciseSheet open={pick} onClose={() => setPick(false)} injuries={[]} warn={program.q.injuries} customs={customs}
         onCreateCustom={(name, muscle) => addCustomExercise(program.id, name, muscle)}
-        onPick={(id) => { const e = newTemplateExercise(id); setDraft((d) => ({ ...d, exercises: [...d.exercises, e] })); setOpenId(e.id) }} />
+        existing={draft.exercises.filter((e) => !groupOf(draft, e.id)).map((e) => ({ id: e.id, label: exerciseOf(e.exerciseId).name }))}
+        onAdd={(id, fmt) => {
+          const e = newTemplateExercise(id)
+          if (fmt !== 'classique') Object.assign(e, formatPatch(e, fmt))
+          setDraft((d) => ({ ...d, exercises: [...d.exercises, e] })); setOpenId(e.id)
+        }}
+        onGroup={(kind, items) => setDraft((d) => {
+          const next = structuredClone(d)
+          const ids: string[] = []
+          for (const it of items) {
+            if ('existing' in it) ids.push(it.existing)
+            else { const e = newTemplateExercise(it.exerciseId); next.exercises.push(e); ids.push(e.id) }
+          }
+          applyGroupDefaults(kind, next.exercises.filter((e) => ids.includes(e.id)))
+          next.groups = [...(next.groups ?? []), defaultGroup(kind, ids)]
+          normalizeGroups(next)
+          return next
+        })} />
     </>
   )
 }
@@ -224,6 +293,30 @@ export function PlanningEditor({ open, onClose, program }: { open: boolean; onCl
   )
 }
 
+// ------------------------------------------------------------------ modèles tout faits : renfo coureur
+
+/**
+ * Course en mode libre : MIND ne génère pas de renfo, mais propose 2 modèles « Renfo coureur » tout faits
+ * (sans matériel, et avec élastique), à ajouter à « Mes séances ».
+ */
+function RenfoTemplatesCard({ program }: { program: Program }) {
+  const names = ['Renfo coureur · sans matériel', 'Renfo coureur · avec élastique']
+  const have = new Set((program.libre?.templates ?? []).map((t) => t.name))
+  if (program.type !== 'muscu' || names.every((n) => have.has(n))) return null
+  return (
+    <Card className="p-4 mt-4" style={{ background: 'color-mix(in srgb, #FF9F0A 11%, var(--surface))' }}>
+      <div className="flex gap-3">
+        <span style={{ color: '#FF9F0A' }}><SportIcon sport="course" size={22} /></span>
+        <div className="flex-1">
+          <div className="font-bold">Tu cours ? Deux séances de renfo toutes prêtes</div>
+          <p className="text-[14px] text-muted mt-0.5 leading-snug">Un circuit de gainage, de force et de pliométrie pensé pour les coureurs : « sans matériel » et « avec élastique ». Tu les ajoutes à tes séances, tu les modifies comme tu veux.</p>
+          <div className="mt-3"><Button small color="#FF9F0A" onClick={() => { addRenfoTemplates(program.id); toast('Séances de renfo ajoutées') }}>Ajouter à mes séances</Button></div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 // ------------------------------------------------------------------ « Mes séances »
 
 export function FreeSessionsView({ clientId }: { clientId: string }) {
@@ -255,6 +348,7 @@ export function FreeSessionsView({ clientId }: { clientId: string }) {
               </div>
             ))}
           </div>
+          <div className="w-full text-left"><RenfoTemplatesCard program={program} /></div>
         </div>
       ) : (
         <>
@@ -282,6 +376,7 @@ export function FreeSessionsView({ clientId }: { clientId: string }) {
             })}
           </div>
           <div className="mt-3"><Button full variant="tinted" color={MUSCU} onClick={() => setEditing('new')}><Icon name="plus" size={18} strokeWidth={2.4} /> Nouvelle séance</Button></div>
+          <RenfoTemplatesCard program={program} />
 
           <SectionTitle>Planning</SectionTitle>
           <Card className="p-4">

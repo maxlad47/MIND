@@ -11,6 +11,7 @@ import { Button, Card, Cover, Group, Icon, Page, Row, RowIcon, Sheet, Toggle, sp
 import { motion } from 'framer-motion'
 import { setLook, useLook, type Look } from '@/ui/look'
 import { DIST_LABEL } from '@/engine/running'
+import { setRestSound, useRest } from '@/lib/rest'
 
 function InstallGuide({ open, onClose, onGranted }: { open: boolean; onClose: () => void; onGranted: () => void }) {
   const standalone = isStandalone()
@@ -50,6 +51,7 @@ export function ProfileView({ userId }: { userId: string }) {
   const program = programOf(db, userId)
   const [guide, setGuide] = useState(false)
   const [switching, setSwitching] = useState(false)
+  const { sound } = useRest()
   const libre = isLibre(program)
   const edits = db.edits.filter((e) => e.clientId === userId).slice(0, 12)
 
@@ -83,6 +85,14 @@ export function ProfileView({ userId }: { userId: string }) {
           <Row onClick={() => setSwitching(true)}><RowIcon name="edit" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">Passer en mode libre</div><div className="text-[13px] text-muted">J'ai déjà mon programme de musculation</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
         </Group>}
       </>)}
+
+      <Group header="Minuteur de repos" footer="Le repos démarre tout seul quand tu valides une série, une partie ou un tour. Le son de fin ne retentit que si l'app est au premier plan.">
+        <Row>
+          <RowIcon name="clock" color="#30D158" />
+          <div className="flex-1"><div className="font-semibold">Son de fin de repos</div><div className="text-[13px] text-muted">{sound ? 'Activé' : 'Coupé'}</div></div>
+          <Toggle checked={sound} label="Son de fin de repos" onChange={() => setRestSound(!sound)} />
+        </Row>
+      </Group>
 
       <Group header="Rappels" footer={isIOS() && !isStandalone() ? 'Sur iPhone, ajoute d\'abord MIND à l\'écran d\'accueil.' : undefined}>
         <Row>

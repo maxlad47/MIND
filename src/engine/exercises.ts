@@ -133,15 +133,52 @@ const ROWS: Row[] = [
   ['hip_thrust_unilateral', 'Hip thrust unilatéral', 'fessiers', ['ischios'], 'hip_thrust', 'poids_du_corps', I, [], true, 'Une jambe, bassin stable, serrez en haut.'],
   ['mollets_unilateral', 'Mollets unilatéraux à la marche', 'mollets', [], 'calf', 'poids_du_corps', D, ['cheville'], false, 'Sur une marche, amplitude maximale, lent.'],
   ['tirage_poitrine_large', 'Tirage poitrine prise large', 'dos', ['biceps'], 'pull_v', 'poulie', D, ['epaule'], true, 'Prise large, tirez vers le haut de la poitrine.'],
+
+  // ---------- Renfo coureur (gainage, force, pliométrie, élastique) : jamais choisis par le générateur de muscu
+  ['planche_laterale', 'Planche latérale', 'abdos', [], 'core', 'poids_du_corps', D, ['epaule'], false, 'Corps aligné sur l\'avant-bras, hanche haute, serrez les abdos (tenue en secondes, par côté).'],
+  ['copenhague', 'Planche Copenhague', 'abdos', ['fessiers'], 'core', 'poids_du_corps', I, ['hanche'], false, 'Jambe du haut sur un banc ou une chaise, bassin haut : le travail est dans l\'adducteur (tenue, par côté).'],
+  ['dead_bug', 'Dead bug', 'abdos', [], 'core', 'poids_du_corps', D, [], false, 'Dos plaqué au sol, bras et jambe opposés qui s\'éloignent lentement, sans cambrer.'],
+  ['bird_dog', 'Bird dog', 'abdos', ['dos', 'fessiers'], 'core', 'poids_du_corps', D, ['poignet'], false, 'À quatre pattes, étendez le bras et la jambe opposés, bassin stable.'],
+  ['pont_unilateral', 'Pont fessier unilatéral', 'fessiers', ['ischios'], 'hip_thrust', 'poids_du_corps', D, [], true, 'Une jambe tendue, poussez avec le talon d\'appui, bassin à l\'horizontale.'],
+  ['hip_thrust_halteres', 'Hip thrust haltère', 'fessiers', ['ischios'], 'hip_thrust', 'halteres', D, [], true, 'Haltère sur les hanches, menton rentré, extension complète en haut.'],
+  ['pont_elastique', 'Pont fessier avec élastique', 'fessiers', ['ischios'], 'hip_thrust', 'elastique', D, [], true, 'Élastique au-dessus des genoux, poussez les genoux vers l\'extérieur en montant.'],
+  ['chaise', 'Chaise (isométrique)', 'quadriceps', ['fessiers'], 'squat', 'poids_du_corps', D, ['genou'], true, 'Dos contre le mur, cuisses à l\'horizontale, tenez la position.'],
+  ['nordic', 'Nordic curl', 'ischios', [], 'leg_curl', 'poids_du_corps', A, [], false, 'Genoux calés, descendez le buste le plus lentement possible, remontez en vous aidant des mains.'],
+  ['mollets_excentrique', 'Mollets debout en excentrique', 'mollets', [], 'calf', 'poids_du_corps', D, ['cheville'], false, 'Montez sur deux pieds, descendez sur un seul en 3 secondes, talon sous la marche.'],
+  ['mollets_fleche', 'Mollets genou fléchi', 'mollets', [], 'calf', 'halteres', D, ['cheville'], false, 'Genoux fléchis à 90°, montée lente : cible le soléaire, le muscle d\'endurance du coureur.'],
+  ['fente_laterale', 'Fente latérale', 'quadriceps', ['fessiers'], 'lunge', 'poids_du_corps', D, ['genou', 'hanche'], true, 'Grand pas sur le côté, fessier en arrière, jambe tendue de l\'autre côté.'],
+  ['squat_jump', 'Squat jump', 'quadriceps', ['fessiers', 'mollets'], 'plyo', 'poids_du_corps', I, ['genou', 'hanche', 'cheville'], true, 'Descendez en squat, explosez vers le haut, réception souple et silencieuse.'],
+  ['bonds', 'Bonds alternés', 'quadriceps', ['fessiers', 'mollets'], 'plyo', 'poids_du_corps', I, ['genou', 'hanche', 'cheville'], true, 'Grandes foulées bondissantes, un appui à la fois, cherchez la hauteur et la longueur.'],
+  ['skipping', 'Skipping', 'mollets', ['quadriceps'], 'plyo', 'poids_du_corps', D, ['cheville'], false, 'Genoux hauts, appuis rapides sur l\'avant du pied, bras qui accompagnent.'],
+  ['pogo', 'Pogo jumps', 'mollets', [], 'plyo', 'poids_du_corps', I, ['cheville', 'genou'], false, 'Petits sauts raides sur l\'avant du pied, chevilles verrouillées, contact au sol très court.'],
+  ['sauts_lateraux', 'Sauts latéraux', 'quadriceps', ['fessiers'], 'plyo', 'poids_du_corps', D, ['genou', 'cheville'], false, 'Sautez d\'un pied sur l\'autre de côté, réception stable avant de repartir.'],
+  ['monster_walk', 'Monster walk (élastique)', 'fessiers', ['quadriceps'], 'glute_iso', 'elastique', D, [], false, 'Élastique aux chevilles ou au-dessus des genoux, pas latéraux larges, genoux fléchis.'],
+  ['abduction_elastique', 'Abduction à l\'élastique', 'fessiers', [], 'glute_iso', 'elastique', D, [], false, 'Debout, élastique aux chevilles, écartez la jambe sur le côté sans pencher le buste.'],
+  ['clamshell', 'Palourde (élastique)', 'fessiers', [], 'glute_iso', 'elastique', D, [], false, 'Sur le côté, pieds joints, ouvrez le genou du haut sans basculer le bassin.'],
 ]
+
+/** Exercices dont la cible est une durée en secondes. */
+const TIMED = new Set(['planche', 'planche_laterale', 'copenhague', 'chaise', 'skipping'])
+/** Exercices unilatéraux : la cible (répétitions ou durée) s'entend « par côté ». */
+const PER_SIDE = new Set([
+  'planche_laterale', 'copenhague', 'dead_bug', 'bird_dog', 'pont_unilateral', 'mollets_excentrique', 'fente_laterale', 'clamshell',
+  'abduction_elastique', 'fentes_arriere', 'fentes_marchees', 'bulgare', 'step_up', 'rdl_unilateral', 'presse_unilaterale',
+  'hip_thrust_unilateral', 'mollets_unilateral', 'rowing_haltere', 'tirage_unilateral', 'curl_concentre',
+])
+/** Ajoutés pour le renfo coureur : exclus du générateur de muscu (voir `candidates`). */
+const RENFO_ONLY = new Set(ROWS.slice(ROWS.findIndex((r) => r[0] === 'planche_laterale')).map((r) => r[0]))
 
 export const EXERCISES: Exercise[] = ROWS.map(([id, name, muscle, secondary, pattern, equipment, level, contra, compound, cue]) => ({
   id, name, muscle, secondary, pattern, equipment, level, contra, compound, cue, alts: [],
+  ...(TIMED.has(id) ? { unit: 'sec' as const } : {}),
+  ...(PER_SIDE.has(id) ? { perSide: true } : {}),
+  ...(RENFO_ONLY.has(id) ? { renfo: true } : {}),
 }))
 
-// Alternatives explicites : même muscle et même schéma de mouvement.
+// Alternatives explicites : même muscle et même schéma de mouvement. Les exercices de renfo coureur ne sont proposés qu'entre eux
+// (et avec les exercices de la bibliothèque de même schéma) : un exercice de salle garde les mêmes alternatives qu'avant.
 for (const ex of EXERCISES) {
-  ex.alts = EXERCISES.filter((o) => o.id !== ex.id && o.muscle === ex.muscle && o.pattern === ex.pattern).map((o) => o.id)
+  ex.alts = EXERCISES.filter((o) => o.id !== ex.id && o.muscle === ex.muscle && o.pattern === ex.pattern && (ex.renfo || !o.renfo)).map((o) => o.id)
 }
 
 export const EXERCISE_BY_ID: Record<string, Exercise> = Object.fromEntries(EXERCISES.map((e) => [e.id, e]))
@@ -190,6 +227,14 @@ export function exerciseOf(id: string): Exercise {
   return EXERCISE_BY_ID[id] ?? UNKNOWN
 }
 
+/** Exercice dont la cible est une durée (secondes). */
+export const isTimed = (exerciseId: string): boolean => exerciseOf(exerciseId).unit === 'sec'
+/** Suffixe affiché après une cible : « 10 reps / côté », « 30 s / côté ». */
+export function targetSuffix(exerciseId: string): string {
+  const ex = exerciseOf(exerciseId)
+  return ex.perSide ? ' / côté' : ''
+}
+
 export const LEVEL_RANK: Record<Level, number> = { debutant: 0, intermediaire: 1, avance: 2 }
 
 export function isAllowed(ex: Exercise, injuries: Zone[]): boolean {
@@ -207,7 +252,7 @@ export function alternativesFor(exerciseId: string, injuries: Zone[], level?: Le
 
 /** Candidats pour un schéma de mouvement, dans l'ordre de préférence, filtrés blessures + niveau. */
 export function candidates(pattern: Pattern, muscle: Muscle | null, injuries: Zone[], level: Level): Exercise[] {
-  const all = EXERCISES.filter((e) => e.pattern === pattern && (!muscle || e.muscle === muscle) && isAllowed(e, injuries))
+  const all = EXERCISES.filter((e) => !e.renfo && e.pattern === pattern && (!muscle || e.muscle === muscle) && isAllowed(e, injuries))
   const ok = all.filter((e) => LEVEL_RANK[e.level] <= LEVEL_RANK[level])
   return ok.length ? ok : all
 }

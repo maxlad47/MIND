@@ -142,7 +142,7 @@ export function Page({
   const p = hasHero ? clamp01((y - (heroHeight - 130)) / 40) : large ? clamp01((y - 26) / 26) : 1
   const goBack = () => (typeof back === 'string' ? nav(back) : nav(-1))
   return (
-    <div className="min-h-full" style={{ paddingBottom: tabbed ? 'calc(96px + env(safe-area-inset-bottom))' : 'calc(36px + env(safe-area-inset-bottom))' }}>
+    <div className="min-h-full" style={{ paddingBottom: tabbed ? 'calc(96px + env(safe-area-inset-bottom) + var(--rest-h, 0px))' : 'calc(36px + env(safe-area-inset-bottom) + var(--rest-h, 0px))' }}>
       <div className="fixed top-0 inset-x-0 z-30 pointer-events-none">
         <div className="absolute inset-0 glass border-b border-sep" style={{ opacity: p }} />
         <div className="relative pt-safe">
@@ -443,7 +443,7 @@ export function NumberInput({ value, onChange, step = 1, min = 0, max = 999, suf
     last.current = v; setRaw(String(v).replace('.', ',')); onChange(v)
   }
   return (
-    <div className="inline-flex items-center rounded-[14px] bg-surface2 h-12 overflow-hidden" style={{ width: width + 96 }}>
+    <div className="inline-flex items-center rounded-[14px] bg-surface2 h-12 overflow-hidden shrink-0" style={{ width: width + 96 }}>
       <button aria-label="Diminuer" className="tap w-12 h-12 flex items-center justify-center text-muted" onClick={() => bump(-1)}><Icon name="minus" size={18} strokeWidth={2.4} /></button>
       <div className="flex-1 flex items-center justify-center min-w-0">
         <input inputMode="decimal" value={raw} className="w-full min-w-0 h-12 bg-transparent text-center outline-none num font-bold text-[17px]"

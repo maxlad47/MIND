@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { alternativesFor, EXERCISES, exerciseOf, isAllowed } from '@/engine/exercises'
 import { isFreeRun, isLibre } from '@/engine/libre'
@@ -10,6 +10,8 @@ import { motion } from 'framer-motion'
 import { Button, Card, Chip, Cover, Icon, Sheet, SportIcon, spring, toast } from './kit'
 
 export const sportOf = (s: Session) => s.sport
+/** Teinte d'une séance : le renfo coureur est une séance de muscu affichée avec la teinte course. */
+export const tintOf = (s: Pick<Session, 'sport' | 'kind'>): 'muscu' | 'course' => (s.kind === 'renfo' ? 'course' : s.sport)
 export const statusLabel: Record<string, string> = { prevue: 'Prévue', faite: 'Faite', manquee: 'Manquée', sautee: 'Sautée' }
 
 /** Graine de la pochette : en mode libre, une séance garde la pochette de son modèle. */
@@ -18,6 +20,7 @@ export const coverSeed = (s: Session): string => s.templateId ?? s.id + s.title
 export function sessionMeta(s: Session): string {
   if (isFreeRun(s)) return s.runLog ? `${fmtKm(s.runLog.km)} km` : 'Sortie libre'
   if (s.run) return `${fmtKm(s.run.totalKm)} km · ${s.estMinutes} min`
+  if (s.kind === 'renfo') return `Renfo coureur · ${s.estMinutes} min`
   return `${s.exercises?.length ?? 0} exercices · ${s.estMinutes} min`
 }
 
@@ -34,7 +37,7 @@ export function sessionSubtitle(s: Session): string {
 export function SessionTile({ s, onClick, width = 168 }: { s: Session; onClick: () => void; width?: number }) {
   return (
     <motion.button onClick={onClick} whileTap={{ scale: 0.96 }} transition={spring} className="snap-start shrink-0 self-start text-left align-top" style={{ width, display: 'block' }}>
-      <Cover seed={coverSeed(s)} sports={[s.sport]} kind={s.kind} className="rounded-[20px]" style={{ width, height: width, boxShadow: 'var(--shadow-cover)' }}>
+      <Cover seed={coverSeed(s)} sports={[tintOf(s)]} kind={s.kind} className="rounded-[20px]" style={{ width, height: width, boxShadow: 'var(--shadow-cover)' }}>
         <div className="absolute top-2.5 left-2.5 w-8 h-8 rounded-full glass-dark flex items-center justify-center"><SportIcon sport={s.sport} size={17} color="#fff" /></div>
         {s.status === 'faite' && <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-ok text-white flex items-center justify-center shadow"><Icon name="check" size={16} strokeWidth={3} /></div>}
         {s.status === 'manquee' && <div className="absolute top-2.5 right-2.5 rounded-full bg-bad text-white text-[11px] font-bold px-2.5 h-6 flex items-center shadow">Manquée</div>}
@@ -51,7 +54,7 @@ export function SessionTile({ s, onClick, width = 168 }: { s: Session; onClick: 
 export function WarningBanner({ program, onFinish, onChangeGoal }: { program: Program; onFinish?: () => void; onChangeGoal?: () => void }) {
   if (isLibre(program) && program.type === 'muscu') return null // mode libre sans course : aucun avertissement de génération
   // muscu libre + course MIND : seuls les avertissements du plan de course ont un sens
-  const codes = isLibre(program) ? ['prepa_trop_courte', 'chrono_irrealiste', 'pic_non_atteint'] : ['prepa_trop_courte', 'chrono_irrealiste', 'muscu_prioritaire_course', 'conflit_placement', 'pic_non_atteint']
+  const codes = isLibre(program) ? ['prepa_trop_courte', 'chrono_irrealiste', 'pic_non_atteint', 'renfo_placement'] : ['prepa_trop_courte', 'chrono_irrealiste', 'muscu_prioritaire_course', 'conflit_placement', 'pic_non_atteint', 'renfo_placement']
   const list = program.warnings.filter((w) => codes.includes(w.code))
   if (!list.length) return null
   return (
@@ -169,7 +172,7 @@ export function CheckinSheet({ open, onClose, clientId, sessionId, onDone }: { o
 }
 
 // ------------------------------------------------------------------ choix d'exercice
-export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exercice', injuries, level, replacing, excluded = [], customs = [], onCreateCustom, warn = [] }: {
+export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exercice', injuries, level, replacing, excluded = [], customs = [], onCreateCustom, warn = [], header, footer, keepOpen }: {
   open: boolean; onClose: () => void; onPick: (id: string) => void; title?: string; injuries: Zone[]; level?: 'debutant' | 'intermediaire' | 'avance'; replacing?: string; excluded?: Muscle[]
   /** Mode libre : exercices perso du client, affichés avec la bibliothèque. */
   customs?: Exercise[]
@@ -177,6 +180,11 @@ export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exer
   onCreateCustom?: (name: string, muscle: Muscle) => string
   /** Zones à signaler (au lieu de masquer) : « À éviter ». */
   warn?: Zone[]
+  /** Contenu au-dessus de la recherche (choix du format) et en bas de la liste (validation d'un groupe). */
+  header?: ReactNode
+  footer?: ReactNode
+  /** La feuille reste ouverte après un choix (composition d'un groupe). */
+  keepOpen?: boolean
 }) {
   const [q, setQ] = useState('')
   const [creating, setCreating] = useState(false)
@@ -191,7 +199,7 @@ export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exer
     if (!onCreateCustom || !name.trim()) return
     const id = onCreateCustom(name.trim(), muscle)
     onPick(id)
-    onClose()
+    if (keepOpen) { setCreating(false); setName('') } else onClose()
   }
   return (
     <Sheet open={open} onClose={onClose} title={creating ? 'Créer un exercice' : title} tall>
@@ -211,6 +219,7 @@ export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exer
           <Button full variant="ghost" onClick={() => setCreating(false)}>Retour à la liste</Button>
         </div>
       ) : (<>
+        {header}
         {replacing && (
           <p className="text-[14px] text-muted mb-3">Même muscle ({MUSCLE_LABEL[exerciseOf(replacing).muscle]}) et même schéma ({PATTERN_LABEL[exerciseOf(replacing).pattern]}), hors exercices contre-indiqués pour toi.</p>
         )}
@@ -223,7 +232,7 @@ export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exer
         {pool.length === 0 && <p className="text-muted text-center py-6">{replacing ? 'Aucune alternative sans contre-indication.' : 'Aucun exercice trouvé.'}</p>}
         <div className="flex flex-col gap-2">
           {pool.map((e) => (
-            <button key={e.id} className="tap text-left bg-surface2 rounded-xl p-3" style={{ borderRadius: 16, padding: 14 }} onClick={() => { onPick(e.id); onClose() }}>
+            <button key={e.id} className="tap text-left bg-surface2 rounded-xl p-3" style={{ borderRadius: 16, padding: 14 }} onClick={() => { onPick(e.id); if (!keepOpen) onClose() }}>
               <div className="font-semibold">{e.name}{e.id.startsWith('custom:') && <span className="ml-2 align-middle text-[11px] font-bold rounded-full px-2 py-0.5" style={{ background: 'color-mix(in srgb, var(--muscu) 18%, transparent)', color: 'var(--muscu)' }}>Perso</span>}</div>
               <div className="text-[13px] text-muted">{MUSCLE_LABEL[e.muscle]}{e.id.startsWith('custom:') ? '' : ` · ${PATTERN_LABEL[e.pattern]}`}</div>
               {!e.id.startsWith('custom:') && <div className="text-[13px] text-muted mt-0.5">{e.cue}</div>}
@@ -231,6 +240,7 @@ export function ExercisePicker({ open, onClose, onPick, title = 'Choisir un exer
             </button>
           ))}
         </div>
+        {footer}
       </>)}
     </Sheet>
   )
@@ -248,7 +258,7 @@ export function WeekStrip({ start, sessions, today, onOpen }: { start: string; s
         const list = sessions.filter((s) => s.date === d && s.status !== 'sautee')
         const done = list.length > 0 && list.every((s) => s.status === 'faite')
         const missed = list.some((s) => s.status === 'manquee')
-        const sports = [...new Set(list.map((s) => s.sport))] as ('muscu' | 'course')[]
+        const sports = [...new Set(list.map(tintOf))] as ('muscu' | 'course')[]
         const cols = sports.map((x) => (x === 'muscu' ? 'var(--muscu)' : '#FF9F0A'))
         const ring = cols.length > 1 ? `conic-gradient(${cols[0]} 0 50%, ${cols[1]} 50% 100%)` : cols[0]
         const isToday = d === today
