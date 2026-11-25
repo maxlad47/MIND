@@ -385,6 +385,8 @@ export interface LibrePlan {
   suggestLoads: boolean
   /** Exercices créés par le client (ids « custom:… »). */
   customExercises: Exercise[]
+  /** Jours dont la séance prévue a été supprimée à la main (balayage dans l'agenda) : le planning n'y remet rien. */
+  removed?: string[]
 }
 
 export interface Program {

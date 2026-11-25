@@ -396,3 +396,35 @@ describe('muscu libre + course MIND (store)', () => {
     expect(after.find((s) => s.id === id)!.status).toBe('faite')
   })
 })
+
+describe('agenda : supprimer une séance (balayage)', () => {
+  let c: Ctx
+  beforeEach(async () => { c = await fresh() })
+
+  it('carnet libre : la séance supprimée n\'est pas recréée par le planning, « Annuler » la remet', () => {
+    const { me, first } = clientWithHistory(c)
+    const today = addDays(first.date, 1)
+    const p = c.s.switchToLibre(me.id, true, today)!
+    const target = c.adapt.allSessions(p).filter((x) => x.status === 'prevue' && x.date > today && x.templateId && !x.extra).sort((a, b) => a.date.localeCompare(b.date))[0]
+    const undo = c.s.deleteSession(p.id, target.id, today)
+    const after = c.s.programOf(c.s.getDB(), me.id)!
+    expect(c.adapt.allSessions(after).some((x) => x.id === target.id)).toBe(false)
+    expect(c.adapt.allSessions(after).some((x) => x.date === target.date && x.templateId && !x.extra && x.status === 'prevue')).toBe(false)
+    expect(after.libre!.removed).toContain(target.date)
+    // un nouveau passage du planning ne la recrée pas non plus
+    const again = c.libre.syncFree(after, today)
+    expect(c.adapt.allSessions(again).some((x) => x.date === target.date && x.templateId && !x.extra && x.status === 'prevue')).toBe(false)
+    undo()
+    expect(c.adapt.allSessions(c.s.programOf(c.s.getDB(), me.id)!).some((x) => x.id === target.id)).toBe(true)
+  })
+
+  it('programme MIND : la séance disparaît, une séance faite est signalée comme ayant des données', () => {
+    const { prog, first } = clientWithHistory(c)
+    const done = c.adapt.findSession(c.s.programOf(c.s.getDB(), prog.clientId)!, first.id)!
+    expect(c.s.sessionHasData(done)).toBe(true)
+    const next = c.adapt.allSessions(prog).find((x) => x.status === 'prevue' && x.id !== first.id)!
+    expect(c.s.sessionHasData(next)).toBe(false)
+    c.s.deleteSession(prog.id, next.id, first.date)
+    expect(c.adapt.allSessions(c.s.programOf(c.s.getDB(), prog.clientId)!).some((x) => x.id === next.id)).toBe(false)
+  })
+})

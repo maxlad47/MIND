@@ -189,6 +189,7 @@ export function slotsFor(plan: LibrePlan, sessions: Session[], today: string, ho
   const blocked = new Set<string>([
     ...own.filter((s) => !isFree(s) && !pinned.includes(s)).map((s) => s.date),
     ...pinned.map((s) => s.movedFrom!),
+    ...(plan.removed ?? []),
   ])
   const consumers = own.filter((s) => s.status === 'faite' || hasLogs(s) || pinned.includes(s))
 
@@ -254,6 +255,7 @@ export function syncFree(program: Program, today: string, o: { weeksAhead?: numb
   if (!isLibre(program) || !program.libre) return program
   const p = structuredClone(program)
   const plan = p.libre!
+  if (plan.removed) plan.removed = plan.removed.filter((d) => d >= today) // les jours passés n'ont plus besoin d'être bloqués
   settlePast(p, today)
   const ahead = o.weeksAhead ?? WEEKS_AHEAD
   ensureWeeks(p, today, ahead)

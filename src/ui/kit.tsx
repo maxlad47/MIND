@@ -562,11 +562,13 @@ export function DurationInput({ value, onChange, hours = true, compact }: { valu
 }
 
 // ------------------------------------------------------------------ toasts
-type ToastMsg = { id: number; text: string }
+type ToastAction = { label: string; run: () => void }
+type ToastMsg = { id: number; text: string; action?: ToastAction }
 let toastId = 0
 const toastListeners = new Set<(t: ToastMsg) => void>()
-export function toast(text: string) {
-  const t = { id: ++toastId, text }
+/** Message bref en haut de l'écran ; avec `action` (ex. « Annuler »), il reste un peu plus longtemps et se touche. */
+export function toast(text: string, action?: ToastAction) {
+  const t = { id: ++toastId, text, action }
   toastListeners.forEach((l) => l(t))
 }
 export function Toaster() {
@@ -574,7 +576,7 @@ export function Toaster() {
   useEffect(() => {
     const l = (t: ToastMsg) => {
       setList((x) => [...x, t])
-      setTimeout(() => setList((x) => x.filter((y) => y.id !== t.id)), 3200)
+      setTimeout(() => setList((x) => x.filter((y) => y.id !== t.id)), t.action ? 5000 : 3200)
     }
     toastListeners.add(l)
     return () => { toastListeners.delete(l) }
@@ -584,7 +586,13 @@ export function Toaster() {
       <AnimatePresence>
         {list.map((t) => (
           <motion.div key={t.id} layout initial={{ y: -50, opacity: 0, scale: 0.9 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: -30, opacity: 0, scale: 0.95 }} transition={spring}
-            className="glass-strong rounded-[22px] px-5 py-3 text-[14.5px] font-semibold border border-sep max-w-[90%] text-center" style={{ boxShadow: 'var(--shadow-float)' }}>{t.text}</motion.div>
+            className={`glass-strong rounded-[22px] px-5 py-3 text-[14.5px] font-semibold border border-sep max-w-[90%] text-center ${t.action ? 'pointer-events-auto flex items-center gap-4 pr-3 py-2' : ''}`} style={{ boxShadow: 'var(--shadow-float)' }}>
+            {t.text}
+            {t.action && (
+              <button className="tap rounded-full px-3.5 h-9 text-[14.5px] font-bold" style={{ color: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 14%, transparent)' }}
+                onClick={() => { const a = t.action!; setList((x) => x.filter((y) => y.id !== t.id)); a.run() }}>{t.action.label}</button>
+            )}
+          </motion.div>
         ))}
       </AnimatePresence>
     </div>

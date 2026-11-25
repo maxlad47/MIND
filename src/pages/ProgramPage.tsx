@@ -1,14 +1,15 @@
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragStartEvent,
 } from '@dnd-kit/core'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { allSessions, currentWeek } from '@/engine/adapt'
 import { isLibre } from '@/engine/libre'
 import { bestDayFor, conflictsOfWeek, daysFor } from '@/engine/combine'
 import type { Session } from '@/engine/types'
 import { addDays, DAY_NAMES, shortDate, todayISO, weekday } from '@/engine/utils'
-import { moveSession, programOf, restoreSession, undoAdaptationById, useDB } from '@/lib/store'
+import { deleteSession, moveSession, programOf, restoreSession, sessionHasData, undoAdaptationById, useDB } from '@/lib/store'
+import { tick } from '@/lib/haptics'
 import { motion } from 'framer-motion'
 import { Button, Card, Chip, Cover, EmptyState, Icon, Sheet, SectionTitle, SportIcon, spring, toast } from '@/ui/kit'
 import { coverSeed, sessionMeta, statusLabel, tintOf } from '@/ui/parts'
@@ -43,6 +44,104 @@ function SessionRow({ s, canEdit, onOpen, onMenu, dragging }: { s: Session; canE
           <Icon name="grip" size={22} strokeWidth={3} />
         </button>
       )}
+    </div>
+  )
+}
+
+const ACTION_W = 92 // largeur du bouton « Supprimer » révélé
+
+/**
+ * Balayage vers la gauche, comme dans Messages sur iPhone : révèle « Supprimer » ; un balayage long supprime d'un coup.
+ * Doigt seulement (la souris sert au glisser-déposer). Un appui long reste réservé au déplacement de la séance.
+ */
+function SwipeToDelete({ id, openId, setOpenId, onDelete, children }: { id: string; openId: string | null; setOpenId: (v: string | null) => void; onDelete: () => 'remove' | 'keep'; children: React.ReactNode }) {
+  const wrap = useRef<HTMLDivElement>(null)
+  const g = useRef<{ x0: number; y0: number; t0: number; base: number; mode: 'wait' | 'swipe' | 'off'; armed: boolean } | null>(null)
+  const swiped = useRef(false)
+  const [x, setX] = useState(0)
+  const [drag, setDrag] = useState(false)
+  const [gone, setGone] = useState<number | null>(null) // hauteur de départ pendant la disparition
+  const open = openId === id
+  const width = () => wrap.current?.offsetWidth ?? 360
+
+  // une autre ligne s'ouvre, ou on touche ailleurs : celle-ci se referme
+  useEffect(() => { if (!open && !drag && gone === null) setX(0) }, [open, drag, gone])
+  useEffect(() => {
+    if (!open) return
+    const away = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpenId(null) }
+    document.addEventListener('pointerdown', away, true)
+    return () => document.removeEventListener('pointerdown', away, true)
+  }, [open, setOpenId])
+
+  const remove = () => {
+    if (onDelete() === 'keep') { setOpenId(null); setX(0); return }
+    const h = wrap.current?.offsetHeight ?? 0
+    setX(-width())
+    setGone(h)
+    requestAnimationFrame(() => requestAnimationFrame(() => setGone(0)))
+  }
+
+  const down = (e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse' || gone !== null) return
+    g.current = { x0: e.clientX, y0: e.clientY, t0: Date.now(), base: open ? -ACTION_W : 0, mode: 'wait', armed: false }
+  }
+  const move = (e: React.PointerEvent) => {
+    const s = g.current
+    if (!s || s.mode === 'off') return
+    const dx = e.clientX - s.x0
+    const dy = e.clientY - s.y0
+    if (s.mode === 'wait') {
+      if (Date.now() - s.t0 > 230) { s.mode = 'off'; return } // appui long : c'est un déplacement de séance
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { s.mode = 'off'; return } // défilement de la page
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return
+      s.mode = 'swipe'
+      swiped.current = true
+      setDrag(true)
+      if (!open) setOpenId(id)
+      try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId) } catch { /* ignore */ }
+    }
+    const w = width()
+    let nx = s.base + dx
+    if (nx > 0) nx = nx / 4 // un peu d'élastique vers la droite
+    nx = Math.max(-w, nx)
+    const armed = nx < -w * 0.55
+    if (armed !== s.armed) { s.armed = armed; tick() }
+    setX(nx)
+  }
+  const up = () => {
+    const s = g.current
+    g.current = null
+    if (!s || s.mode !== 'swipe') return
+    setDrag(false)
+    if (s.armed) { remove(); return }
+    if (x < -ACTION_W / 2) { setX(-ACTION_W); setOpenId(id) } else { setX(0); setOpenId(null) }
+  }
+  // après un balayage, ou ligne ouverte : le toucher ne doit pas ouvrir la séance
+  const clickCapture = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('[data-swipe-action]')) return
+    if (swiped.current) { e.preventDefault(); e.stopPropagation(); swiped.current = false; return }
+    if (open) { e.preventDefault(); e.stopPropagation(); setOpenId(null) }
+  }
+
+  const w = wrap.current?.offsetWidth ?? 360
+  const full = x < -w * 0.55
+  return (
+    <div ref={wrap} className="relative rounded-[18px] overflow-hidden" data-swipe={id} onClickCapture={clickCapture} onPointerDownCapture={() => { swiped.current = false }}
+      onTransitionEnd={(e) => { if (gone === 0 && e.target === wrap.current && e.propertyName === 'height') { setGone(null); setOpenId(null) } }}
+      style={gone !== null ? { height: gone, opacity: gone ? 1 : 0, transition: 'height .24s ease, opacity .24s ease' } : undefined}>
+      {x < 0 && (
+        <div className="absolute inset-0 flex justify-end" style={{ background: '#FF3B30' }}>
+          <button data-swipe-action aria-label="Supprimer la séance" onClick={remove}
+            className="h-full flex flex-col items-center justify-center gap-0.5 text-white text-[13px] font-semibold"
+            style={{ width: full ? '100%' : Math.max(ACTION_W, -x), alignItems: full ? 'flex-end' : 'center', paddingRight: full ? 22 : 0, transition: drag ? 'none' : 'width .25s ease' }}>
+            <span className="flex flex-col items-center gap-0.5"><Icon name="trash" size={21} strokeWidth={2.2} />Supprimer</span>
+          </button>
+        </div>
+      )}
+      <div onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+        style={{ transform: x ? `translateX(${x}px)` : undefined, transition: drag ? 'none' : 'transform .28s cubic-bezier(.2,.8,.2,1)', touchAction: 'pan-y' }}>
+        {children}
+      </div>
     </div>
   )
 }
@@ -83,6 +182,8 @@ export function ProgramView({ clientId, canEdit = true }: { clientId: string; ca
   // souris : on glisse directement ; doigt : appui long (~0,25 s) puis glisser, pour ne pas gêner le défilement de la page
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }))
   const [menu, setMenu] = useState<Session | null>(null)
+  const [openSwipe, setOpenSwipe] = useState<string | null>(null)
+  const [confirmDel, setConfirmDel] = useState<Session | null>(null)
 
   if (!program) return <EmptyState icon="program" title="Pas encore de programme" text="Le programme apparaîtra ici dès que le formulaire d'entrée sera rempli." />
 
@@ -119,6 +220,16 @@ export function ProgramView({ clientId, canEdit = true }: { clientId: string; ca
     const s = week.sessions.find((x) => x.id === e.active.id)
     if (s && e.over) attemptMove(s, String(e.over.id))
   }
+  const doDelete = (s: Session) => {
+    const undo = deleteSession(program.id, s.id)
+    toast(`« ${s.title} » supprimée`, { label: 'Annuler', run: () => { undo(); toast('Séance remise dans l\'agenda') } })
+  }
+  /** Balayage « Supprimer » : tout de suite si la séance est vierge, après confirmation si des données seraient perdues. */
+  const askDelete = (s: Session): 'remove' | 'keep' => {
+    if (sessionHasData(s)) { setConfirmDel(s); return 'keep' }
+    setTimeout(() => doDelete(s), 240) // le temps que la ligne s'efface
+    return 'remove'
+  }
 
   return (
     <div>
@@ -146,7 +257,7 @@ export function ProgramView({ clientId, canEdit = true }: { clientId: string; ca
         <button className="tap w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-25" aria-label="Semaine suivante" disabled={n >= program.weeks.length} onClick={() => setIdx(n + 1)}><Icon name="chevron" strokeWidth={2.4} /></button>
       </div>
 
-      {canEdit && <p className="text-[12.5px] text-muted text-center mt-3 px-4 leading-snug">Maintiens une séance puis glisse-la sur un autre jour, ou touche <span className="inline-block align-middle text-faint"><Icon name="grip" size={14} strokeWidth={3} /></span> pour choisir le jour.</p>}
+      {canEdit && <p className="text-[12.5px] text-muted text-center mt-3 px-4 leading-snug">Maintiens une séance puis glisse-la sur un autre jour, ou touche <span className="inline-block align-middle text-faint"><Icon name="grip" size={14} strokeWidth={3} /></span> pour choisir le jour. Balaie vers la gauche pour la supprimer.</p>}
       {week.note && (
         <Card className="p-3.5 mt-3 mb-1"><div className="flex gap-2.5 text-[14.5px] leading-snug"><span style={{ color: 'var(--accent)' }}><Icon name="sparkle" size={18} /></span><span>{week.note}</span></div></Card>
       )}
@@ -159,7 +270,10 @@ export function ProgramView({ clientId, canEdit = true }: { clientId: string; ca
               <DayColumn key={date} date={date} today={date === today} past={date < today}>
                 {list.length === 0 ? (
                   <div className="text-[13px] text-faint font-medium rounded-[14px] border border-dashed border-sep px-3 h-10 flex items-center">{available.length && !available.includes(weekday(date)) ? 'Repos' : 'Libre'}</div>
-                ) : list.map((s) => <SessionRow key={s.id} s={s} canEdit={canEdit} onOpen={() => nav(`/session/${s.id}`)} onMenu={() => setMenu(s)} />)}
+                ) : list.map((s) => {
+                  const row = <SessionRow key={s.id} s={s} canEdit={canEdit} onOpen={() => nav(`/session/${s.id}`)} onMenu={() => setMenu(s)} />
+                  return canEdit ? <SwipeToDelete key={s.id} id={s.id} openId={openSwipe} setOpenId={setOpenSwipe} onDelete={() => askDelete(s)}>{row}</SwipeToDelete> : row
+                })}
               </DayColumn>
             )
           })}
@@ -208,6 +322,19 @@ export function ProgramView({ clientId, canEdit = true }: { clientId: string; ca
                 </button>
               )
             })}
+            <button onClick={() => { const m = menu; setMenu(null); askDelete(m) }} className="tap flex items-center justify-center gap-2 rounded-[16px] h-14 mt-1 font-semibold" style={{ color: '#FF453A', background: 'color-mix(in srgb, #FF453A 12%, transparent)' }}>
+              <Icon name="trash" size={19} /> Supprimer la séance
+            </button>
+          </div>
+        )}
+      </Sheet>
+
+      <Sheet open={!!confirmDel} onClose={() => setConfirmDel(null)} title="Supprimer cette séance ?">
+        {confirmDel && (
+          <div className="flex flex-col gap-3">
+            <p className="text-[15px] text-muted leading-snug">« {confirmDel.title} » du {shortDate(confirmDel.date)} contient déjà des données ({confirmDel.status === 'faite' ? 'séance faite' : 'séries ou sortie enregistrées'}). Elles seront effacées.</p>
+            <Button full onClick={() => { const s = confirmDel; setConfirmDel(null); doDelete(s) }} variant="danger">Supprimer</Button>
+            <Button full variant="ghost" onClick={() => setConfirmDel(null)}>Annuler</Button>
           </div>
         )}
       </Sheet>

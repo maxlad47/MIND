@@ -13,7 +13,7 @@ import {
 } from '@/engine/formats'
 import { renfoTemplates } from '@/engine/renfo'
 import {
-  applyRunPlan, isLibre, libreFromProgram, newLibreProgram, syncFree, templateFromSession, withExtraSession, weekRecap, type ExtraSource,
+  applyRunPlan, hasLogs, isLibre, libreFromProgram, newLibreProgram, syncFree, templateFromSession, withExtraSession, weekRecap, type ExtraSource,
 } from '@/engine/libre'
 import { generateProgram, nextStrengthCycle, regenerateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
@@ -394,6 +394,47 @@ export function skipSession(programId: string, sessionId: string): void {
 }
 export function restoreSession(programId: string, sessionId: string): void {
   withSession(programId, sessionId, (s) => { s.status = 'prevue'; return `« ${s.title} » remise au programme.` })
+}
+/** Une séance contient-elle quelque chose qui serait perdu en la supprimant (séries, sortie, bilan) ? */
+export function sessionHasData(s: Session): boolean {
+  return s.status === 'faite' || hasLogs(s) || !!s.runLog || (s.groups ?? []).some((g) => !!g.result)
+}
+/**
+ * Supprime une séance de l'agenda (balayage vers la gauche). En mode libre, le jour est retenu pour que le planning
+ * ne la recrée pas ; une sortie importée qui y était rattachée est mise de côté (elle ne se rattache pas ailleurs toute seule).
+ */
+export function deleteSession(programId: string, sessionId: string, today = todayISO()): () => void {
+  // de quoi revenir en arrière (bouton « Annuler » du message) : le programme et les sorties rattachées, tels qu'avant
+  const before = db.programs.find((x) => x.id === programId)
+  const snap = before && structuredClone(before)
+  const runs = structuredClone(db.importedRuns.filter((r) => r.matchedSessionId === sessionId))
+  mutate((d) => {
+    const p = d.programs.find((x) => x.id === programId)
+    const s = p && findSession(p, sessionId)
+    if (!p || !s) return
+    for (const w of p.weeks) w.sessions = w.sessions.filter((x) => x.id !== s.id)
+    if (isLibre(p) && p.libre && s.templateId && !s.extra) {
+      const days = [s.date, s.movedFrom].filter((x): x is string => !!x && x >= today)
+      p.libre.removed = [...new Set([...(p.libre.removed ?? []), ...days])].sort()
+    }
+    for (const r of d.importedRuns) {
+      if (r.matchedSessionId === s.id) { r.status = 'ignoree'; r.matchedSessionId = undefined; r.note = 'Séance supprimée de l\'agenda.' }
+    }
+    refreshSlots(p, [s.date])
+    if (isLibre(p) && p.libre) syncLibre(d, p, today)
+    logEdit(d, p, `« ${s.title} » du ${s.date} supprimée.`)
+  })
+  return () => {
+    if (!snap) return
+    mutate((d) => {
+      const i = d.programs.findIndex((x) => x.id === programId)
+      if (i < 0) return
+      d.programs[i] = structuredClone(snap)
+      for (const r of runs) { const j = d.importedRuns.findIndex((x) => x.id === r.id); if (j >= 0) d.importedRuns[j] = structuredClone(r) }
+      const s = findSession(snap, sessionId)
+      logEdit(d, d.programs[i], `« ${s?.title ?? 'Séance'} » remise dans l'agenda.`)
+    })
+  }
 }
 export function replaceExercise(programId: string, sessionId: string, seId: string, exerciseId: string): void {
   withSession(programId, sessionId, (s) => {
