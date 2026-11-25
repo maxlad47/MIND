@@ -930,7 +930,7 @@ function notifyOnce(d: DB, id: string, userId: string, title: string, body: stri
 }
 
 /** Rattache une activité au programme actif du client (même résultat sur tous les appareils). Sans programme, elle attend. */
-function attachInDb(d: DB, run: ImportedRun, today: string, o: { forceSessionId?: string; asExtra?: boolean } = {}): void {
+function attachInDb(d: DB, run: ImportedRun, today: string, o: { forceSessionId?: string; asExtra?: boolean; toRunDate?: boolean } = {}): void {
   if (!isRunTypeStr(run.activityType)) { run.status = 'ignoree'; run.note = 'Ce n\'est pas une course à pied.'; return } // vélo, marche, muscu… : jamais rattaché
   const p = programOf(d, run.clientId)
   if (!p) return
@@ -942,26 +942,53 @@ function attachInDb(d: DB, run: ImportedRun, today: string, o: { forceSessionId?
   run.movedFromDate = res.movedFrom
   run.note = undefined
   const s = res.sessionId ? findSession(p, res.sessionId) : undefined
-  if (res.outcome === 'deplacee' && s) {
+  if (res.outcome === 'deplacee' && s && !d.adaptations.some((a) => a.id === `ad-${run.id}`)) {
     d.adaptations.unshift({ id: `ad-${run.id}`, clientId: p.clientId, programId: p.id, date: today, kind: 'deplacee', status: 'applique', text: `« ${s.title} » rattachée à ta sortie du ${run.startAt.slice(0, 10)} (prévue le ${res.movedFrom}).` })
   }
   // sorties arrivées toutes seules de la montre : le client a un bilan à remplir
   if (run.source === 'garmin' && s) notifyOnce(d, `n-${run.id}`, run.clientId, 'À compléter', `Ta sortie de ${fmtKm(run.km)} km : respectée ? effort ?`, `/session/${s.id}`)
 }
 
-/** Rattache toutes les activités en attente. En ligne, chaque compte ne traite que les siennes. */
+/**
+ * Sortie « rattachée » dont la séance a perdu les données : le programme a été remplacé par une copie plus ancienne
+ * (autre appareil resté sur une vieille version). Renvoie la séance à re-remplir, `null` si elle a disparu, `undefined` si tout va bien.
+ * Une séance d'un programme archivé, prise par une autre sortie ou sautée n'est jamais touchée.
+ */
+function orphanOf(d: DB, run: ImportedRun): Session | null | undefined {
+  if (run.status !== 'rattachee') return undefined
+  const p = programOf(d, run.clientId)
+  if (!p) return undefined
+  const s = run.matchedSessionId ? findSession(p, run.matchedSessionId) : undefined
+  if (!s) return run.matchedSessionId && clientSessions(d, run.clientId).some((x) => x.id === run.matchedSessionId) ? undefined : null
+  if (s.runLog || s.status === 'faite' || s.status === 'sautee') return undefined
+  return s
+}
+/** Re-rattache une sortie orpheline : à sa séance (remise au jour de la sortie), ou comme au premier passage si la séance a disparu. */
+function relinkInDb(d: DB, run: ImportedRun, today: string, sessionId?: string): void {
+  const s = orphanOf(d, run)
+  if (s === undefined) return
+  const target = sessionId ?? s?.id
+  attachInDb(d, run, today, target ? { forceSessionId: target, toRunDate: !sessionId } : {})
+}
+
+/** Rattache toutes les activités en attente, et répare celles dont la séance a perdu les données. En ligne, chaque compte ne traite que les siennes. */
 export function attachPendingRuns(today = todayISO()): number {
   const me = db.sessionUserId
-  const todo = db.importedRuns.filter((r) => r.status === 'a_rattacher' && (!REMOTE || r.clientId === me) && (r.status === 'a_rattacher'))
-  const ready = todo.filter((r) => !isRunTypeStr(r.activityType) || !!programOf(db, r.clientId))
-  if (!ready.length) return 0
+  const mine = db.importedRuns.filter((r) => !REMOTE || r.clientId === me)
+  const ready = mine.filter((r) => r.status === 'a_rattacher' && (!isRunTypeStr(r.activityType) || !!programOf(db, r.clientId)))
+  const orphans = mine.filter((r) => orphanOf(db, r) !== undefined)
+  if (!ready.length && !orphans.length) return 0
   mutate((d) => {
     for (const r0 of ready) {
       const r = d.importedRuns.find((x) => x.id === r0.id)
       if (r && r.status === 'a_rattacher') attachInDb(d, r, today)
     }
+    for (const r0 of orphans) {
+      const r = d.importedRuns.find((x) => x.id === r0.id)
+      if (r) relinkInDb(d, r, today)
+    }
   })
-  return ready.length
+  return ready.length + orphans.length
 }
 const isRunTypeStr = (t: string) => ['route', 'tapis', 'trail', 'piste'].includes(t)
 
@@ -976,6 +1003,12 @@ export function importRun(clientId: string, data: RunData, source: ImportSource,
   const externalId = opts.externalId ?? data.externalId ?? `${source}:${data.startAt}:${data.km}:${data.seconds}`
   const id = runIdOf(externalId)
   const existing = db.importedRuns.find((r) => r.clientId === clientId && (r.id === id || r.externalId === externalId))
+  if (existing && opts.sessionId && orphanOf(db, existing) !== undefined) {
+    // déjà reçue, mais sa séance a perdu les données (copie plus ancienne du programme) : on la remet sur la séance affichée
+    mutate((d) => { const r = d.importedRuns.find((x) => x.id === existing.id); if (r) relinkInDb(d, r, today, opts.sessionId) })
+    const fixed = db.importedRuns.find((r) => r.id === existing.id)!
+    return { run: fixed, duplicate: false, sessionId: fixed.matchedSessionId }
+  }
   if (existing) return { run: existing, duplicate: true, sessionId: existing.matchedSessionId }
   const run: ImportedRun = { ...data, id, clientId, source, externalId, status: 'a_rattacher' }
   mutate((d) => {

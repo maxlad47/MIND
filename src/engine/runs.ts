@@ -103,12 +103,14 @@ function fill(s: Session, run: ImportedRun): void {
  * Rattache une activité au programme. `forceSessionId` : le client est sur cette séance (« Fait comme prévu », saisie rapide, .fit).
  * Fonction pure et déterministe : deux appareils qui la rejouent obtiennent le même programme.
  */
-export function attachRun(program: Program, run: ImportedRun, opts: { forceSessionId?: string; asExtra?: boolean; today?: string; history?: Session[] } = {}): AttachResult {
+export function attachRun(program: Program, run: ImportedRun, opts: { forceSessionId?: string; asExtra?: boolean; today?: string; history?: Session[]; toRunDate?: boolean } = {}): AttachResult {
   if (!isRunType(run.activityType)) return { program, outcome: 'ignoree', note: 'Ce n\'est pas une course à pied.' }
   const p = structuredClone(program)
   const date = run.startAt.slice(0, 10)
   const forced = opts.forceSessionId ? findSession(p, opts.forceSessionId) : undefined
-  const m: Match | undefined = opts.asExtra ? undefined : forced && isRunSession(forced) ? { sessionId: forced.id } : matchImportedRun(p, run)
+  // `toRunDate` (réparation) : la séance revient au jour de la sortie, comme lors du premier rattachement
+  const forcedMatch = (s: Session): Match => ({ sessionId: s.id, movedFrom: opts.toRunDate && s.date !== date ? s.date : undefined })
+  const m: Match | undefined = opts.asExtra ? undefined : forced && isRunSession(forced) ? forcedMatch(forced) : matchImportedRun(p, run)
   if (m) {
     const s = findSession(p, m.sessionId)!
     if (m.movedFrom) relocateSession(p, s, date)

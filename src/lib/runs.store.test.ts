@@ -205,3 +205,45 @@ describe('réglages et migration', () => {
     expect(c.runs.needsReview(s)).toBe(false)
   })
 })
+
+describe('programme remplacé par une copie plus ancienne (autre appareil) : la sortie retrouve sa séance', () => {
+  let c: Ctx
+  beforeEach(async () => { c = await fresh() })
+  /** Simule l'écrasement : le programme revient à la version d'avant la sortie, l'activité reste « rattachée ». */
+  const overwrite = (old: unknown) => c.s.mutate((d) => { const i = d.programs.findIndex((p) => p.id === (old as { id: string }).id); d.programs[i] = structuredClone(old) as typeof d.programs[number] })
+
+  it('sortie montre : la séance est re-remplie automatiquement, à la date de la sortie', () => {
+    const { me } = setup(c)
+    const ef = courses(c, me.id).find((s) => s.kind === 'ef')!
+    const before = structuredClone(c.s.programOf(c.s.getDB(), me.id)!)
+    c.s.importRun(me.id, data(`${ef.date}T08:00:00`, 8, { externalId: 'garmin:7' }), 'garmin', { today: ef.date })
+    overwrite(before)
+    expect(sess(c, me, ef.id).runLog).toBeUndefined()
+    expect(c.s.attachPendingRuns(ef.date)).toBe(1)
+    expect(sess(c, me, ef.id)).toMatchObject({ status: 'faite', date: ef.date, runLog: { importedRunId: 'ir-garmin-7', km: 8 } })
+    expect(c.s.getDB().notifications.filter((n) => n.id === 'n-ir-garmin-7')).toHaveLength(1) // pas de doublon
+    expect(c.s.attachPendingRuns(ef.date)).toBe(0) // réparé une fois pour toutes
+  })
+
+  it('« Fait comme prévu » déjà appuyé avant l\'écrasement : le bouton remet la sortie et ouvre le bilan', () => {
+    const { me, prog } = setup(c)
+    const ef = courses(c, me.id).find((s) => s.kind === 'ef')!
+    const before = structuredClone(c.s.programOf(c.s.getDB(), me.id)!)
+    c.s.logPlannedRun(prog.id, ef.id, ef.date)
+    overwrite(before)
+    const out = c.s.logPlannedRun(prog.id, ef.id, ef.date)!
+    expect(out.sessionId).toBe(ef.id)
+    expect(sess(c, me, ef.id).runLog?.feeling).toBe(0) // bilan à remplir
+  })
+
+  it('une séance sautée, ou prise par une autre sortie, n\'est jamais touchée', () => {
+    const { me, prog } = setup(c)
+    const ef = courses(c, me.id).find((s) => s.kind === 'ef')!
+    const before = structuredClone(c.s.programOf(c.s.getDB(), me.id)!)
+    c.s.importRun(me.id, data(`${ef.date}T08:00:00`, 8, { externalId: 'garmin:8' }), 'garmin', { today: ef.date })
+    overwrite(before)
+    c.s.logQuickRun(prog.id, ef.id, 9, 3000, ef.date)
+    expect(c.s.attachPendingRuns(ef.date)).toBe(0)
+    expect(sess(c, me, ef.id).runLog?.km).toBe(9)
+  })
+})

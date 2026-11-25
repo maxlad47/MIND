@@ -286,7 +286,12 @@ export function RunEntry({ program, session, onImported }: { program: Program; s
   const canPlanned = plannedKm(session) > 0 && (session.run?.estMinutes ?? 0) > 0
   return (
     <>
-      {canPlanned && <Button full color={COURSE} onClick={() => { if (logPlannedRun(program.id, session.id)) onImported() }}>Fait comme prévu</Button>}
+      {canPlanned && <Button full color={COURSE} onClick={() => {
+        const out = logPlannedRun(program.id, session.id)
+        if (!out) toast('Cette séance n\'a pas pu être enregistrée.')
+        else if (out.sessionId === session.id) onImported()
+        else toast('Cette sortie est déjà enregistrée sur une autre séance.') // jamais de bouton qui ne fait rien
+      }}>Fait comme prévu</Button>}
       <Button full variant={canPlanned ? 'secondary' : 'primary'} color={COURSE} onClick={() => setQuick(true)}>Saisie rapide</Button>
       <Button full variant="tinted" color={COURSE} onClick={() => setFit(true)}><Icon name="refresh" size={17} /> Importer depuis ma montre (.FIT)</Button>
       <QuickRunSheet open={quick} onClose={() => setQuick(false)} program={program} session={session} onDone={onImported} />

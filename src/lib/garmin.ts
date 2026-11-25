@@ -2,6 +2,7 @@
 // elle part une seule fois en HTTPS vers `garmin-personal-link`, puis le champ est vidé. Rien dans localStorage.
 import { useEffect } from 'react'
 import { addDays, todayISO } from '@/engine/utils'
+import { useHydrations } from './remote'
 import { attachPendingRuns, linkOf, useDB } from './store'
 import { REMOTE, supabase } from './supabase'
 
@@ -70,7 +71,9 @@ export function useGarminAuto(userId: string): void {
   const db = useDB()
   const pending = db.importedRuns.filter((r) => r.status === 'a_rattacher' && (!REMOTE || r.clientId === userId)).length
   const hasProgram = db.programs.some((p) => p.clientId === userId && p.status === 'actif')
-  useEffect(() => { if (pending && hasProgram) attachPendingRuns() }, [pending, hasProgram])
+  const hydrations = useHydrations()
+  // après chaque chargement serveur : rattache les nouvelles sorties et répare celles dont la séance a perdu les données
+  useEffect(() => { if (hydrations > 0 && hasProgram) attachPendingRuns() }, [pending, hasProgram, hydrations])
   const linked = linkOf(db, userId)?.state === 'liee'
   useEffect(() => { if (REMOTE && GARMIN_PERSONAL && linked) void syncOnOpen() }, [userId, linked])
 }

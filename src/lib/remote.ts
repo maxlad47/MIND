@@ -31,6 +31,14 @@ const subscribe = (f: () => void) => { subs.add(f); return () => { subs.delete(f
 export const useBoot = (): Boot => useSyncExternalStore(subscribe, () => boot)
 export const useSyncState = (): SyncState => useSyncExternalStore(subscribe, () => syncState)
 const setBoot = (b: Boot) => { boot = b; emit() }
+/**
+ * Nombre de chargements depuis le serveur terminés. Les tâches automatiques (séances manquées, rattachement des courses…)
+ * attendent le premier : lancées sur le cache d'un appareil resté sur une vieille version, elles renverraient tout le
+ * programme périmé au serveur et effaceraient ce qui a été fait ailleurs entre-temps.
+ */
+let hydrations = 0
+export const useHydrations = (): number => useSyncExternalStore(subscribe, () => hydrations)
+export const hydrationCount = (): number => hydrations
 const setSync = (s: SyncState) => { if (syncState !== s) { syncState = s; emit() } }
 
 // ------------------------------------------------------------------ empreintes (détection des changements)
@@ -218,6 +226,8 @@ async function hydrate(uid: string): Promise<void> {
   }
   replaceDB(next)
   saveSynced()
+  hydrations++
+  emit()
 }
 
 let channel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
@@ -357,6 +367,7 @@ async function startSession(uid: string): Promise<void> {
 
 async function endSession(): Promise<void> {
   started = null
+  hydrations = 0
   stopListening()
   if (timer) { clearTimeout(timer); timer = null }
   synced = new Map()
@@ -400,14 +411,38 @@ export async function remoteSignOut(): Promise<void> {
   await endSession()
 }
 
+/**
+ * Retour au premier plan ou au réseau : envoie ce qui attend, puis recharge tout. Une app iPhone en veille ne reçoit pas
+ * le temps réel : sans ce rechargement, elle travaillerait sur une copie périmée et l'enverrait au prochain changement.
+ */
+let refreshing = false
+export async function refreshRemote(): Promise<void> {
+  const uid = started
+  if (!supabase || !uid || refreshing) return
+  refreshing = true
+  try {
+    await pushNow()
+    await hydrate(uid)
+    listen(uid) // le canal temps réel a pu être coupé pendant la veille
+  } catch (e) {
+    console.warn('[sync] rechargement impossible (hors ligne ?)', e)
+  } finally {
+    refreshing = false
+  }
+}
+
 /** À appeler une fois au démarrage de l'app. */
 export async function initRemote(): Promise<void> {
-  if (!supabase) { setBoot('ready'); return }
+  if (!supabase) { hydrations = 1; setBoot('ready'); return }
   loadSynced()
   setChangeHook(() => schedulePush())
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') void pushNow() })
+  let hiddenAt = 0
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); void pushNow() }
+    else if (hiddenAt && Date.now() - hiddenAt > 20_000) void refreshRemote()
+  })
   window.addEventListener('pagehide', () => { void pushNow() })
-  window.addEventListener('online', () => { void pushNow() })
+  window.addEventListener('online', () => { void refreshRemote() })
   supabase.auth.onAuthStateChange((event) => { if (event === 'SIGNED_OUT' && started) void endSession() })
   try {
     const { data } = await supabase.auth.getSession()

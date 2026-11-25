@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { P_MIXTE } from '@/engine/fixtures'
 import { newTemplate, newTemplateExercise } from '@/engine/libre'
-import { todayISO } from '@/engine/utils'
+import { addDays, todayISO } from '@/engine/utils'
 
 type Row = Record<string, any>
 function makeServer() {
@@ -12,8 +12,8 @@ function makeServer() {
 }
 type Server = ReturnType<typeof makeServer>
 
-function fakeClient(server: Server) {
-  let current: string | null = null
+function fakeClient(server: Server, loggedIn: string | null = null) {
+  let current: string | null = loggedIn
   const q = (table: string) => {
     const t = server.tables[table]
     const filters: ((r: Row) => boolean)[] = []
@@ -65,18 +65,18 @@ function fakeClient(server: Server) {
 }
 
 /** Un « appareil » = un localStorage + une instance neuve des modules. */
-async function device(server: Server) {
+async function device(server: Server, o: { store?: Map<string, string>; loggedIn?: string; init?: boolean } = {}) {
   vi.resetModules()
-  const store = new Map<string, string>()
+  const store = o.store ?? new Map<string, string>()
   vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) })
   vi.stubGlobal('document', { addEventListener() {}, visibilityState: 'visible' })
   vi.stubGlobal('window', { addEventListener() {} })
-  const client = fakeClient(server)
+  const client = fakeClient(server, o.loggedIn ?? null)
   vi.doMock('./supabase', () => ({ supabase: client, REMOTE: true }))
   const s = await import('./store')
   const r = await import('./remote')
-  await r.initRemote()
-  return { s, r }
+  if (o.init !== false) await r.initRemote()
+  return { s, r, store }
 }
 
 describe('synchronisation en ligne', () => {
@@ -165,6 +165,57 @@ describe('synchronisation en ligne', () => {
     const db2 = cli2.s.getDB()
     expect(db2.programs.find((p) => p.id === prog.id)!.libre!.templates[0].name).toBe('Push lourd')
     expect(db2.notifications.some((n) => n.userId === me.id && n.title === 'Max a modifié ta séance Push lourd')).toBe(true)
+  })
+
+  it('un appareil rouvert avec une vieille copie n\'efface pas les séances créées ailleurs (tâches du jour après le chargement)', async () => {
+    // téléphone : crée le compte et le programme libre
+    const phone = await device(server)
+    await phone.r.remoteSignUp('max@test.fr', 'secret1', 'Max')
+    const me = phone.s.currentUser()!
+    const today = todayISO()
+    const prog = phone.s.submitQuestionnaire(me.id, { ...P_MIXTE, firstName: 'Max', mode: 'libre' }, today)
+    phone.s.runDailyJobs(today)
+    await phone.r.pushNow()
+
+    // ordinateur : même compte, crée 3 séances
+    const pc = await device(server)
+    await pc.r.remoteSignIn('max@test.fr', 'secret1')
+    for (const name of ['Push', 'Pull', 'Jambes']) pc.s.saveTemplate(prog.id, newTemplate(name))
+    await pc.r.pushNow()
+    const names = () => ((server.tables.records.get(`p:${prog.id}`)!.data as any).libre.templates as { name: string }[]).map((t) => t.name)
+    expect(names()).toEqual(['Push', 'Pull', 'Jambes'])
+
+    // le lendemain, le téléphone est rouvert avec son cache d'hier
+    const tomorrow = addDays(today, 1)
+    const again = await device(server, { store: phone.store, loggedIn: me.id, init: false })
+    const init = again.r.initRemote()
+    expect(again.r.hydrationCount()).toBe(0) // l'app s'affiche avec le cache : les tâches du jour attendent
+    await init
+    expect(again.r.hydrationCount()).toBe(1)
+    again.s.runDailyJobs(tomorrow)
+    await again.r.pushNow()
+    expect(names()).toEqual(['Push', 'Pull', 'Jambes'])
+    expect(again.s.getDB().programs.find((p) => p.id === prog.id)!.libre!.templates).toHaveLength(3)
+  })
+
+  it('cause du bug : les tâches du jour lancées sur le cache avant le chargement renvoyaient le programme périmé', async () => {
+    const phone = await device(server)
+    await phone.r.remoteSignUp('max@test.fr', 'secret1', 'Max')
+    const me = phone.s.currentUser()!
+    const today = todayISO()
+    const prog = phone.s.submitQuestionnaire(me.id, { ...P_MIXTE, firstName: 'Max', mode: 'libre' }, today)
+    phone.s.runDailyJobs(today)
+    await phone.r.pushNow()
+    const pc = await device(server)
+    await pc.r.remoteSignIn('max@test.fr', 'secret1')
+    pc.s.saveTemplate(prog.id, newTemplate('Push'))
+    await pc.r.pushNow()
+
+    const again = await device(server, { store: phone.store, loggedIn: me.id, init: false })
+    again.s.runDailyJobs(addDays(today, 1)) // ancien comportement : avant le chargement
+    await again.r.initRemote()
+    await again.r.pushNow()
+    expect((server.tables.records.get(`p:${prog.id}`)!.data as any).libre.templates).toHaveLength(0)
   })
 
   it('une modification faite hors ligne n\'est pas perdue au rechargement', async () => {

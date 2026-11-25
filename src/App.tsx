@@ -11,7 +11,7 @@ import { ClientShell, CoachShell } from './pages/Shell'
 import SessionPage from './pages/SessionPage'
 import ClientDetail from './pages/ClientDetail'
 import { scheduleLocalReminder } from './lib/push'
-import { useBoot } from './lib/remote'
+import { useBoot, useHydrations } from './lib/remote'
 
 export default function App() {
   const db = useDB()
@@ -27,7 +27,9 @@ export default function App() {
   }, [me?.theme])
 
   useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
-  useEffect(() => { if (me) runDailyJobs() }, [me?.id])
+  const hydrations = useHydrations()
+  // jamais sur le cache seul : on attend la version du serveur (sinon un appareil périmé écrase le programme)
+  useEffect(() => { if (me && hydrations > 0) runDailyJobs() }, [me?.id, hydrations])
   useEffect(() => { if (me?.notifications) scheduleLocalReminder(me.id, me.reminderTime) }, [me?.id, me?.notifications, me?.reminderTime])
 
   if (boot === 'booting') return (<><div className="min-h-[100dvh] bg-bg" /><Splash /></>)
