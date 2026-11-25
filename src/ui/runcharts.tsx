@@ -6,7 +6,7 @@ import { fmtPace, fmtKm, shortDate } from '@/engine/utils'
 import { fmtSleep } from '@/engine/runs'
 
 const axis = { fill: 'var(--muted)', fontSize: 11, fontWeight: 500 }
-const COURSE = '#FF9F0A'
+const COURSE = 'var(--course)'
 export const ZONE_COLORS = ['#64D2FF', '#30D158', '#FFD60A', '#FF9F0A', '#FF453A']
 
 function Tip({ active, payload, label, render }: { active?: boolean; payload?: { payload: Record<string, number> }[]; label?: string | number; render: (p: Record<string, number>, label?: string | number) => string }) {
@@ -80,7 +80,7 @@ export function RpeChart({ points }: { points: { date: string; rpe: number }[] }
 
 /** Pas et durée de sommeil des 7 derniers jours. */
 export function HealthBars({ days }: { days: HealthDay[] }) {
-  const data = days.map((d) => ({ name: shortDate(d.date), steps: d.steps ?? 0, sleep: d.sleepMinutes ?? 0 }))
+  const data = days.map((d) => ({ name: shortDate(d.date), steps: d.steps ?? null, sleep: d.sleepMinutes || null }))
   const mini = (key: 'steps' | 'sleep', color: string, label: string, fmt: (v: number) => string) => (
     <div>
       <div className="text-[12.5px] text-muted font-semibold mb-1 px-1">{label}</div>
@@ -89,7 +89,7 @@ export function HealthBars({ days }: { days: HealthDay[] }) {
           <BarChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }} barCategoryGap="22%">
             <XAxis dataKey="name" tick={axis} axisLine={false} tickLine={false} interval={0} />
             <YAxis hide domain={[0, 'dataMax']} />
-            <Tooltip cursor={{ fill: 'var(--surface2)', radius: 6 }} content={<Tip render={(p, l) => `${l} · ${fmt(p[key])}`} />} />
+            <Tooltip cursor={{ fill: 'var(--surface2)', radius: 6 }} content={<Tip render={(p, l) => `${l} · ${p[key] == null ? 'pas de données' : fmt(p[key])}`} />} />
             <Bar dataKey={key} fill={color} radius={[5, 5, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -98,8 +98,8 @@ export function HealthBars({ days }: { days: HealthDay[] }) {
   )
   return (
     <div className="flex flex-col gap-3">
-      {mini('steps', '#30D158', 'Pas par jour', (v) => `${v.toLocaleString('fr-FR')} pas`)}
-      {mini('sleep', '#5E5CE6', 'Sommeil par nuit', (v) => (v ? fmtSleep(v) : '—'))}
+      {mini('steps', 'var(--steps)', 'Pas par jour', (v) => `${v.toLocaleString('fr-FR')} pas`)}
+      {mini('sleep', 'var(--sleep)', 'Sommeil par nuit', (v) => fmtSleep(v))}
     </div>
   )
 }

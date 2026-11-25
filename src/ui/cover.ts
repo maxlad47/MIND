@@ -3,41 +3,41 @@ import { hash } from '@/engine/utils'
 import { getLook, type Look } from './look'
 
 export type Sport = 'muscu' | 'course'
-export const SPORT_COLOR = { muscu: 'var(--muscu)', course: '#FF9F0A' } as const
+export const SPORT_COLOR = { muscu: 'var(--muscu)', course: 'var(--course)' } as const
 export const SPORT_LABEL = { muscu: 'Musculation', course: 'Course' } as const
 
 /**
  * « Pochettes » abstraites façon Apple Music, générées par code et déterministes à partir de l'id.
  *
- * Deux palettes de dégradés (une par style) :
- *  - Féminin  : jaune → orange-rouge, pêche → rose, citron vert → menthe, magenta → indigo.
- *  - Masculin : crème → ambre, orange → brique, orange-rouge → bordeaux, vin → quasi noir.
+ * Deux palettes de dégradés (une par thème) :
+ *  - Thème 1 (Paceform) : orange Vivid, bleu Mist → bleu Ocean, bleu nuit, orange → bleu.
+ *  - Thème 2 (Kinetic bleu) : rose Hot Pink, bleu clair → bleu Sky, bleu profond, bleu → rose.
  *
  * Les séances de course suivent la température de la palette : fractionné (VMA, côtes, fartlek, test, course)
  * = les teintes les plus chaudes ; seuil / spécifique = chaud tempéré ; sortie longue = intermédiaire ;
  * endurance fondamentale et récupération = les plus froides. La musculation a sa propre famille
- * (magenta → indigo en féminin, rouge → vin en masculin).
+ * (orange → bleu Ocean en thème 1, rose → bleu en thème 2).
  */
 
 type Stops = [string, string, string] // haut, milieu, bas
 type PalKey = 'g1' | 'g2' | 'g3' | 'g4' | 'mild' | 'muscu'
 
 const PAL: Record<Look, Record<PalKey, Stops>> = {
-  feminin: {
-    g1: ['#F9CC56', '#F6993C', '#EE5238'],
-    g2: ['#F7BCA6', '#EC7A93', '#E63869'],
-    g3: ['#E5EF6E', '#A6EE9A', '#62F2D8'],
-    g4: ['#D2307F', '#9024A9', '#3A22DD'],
-    mild: ['#8EEFC9', '#6C9BE9', '#5A3EDC'],
-    muscu: ['#D2307F', '#9024A9', '#3A22DD'],
+  t1: {
+    g1: ['#FFB27A', '#F76926', '#B8380A'],
+    g2: ['#A9CEE7', '#3F86B8', '#01598C'],
+    g3: ['#1A6FA3', '#01406A', '#02121F'],
+    g4: ['#01598C', '#0A2F55', '#F76926'],
+    mild: ['#A9CEE7', '#5C93BC', '#F76926'],
+    muscu: ['#F76926', '#C2471A', '#01406A'],
   },
-  masculin: {
-    g1: ['#F6EADA', '#F1C27A', '#DE8D2C'],
-    g2: ['#E88F30', '#C9602F', '#A23A2B'],
-    g3: ['#C95A2A', '#A92A33', '#3A0F18'],
-    g4: ['#7B1D29', '#46121C', '#1A0A0C'],
-    mild: ['#F6EADA', '#F1C27A', '#DE8D2C'],
-    muscu: ['#B93232', '#6C1826', '#1E0A0E'],
+  t2: {
+    g1: ['#FF7AC0', '#D83995', '#7A1A6A'],
+    g2: ['#7FD3F5', '#0593C6', '#034A70'],
+    g3: ['#0593C6', '#034A70', '#021821'],
+    g4: ['#3FB6E6', '#6A5BC8', '#D83995'],
+    mild: ['#CFF0FC', '#62C3EA', '#0593C6'],
+    muscu: ['#D83995', '#7A2A9A', '#034A70'],
   },
 }
 
@@ -50,8 +50,8 @@ const TEMP_OF: Record<string, Temp> = {
   fullbody: 'muscu', haut: 'muscu', bas: 'muscu', push: 'muscu', pull: 'muscu', jambes: 'muscu',
 }
 const KEY_OF: Record<Look, Record<Temp, PalKey>> = {
-  feminin: { hot: 'g1', warm: 'g2', mild: 'mild', cold: 'g3', muscu: 'muscu' },
-  masculin: { hot: 'g2', warm: 'g3', mild: 'g1', cold: 'g4', muscu: 'muscu' },
+  t1: { hot: 'g1', warm: 'mild', mild: 'g2', cold: 'g3', muscu: 'muscu' },
+  t2: { hot: 'g1', warm: 'g4', mild: 'g2', cold: 'g3', muscu: 'muscu' },
 }
 
 function rng(seed: string) {
@@ -72,7 +72,7 @@ const mixHex = (h: string, w: string, t: number) => {
   return '#' + [f(r, r2), f(g, g2), f(b, b2)].map((v) => v.toString(16).padStart(2, '0')).join('')
 }
 /** Palettes claires : voile plus fort pour garder le titre blanc lisible. */
-const LIGHT = new Set(['feminin:g3', 'feminin:mild', 'masculin:g1', 'masculin:mild'])
+const LIGHT = new Set(['t1:g2', 't2:mild'])
 
 export interface CoverSpec {
   base: string
@@ -103,7 +103,7 @@ export function coverSpec(seed: string, sports: Sport[], kind?: string): CoverSp
   const angle = Math.floor(range(155, 205))
   const base = `linear-gradient(${angle}deg, ${top} 0%, ${mid} 52%, ${bot} 100%)`
   const strong = LIGHT.has(`${look}:${key}`)
-  const masc = look === 'masculin'
+  const masc = true // angles francs dans les deux thèmes
   // toutes les couleurs de la palette : deux accents pris dans les AUTRES dégradés
   const others = (['g1', 'g2', 'g3', 'g4'] as PalKey[]).filter((k) => PAL[look][k] !== stops && !(k === 'g4' && key === 'muscu'))
   const pickAcc = () => others.splice(Math.floor(r() * others.length), 1)[0]
@@ -116,8 +116,41 @@ export function coverSpec(seed: string, sports: Sport[], kind?: string): CoverSp
     `radial-gradient(circle at ${range(65, 100)}% ${range(35, 80)}%, ${rgba(accB, 0.6)} 0%, transparent ${range(32, 48)}%)`,
   ].join(',') }]
 
-  const arch = masc ? [3, 6, 2, 5, 7, 6, 3][Math.floor(r() * 7)] : [0, 1, 2, 3, 4, 5][Math.floor(r() * 6)]
-  if (arch === 0) {
+  // thème 1 : traînées orange (8) et satin (10) ; thème 2 : traînées roses (8), satin, éclat
+  const arch = look === 't1' ? [8, 10, 8, 10, 6, 8, 10][Math.floor(r() * 7)] : [8, 8, 10, 8, 5, 8, 10][Math.floor(r() * 7)]
+  if (arch === 8) {
+    const streak = (c: string, top: number, h: number, left: number, w: number, a: number): string =>
+      `linear-gradient(90deg, transparent ${left}%, ${rgba(c, a)} ${left + w * 0.35}%, ${rgba(c, a)} ${left + w * 0.7}%, transparent ${left + w}%) 0 ${top}% / 100% ${h}% no-repeat`
+    const yel = look === 't1' ? '#F76926' : '#FF4FAE'
+    layers.push({ filter: 'blur(4px)', background: [
+      streak(yel, range(46, 58), range(7, 11), range(-10, 15), range(55, 80), 0.95),
+      streak(look === 't1' ? '#A9CEE7' : '#FCFFFF', range(62, 72), range(2, 4), range(5, 35), range(35, 55), 0.75),
+      streak(yel, range(74, 86), range(5, 8), range(-5, 25), range(45, 65), 0.85),
+      streak('#FEFEFE', range(30, 42), range(2, 3), range(30, 60), range(30, 45), 0.45),
+    ].join(',') })
+    layers.push({ background: `radial-gradient(ellipse at ${range(55, 85)}% ${range(25, 55)}%, rgba(0,0,0,.35) 0%, transparent 55%)` })
+  } else if (arch === 10) {
+    // satin : larges plis de lumière bleu clair, flous
+    const fold = (x: number, y: number, w: number, h: number, a: number) => `radial-gradient(ellipse ${w}% ${h}% at ${x}% ${y}%, rgba(169,206,231,${a}) 0%, transparent 70%)`
+    layers.push({ filter: 'blur(6px)', transform: `rotate(${Math.floor(range(-30, 30))}deg) scale(1.3)`, background: [
+      fold(range(20, 45), range(25, 45), range(40, 60), range(8, 14), 0.55),
+      fold(range(50, 80), range(50, 70), range(45, 65), range(7, 12), 0.45),
+      fold(range(10, 40), range(70, 90), range(35, 50), range(6, 10), 0.35),
+    ].join(',') })
+    layers.push({ background: `linear-gradient(${Math.floor(range(150, 210))}deg, transparent 40%, rgba(1,20,40,.45))` })
+  } else if (arch === 9) {
+    const c1 = range(26, 36), c2 = range(64, 74), r1 = range(22, 32), r2 = range(62, 72), lw = 1
+    const line = 'rgba(255,239,239,.32)'
+    const glint = (x: number, y: number) => `radial-gradient(circle at ${x}% ${y}%, rgba(255,239,239,.95) 0 1.4px, rgba(255,239,239,.35) 2.4px, transparent 6px)`
+    layers.push({ background: `radial-gradient(ellipse at ${range(45, 75)}% ${range(35, 65)}%, rgba(255,70,50,.55) 0%, transparent 55%)` })
+    layers.push({ background: [
+      glint(c1, r1), glint(c2, r1), glint(c1, r2), glint(c2, r2),
+      `linear-gradient(90deg, transparent calc(${c1}% - ${lw}px), ${line} calc(${c1}% - ${lw}px) ${c1}%, transparent ${c1}%)`,
+      `linear-gradient(90deg, transparent calc(${c2}% - ${lw}px), ${line} calc(${c2}% - ${lw}px) ${c2}%, transparent ${c2}%)`,
+      `linear-gradient(180deg, transparent calc(${r1}% - ${lw}px), ${line} calc(${r1}% - ${lw}px) ${r1}%, transparent ${r1}%)`,
+      `linear-gradient(180deg, transparent calc(${r2}% - ${lw}px), ${line} calc(${r2}% - ${lw}px) ${r2}%, transparent ${r2}%)`,
+    ].join(',') })
+  } else if (arch === 0) {
     layers.push({ background: [
       `radial-gradient(circle at ${range(0, 30)}% ${range(60, 110)}%, ${rgba(A[2], 0.9)} 0%, transparent ${range(45, 65)}%)`,
       `radial-gradient(circle at ${range(70, 100)}% ${range(20, 70)}%, ${rgba(B[0], 0.85)} 0%, transparent ${range(40, 60)}%)`,
@@ -172,7 +205,7 @@ export function coverBackground(seed: string, sports: Sport[], kind?: string): s
 
 /** Couleurs des phases du programme, tirées de la palette du style courant. */
 const PHASES: Record<Look, Record<string, string>> = {
-  feminin: { Base: '#7FE3C0', 'Développement': '#F6993C', 'Spécifique': '#E63869', 'Affûtage': '#6A44E8', Musculation: '#B02FA0' },
-  masculin: { Base: '#B8434F', 'Développement': '#E88F30', 'Spécifique': '#D1442B', 'Affûtage': '#F1C27A', Musculation: '#A92A33' },
+  t1: { Base: '#5C93BC', 'Développement': '#F79A5E', 'Spécifique': '#F76926', 'Affûtage': '#2C7DB5', Musculation: '#C2471A' },
+  t2: { Base: '#4FAFD8', 'Développement': '#0593C6', 'Spécifique': '#D83995', 'Affûtage': '#8A5AC8', Musculation: '#B02A7C' },
 }
 export const PHASE_COLOR: Record<string, string> = new Proxy({} as Record<string, string>, { get: (_t, k: string) => PHASES[getLook()][k] ?? PHASES[getLook()].Base })

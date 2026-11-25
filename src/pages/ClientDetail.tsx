@@ -94,7 +94,7 @@ export default function ClientDetail() {
           <Suspense fallback={<div className="skeleton h-36 rounded-2xl" />}><RpeChart points={rpePoints} /></Suspense></Card>
       )}
       {tab === 'seances' && week.length > 0 && (
-        <Card className="p-4 mb-3"><div className="font-bold text-[17px] mb-2">Pas et sommeil · 7 jours</div>
+        <Card className="p-4 mb-3" onClick={() => nav(`/recovery/${id}`)}><div className="flex items-center justify-between mb-2"><div className="font-bold text-[17px]">Pas et sommeil · 7 jours</div><span className="flex items-center gap-0.5 text-[14px] font-semibold" style={{ color: 'var(--accent)' }}>Tout voir<Icon name="chevron" size={16} /></span></div>
           <Suspense fallback={<div className="skeleton h-40 rounded-2xl" />}><HealthBars days={week} /></Suspense></Card>
       )}
       {tab === 'seances' && (

@@ -74,6 +74,8 @@ export interface GarminSettings {
   id: string
   clientId: string
   maxHr?: number
+  /** Objectif de pas par jour, choisi par le client (absent = pas d'objectif). */
+  stepGoal?: number
 }
 
 /** Ce que sait lire un fichier FIT ou une synchro, avant d'être rattaché à un client. */

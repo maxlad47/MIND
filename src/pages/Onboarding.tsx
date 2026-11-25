@@ -9,7 +9,7 @@ import { ZONES, type Goal, type Level, type Muscle, type Priority, type ProgramT
 import { DAY_NAMES, DAY_SHORT, diffDays, fmtPace, fmtTime, mondayOf, todayISO, addDays } from '@/engine/utils'
 import { clientSessions, currentUser, programOf, questionnaireOf, saveDraft, submitQuestionnaire, useDB } from '@/lib/store'
 import { personalizeInBackground } from '@/lib/ai'
-import { Button, Cover, DurationInput, Field, Icon, inputCls, NumberInput, Segmented, SportIcon, springT, toast } from '@/ui/kit'
+import { Button, Cover, DurationInput, Field, Icon, inputCls, NumberInput, onColor, Segmented, SportIcon, springT, toast } from '@/ui/kit'
 
 type Q = Partial<Questionnaire>
 
@@ -31,7 +31,7 @@ function Option({ active, title, sub, onClick, accent, icon }: { active: boolean
         <div className="text-[18px] font-bold leading-tight tracking-tight">{title}</div>
         {sub && <div className="text-muted text-[14px] mt-0.5 leading-snug">{sub}</div>}
       </div>
-      <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors" style={{ background: active ? c : 'transparent', color: '#fff', boxShadow: active ? 'none' : 'inset 0 0 0 2px var(--faint)' }}>
+      <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors" style={{ background: active ? c : 'transparent', color: onColor(c), boxShadow: active ? 'none' : 'inset 0 0 0 2px var(--faint)' }}>
         {active && <Icon name="check" size={15} strokeWidth={3.2} />}
       </div>
     </motion.button>
@@ -44,7 +44,7 @@ function DayPicker({ days, color, onChange }: { days: number[]; color: string; o
       {DAY_SHORT.map((d, i) => {
         const on = days.includes(i)
         return <button key={i} aria-label={DAY_NAMES[i]} aria-pressed={on} onClick={() => onChange(on ? days.filter((x) => x !== i) : [...days, i].sort())}
-          className="tap aspect-[3/4] rounded-[18px] text-[20px] font-bold" style={{ background: on ? color : 'var(--surface)', color: on ? '#fff' : 'var(--text)', boxShadow: on ? `0 8px 18px -8px ${color}` : undefined }}>{d}</button>
+          className="tap aspect-[3/4] rounded-[18px] text-[20px] font-bold" style={{ background: on ? color : 'var(--surface)', color: on ? onColor(color) : 'var(--text)', boxShadow: on ? `0 8px 18px -8px ${color}` : undefined }}>{d}</button>
       })}
     </div>
   )
@@ -164,7 +164,7 @@ export default function Onboarding() {
             {ZONES.map((z) => {
               const on = (x.injuries ?? []).includes(z.id)
               return <button key={z.id} onClick={() => set({ injuries: on ? (x.injuries ?? []).filter((i) => i !== z.id) : [...(x.injuries ?? []), z.id as Zone] })}
-                className="tap rounded-full h-11 px-4 text-[16px] font-semibold" aria-pressed={on} style={{ background: on ? 'var(--accent)' : 'var(--surface)', color: on ? '#fff' : 'var(--text)' }}>{z.label}</button>
+                className="tap rounded-full h-11 px-4 text-[16px] font-semibold" aria-pressed={on} style={{ background: on ? 'var(--accent)' : 'var(--surface)', color: on ? 'var(--on-accent)' : 'var(--text)' }}>{z.label}</button>
             })}
           </div>
           <textarea className={`${inputCls} h-24 py-3`} placeholder="Autre précision (facultatif)" value={x.injuryNote ?? ''} onChange={(e) => set({ injuryNote: e.target.value })} />
@@ -194,7 +194,7 @@ export default function Onboarding() {
     { id: 'type', title: 'Quel programme veux-tu ?',
       render: (x) => (
         <Big>
-          {([['muscu', 'Musculation', 'Hypertrophie, force ou mixte', 'var(--muscu)'], ['course', 'Course à pied', '10 km, semi ou marathon', '#FF9F0A'], ['mixte', 'Musculation + course', 'Les deux, sans conflit entre eux', 'var(--accent)']] as [ProgramType, string, string, string][]).map(([v, t, s, c]) =>
+          {([['muscu', 'Musculation', 'Hypertrophie, force ou mixte', 'var(--muscu)'], ['course', 'Course à pied', '10 km, semi ou marathon', 'var(--course)'], ['mixte', 'Musculation + course', 'Les deux, sans conflit entre eux', 'var(--accent)']] as [ProgramType, string, string, string][]).map(([v, t, s, c]) =>
             <Option key={v} accent={c} active={(x.programType ?? 'muscu') === v} title={t} sub={s} onClick={() => set({ programType: v })}
               icon={v === 'mixte' ? <span className="flex gap-0.5"><SportIcon sport="muscu" size={19} /><SportIcon sport="course" size={19} /></span> : <SportIcon sport={v} size={24} />} />)}
         </Big>) },
@@ -208,7 +208,7 @@ export default function Onboarding() {
       render: () => (
         <div className="grid grid-cols-3 gap-3">
           {[2, 3, 4, 5, 6].map((n) => <button key={n} onClick={() => set({ runSessions: n })} className="tap h-24 rounded-[22px] text-[36px] font-extrabold num"
-            style={{ background: m.runSessions === n ? 'color-mix(in srgb, #FF9F0A 18%, var(--surface))' : 'var(--surface)', boxShadow: `inset 0 0 0 2px ${m.runSessions === n ? '#FF9F0A' : 'transparent'}`, color: m.runSessions === n ? '#FF9F0A' : undefined }}>{n}</button>)}
+            style={{ background: m.runSessions === n ? 'color-mix(in srgb, var(--course) 18%, var(--surface))' : 'var(--surface)', boxShadow: `inset 0 0 0 2px ${m.runSessions === n ? 'var(--course)' : 'transparent'}`, color: m.runSessions === n ? 'var(--course)' : undefined }}>{n}</button>)}
         </div>) },
     { id: 'mdays', title: 'Quels jours pour la musculation ?', sub: 'MIND place tes séances de muscu uniquement sur ces jours.', when: () => hasM,
       valid: () => muscuDays.length > 0,
@@ -222,7 +222,7 @@ export default function Onboarding() {
       valid: () => runDays.length > 0,
       render: () => (
         <div className="flex flex-col gap-4">
-          <DayPicker days={runDays} color="#FF9F0A" onChange={(d) => setDays('run', d)} />
+          <DayPicker days={runDays} color="var(--course)" onChange={(d) => setDays('run', d)} />
           <p className="text-[14px] text-muted px-1">{m.runSessions} sortie{m.runSessions > 1 ? 's' : ''} par semaine sur {runDays.length} jour{runDays.length > 1 ? 's' : ''}.
             {m.runSessions > runDays.length ? ' Choisis-en davantage pour éviter deux sorties le même jour.' : ''}
             {m.runSessions >= 3 && runDays.length < m.runSessions + 2 ? ' Garde un jour d\'écart entre une endurance et ta sortie longue : avec peu de jours, elles risquent de se suivre.' : ''}
@@ -231,8 +231,8 @@ export default function Onboarding() {
     { id: 'longday', title: 'Quel jour pour ta sortie longue ?', sub: 'La plus longue sortie de la semaine, toujours placée ce jour-là. Les autres séances s\'organisent autour.', when: () => hasR && m.runSessions >= 2,
       render: () => (
         <Big>
-          {runDays.map((d) => <Option key={d} accent="#FF9F0A" active={m.dayPrefs?.longRun === d} title={DAY_NAMES[d][0].toUpperCase() + DAY_NAMES[d].slice(1)} onClick={() => set({ dayPrefs: { ...m.dayPrefs, longRun: d } })} />)}
-          <Option accent="#FF9F0A" active={m.dayPrefs?.longRun === undefined} title="Peu importe" sub="MIND choisit le meilleur jour" onClick={() => set({ dayPrefs: { ...m.dayPrefs, longRun: undefined } })} />
+          {runDays.map((d) => <Option key={d} accent="var(--course)" active={m.dayPrefs?.longRun === d} title={DAY_NAMES[d][0].toUpperCase() + DAY_NAMES[d].slice(1)} onClick={() => set({ dayPrefs: { ...m.dayPrefs, longRun: d } })} />)}
+          <Option accent="var(--course)" active={m.dayPrefs?.longRun === undefined} title="Peu importe" sub="MIND choisit le meilleur jour" onClick={() => set({ dayPrefs: { ...m.dayPrefs, longRun: undefined } })} />
         </Big>) },
     { id: 'dur', title: 'Durée maximale par séance',
       render: () => <Big>{([45, 60, 75, 90] as const).map((n) => <Option key={n} active={m.maxMinutes === n} title={`${n} minutes`} onClick={() => set({ maxMinutes: n })} />)}</Big> },
@@ -280,7 +280,7 @@ export default function Onboarding() {
     { id: 'dist', title: 'Quelle distance prépares-tu ?', when: () => hasR,
       render: () => (
         <Big>
-          {(['10k', 'semi', 'marathon'] as RaceDistance[]).map((v) => <Option key={v} accent="#FF9F0A" active={m.run.distance === v} title={DIST_LABEL[v]} sub={`Préparation idéale : ${PREP[v].idealMin}–${PREP[v].idealMax} semaines`} onClick={() => setR({ distance: v })} />)}
+          {(['10k', 'semi', 'marathon'] as RaceDistance[]).map((v) => <Option key={v} accent="var(--course)" active={m.run.distance === v} title={DIST_LABEL[v]} sub={`Préparation idéale : ${PREP[v].idealMin}–${PREP[v].idealMax} semaines`} onClick={() => setR({ distance: v })} />)}
         </Big>) },
     { id: 'date', title: 'Quelle est la date de ta course ?', when: () => hasR, valid: (x) => !!x.run?.raceDate && x.run.raceDate > today,
       render: () => (
@@ -297,7 +297,7 @@ export default function Onboarding() {
       render: () => (
         <div className="flex flex-col gap-3">
           {([['debutant', 'Débutant'], ['intermediaire', 'Intermédiaire'], ['avance', 'Avancé']] as [Level, string][]).map(([v, t]) =>
-            <Option key={v} accent="#FF9F0A" active={m.run.level === v} title={t} onClick={() => setR({ level: v })} />)}
+            <Option key={v} accent="var(--course)" active={m.run.level === v} title={t} onClick={() => setR({ level: v })} />)}
           <Field label="VMA connue (km/h)"><NumberInput value={m.run.vma} onChange={(v) => setR({ vma: v })} min={8} max={25} step={0.5} suffix="km/h" /></Field>
         </div>) },
     { id: 'refs', title: 'Tes chronos de référence', sub: 'Renseigne ceux que tu connais (5 km, 10 km…). Ils servent à calculer tes allures et à juger ton objectif.', when: () => hasR,
@@ -327,7 +327,7 @@ export default function Onboarding() {
                 </div>)
             })}
             {paces.source !== 'niveau' && (
-              <div className="rounded-2xl p-4" style={{ background: 'color-mix(in srgb, #FF9F0A 14%, var(--surface))' }}>
+              <div className="rounded-2xl p-4" style={{ background: 'color-mix(in srgb, var(--course) 14%, var(--surface))' }}>
                 <div className="text-[13px] text-muted">Estimation à partir de {paces.source === 'vma' ? 'ta VMA' : 'tes chronos'}</div>
                 <div className="text-[19px] font-extrabold">VMA {String(paces.vma).replace('.', ',')} km/h · 10 km à {fmtPace(paces.dix)}/km</div>
               </div>)}
@@ -344,8 +344,8 @@ export default function Onboarding() {
         const pct = (n: number) => `${(n * 100).toFixed(1).replace('.', ',')} %`
         return (
           <div className="flex flex-col gap-3">
-            <Option accent="#FF9F0A" active={m.run.objective === 'finir'} title="Finir" sub="Aller au bout dans de bonnes conditions" onClick={() => setR({ objective: 'finir' })} />
-            <Option accent="#FF9F0A" active={m.run.objective === 'chrono'} title="Chrono cible" sub="Viser un temps précis" onClick={() => setR({ objective: 'chrono' })} />
+            <Option accent="var(--course)" active={m.run.objective === 'finir'} title="Finir" sub="Aller au bout dans de bonnes conditions" onClick={() => setR({ objective: 'finir' })} />
+            <Option accent="var(--course)" active={m.run.objective === 'chrono'} title="Chrono cible" sub="Viser un temps précis" onClick={() => setR({ objective: 'chrono' })} />
             {m.run.objective === 'chrono' && (<>
               <Field label="Temps visé"><DurationInput value={m.run.targetSeconds} onChange={(v) => setR({ targetSeconds: v })} /></Field>
               <div className="bg-surface rounded-2xl p-4 flex flex-col gap-2">
@@ -377,8 +377,8 @@ export default function Onboarding() {
         const lead = leadIn({ ...m.run, startMode: 'progressif' }, Math.max(1, raceWeeks))
         return (
           <Big>
-            <Option accent="#FF9F0A" active={cur === 'progressif'} title="Progressivement" sub={`Beaucoup d'endurance au début, puis on intègre peu à peu les côtes, le fractionné, la VMA et le seuil${lead.weeks ? ` (${lead.weeks} semaines d'introduction)` : ''}.${rec === 'progressif' ? ' · conseillé pour toi' : ''}`} onClick={() => setR({ startMode: 'progressif' })} />
-            <Option accent="#FF9F0A" active={cur === 'direct'} title="Tout de suite" sub={`Je cours régulièrement : on intègre le travail de qualité dès les premières semaines.${rec === 'direct' ? ' · conseillé pour toi' : ''}`} onClick={() => setR({ startMode: 'direct' })} />
+            <Option accent="var(--course)" active={cur === 'progressif'} title="Progressivement" sub={`Beaucoup d'endurance au début, puis on intègre peu à peu les côtes, le fractionné, la VMA et le seuil${lead.weeks ? ` (${lead.weeks} semaines d'introduction)` : ''}.${rec === 'progressif' ? ' · conseillé pour toi' : ''}`} onClick={() => setR({ startMode: 'progressif' })} />
+            <Option accent="var(--course)" active={cur === 'direct'} title="Tout de suite" sub={`Je cours régulièrement : on intègre le travail de qualité dès les premières semaines.${rec === 'direct' ? ' · conseillé pour toi' : ''}`} onClick={() => setR({ startMode: 'direct' })} />
           </Big>)
       } },
     { id: 'peak', title: 'Ton volume de course au pic', sub: 'La semaine la plus chargée, juste avant l\'affûtage. MIND calcule ce qui est raisonnable pour toi : tu peux le modifier si besoin.', when: () => hasR,
@@ -393,7 +393,7 @@ export default function Onboarding() {
         const pct = ((rec.rate - 1) * 100).toFixed(0)
         return (
           <div className="flex flex-col gap-4 pt-2">
-            <div className="rounded-2xl p-5" style={{ background: 'color-mix(in srgb, #FF9F0A 14%, var(--surface))' }}>
+            <div className="rounded-2xl p-5" style={{ background: 'color-mix(in srgb, var(--course) 14%, var(--surface))' }}>
               <div className="text-[13px] text-muted font-semibold uppercase tracking-wide">L'avis de MIND</div>
               <div className="text-[34px] font-extrabold num leading-tight mt-1">{f(rec.target)} km <span className="text-[17px] text-muted font-semibold">par semaine au pic</span></div>
               <p className="text-[14.5px] mt-2 leading-snug">
@@ -421,12 +421,12 @@ export default function Onboarding() {
           <div className="flex flex-col gap-3">
             <Big>
               {([[0, 'Non', 'Juste mes séances de course.'], [1, '1 fois par semaine', 'Le minimum utile pour un coureur.'], [2, '2 fois par semaine', 'Plus de travail de fond, si tes jours le permettent.']] as [0 | 1 | 2, string, string][]).map(([v, t, sub]) =>
-                <Option key={v} accent="#FF9F0A" active={cur.perWeek === v} title={t} sub={sub} onClick={() => setR({ renfo: { perWeek: v, kit: cur.kit } })} />)}
+                <Option key={v} accent="var(--course)" active={cur.perWeek === v} title={t} sub={sub} onClick={() => setR({ renfo: { perWeek: v, kit: cur.kit } })} />)}
             </Big>
             {cur.perWeek > 0 && (
               <div className="flex flex-col gap-3 mt-1">
                 <div className="text-[13px] uppercase tracking-wide text-muted font-medium px-1">Quel matériel ?</div>
-                <Big>{kits.map((k) => <Option key={k} accent="#FF9F0A" active={cur.kit === k} title={KIT_LABEL[k]} onClick={() => setR({ renfo: { perWeek: cur.perWeek, kit: k } })} />)}</Big>
+                <Big>{kits.map((k) => <Option key={k} accent="var(--course)" active={cur.kit === k} title={KIT_LABEL[k]} onClick={() => setR({ renfo: { perWeek: cur.perWeek, kit: k } })} />)}</Big>
                 <p className="text-[13px] text-muted bg-surface rounded-xl p-3 leading-snug">
                   {m.programType === 'mixte' && !libre
                     ? 'Ton programme mélange muscu et course : pas de séance à part. MIND ajoute 2 ou 3 exercices de coureur (mollets en excentrique, gainage latéral, un exercice unilatéral) à la fin de tes séances de muscu.'
@@ -487,7 +487,7 @@ export default function Onboarding() {
         <button className="tap w-11 h-11 -ml-2 flex items-center justify-center rounded-full" aria-label="Étape précédente" style={{ opacity: idx === 0 && !edit ? 0.2 : 1 }} disabled={idx === 0 && !edit}
           onClick={() => (idx === 0 ? nav(-1) : go(-1))}><Icon name="back" size={24} strokeWidth={2.4} /></button>
         <div className="flex-1 h-1.5 rounded-full bg-surface3/70 overflow-hidden">
-          <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,var(--muscu),#FF9F0A)' }} animate={{ width: `${progress * 100}%` }} transition={springT} />
+          <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,var(--muscu),var(--course))' }} animate={{ width: `${progress * 100}%` }} transition={springT} />
         </div>
         {(edit || hasProgram) ? <button className="tap text-[16px] font-medium h-11 px-1 -mr-1" style={{ color: 'var(--accent)' }} onClick={() => nav(-1)}>Annuler</button> : <span className="text-[13px] text-muted font-semibold num w-11 text-right">{Math.min(idx + 1, active.length)}/{active.length}</span>}
       </div>

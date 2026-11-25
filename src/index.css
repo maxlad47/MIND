@@ -18,7 +18,7 @@
   --color-sep: var(--sep);
   --color-accent: var(--accent);
   --color-muscu: var(--muscu);
-  --color-course: #FF9F0A;
+  --color-course: var(--course);
   --color-ok: #30D158;
   --color-bad: #FF453A;
   --radius-card: 20px;
@@ -29,9 +29,14 @@
 :root {
   /* palette sport / système */
   --accent: #FF375F;
-  --muscu: #D9317F; /* défaut = féminin ; surchargé par look ci-dessous */
+  --muscu: #D9317F; /* surchargé par le thème (data-look) ci-dessous */
   --course: #FF9F0A;
+  --on-course: #fff;
+  --on-accent: #fff;
   --ok: #30D158;
+  /* données santé (sommeil, pas, phases) : surchargées par le thème */
+  --sleep: #5E5CE6; --steps: #30D158;
+  --ph-deep: #3634A3; --ph-light: #8E8CF2; --ph-rem: #BF5AF2; --ph-awake: #FF8FB1;
   --bad: #FF453A;
 
   /* rayons */
@@ -65,17 +70,6 @@
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.5);
   --shadow-cover: 0 14px 30px rgba(0, 0, 0, 0.45);
-
-  /* touches en relief et creux (matière « tactile ») */
-  --key-top: color-mix(in srgb, var(--surface3), white 7%);
-  --key-bot: var(--surface2);
-  --key-glow: rgba(255, 255, 255, 0.07);
-  --key-hi: rgba(255, 255, 255, 0.13);
-  --key-skirt: color-mix(in srgb, var(--bg), black 45%);
-  --key-contact: rgba(0, 0, 0, 0.55);
-  --key-drop: rgba(0, 0, 0, 0.6);
-  --well-bg: color-mix(in srgb, var(--bg), black 35%);
-  --well-in: inset 0 1.5px 3px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.035), 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
@@ -94,15 +88,6 @@
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
     --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.18);
     --shadow-cover: 0 12px 26px rgba(40, 20, 80, 0.22);
-  --key-top: var(--surface);
-  --key-bot: color-mix(in srgb, var(--surface2) 55%, var(--surface));
-  --key-glow: rgba(255, 255, 255, 0.7);
-  --key-hi: rgba(255, 255, 255, 0.95);
-  --key-skirt: color-mix(in srgb, var(--surface3), black 13%);
-  --key-contact: rgba(0, 0, 0, 0.1);
-  --key-drop: rgba(0, 0, 0, 0.14);
-  --well-bg: color-mix(in srgb, var(--surface2), black 3%);
-  --well-in: inset 0 1.5px 3px rgba(0, 0, 0, 0.14), inset 0 0 0 1px rgba(0, 0, 0, 0.03), 0 1px 0 rgba(255, 255, 255, 0.9);
   }
 }
 :root[data-theme="light"] {
@@ -121,15 +106,6 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.18);
   --shadow-cover: 0 12px 26px rgba(40, 20, 80, 0.22);
-  --key-top: var(--surface);
-  --key-bot: color-mix(in srgb, var(--surface2) 55%, var(--surface));
-  --key-glow: rgba(255, 255, 255, 0.7);
-  --key-hi: rgba(255, 255, 255, 0.95);
-  --key-skirt: color-mix(in srgb, var(--surface3), black 13%);
-  --key-contact: rgba(0, 0, 0, 0.1);
-  --key-drop: rgba(0, 0, 0, 0.14);
-  --well-bg: color-mix(in srgb, var(--surface2), black 3%);
-  --well-in: inset 0 1.5px 3px rgba(0, 0, 0, 0.14), inset 0 0 0 1px rgba(0, 0, 0, 0.03), 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 @layer base {
@@ -198,7 +174,6 @@ input[type="date"], input[type="time"] { min-height: 44px; }
 .hide-scroll { scrollbar-width: none; }
 .hide-scroll::-webkit-scrollbar { display: none; }
 .num { font-variant-numeric: tabular-nums; }
-.roll-ch::before { content: attr(data-ch); }
 .cap-first::first-letter { text-transform: uppercase; }
 .recharts-wrapper * { outline: none; }
 .recharts-surface:focus { outline: none; }
@@ -207,42 +182,6 @@ input[type="date"], input[type="time"] { min-height: 44px; }
 .tap { transition: transform .22s var(--ease-ios), opacity .22s, filter .22s; }
 .tap:active { transform: scale(.965); opacity: .86; transition-duration: .08s; }
 .tap-soft:active { transform: scale(.985); opacity: .9; }
-
-/* touche en relief : un capuchon posé sur une jupe de 2 px ; enfoncée, elle descend de la hauteur de la jupe */
-.key {
-  --kc-top: var(--key-top);
-  --kc-bot: var(--key-bot);
-  --kc-skirt: var(--key-skirt);
-  --kc-hi: var(--key-hi);
-  --kc-glow: var(--key-glow);
-  background:
-    radial-gradient(120% 90% at 50% 0%, var(--kc-glow), transparent 62%),
-    linear-gradient(180deg, var(--kc-top), var(--kc-bot));
-  box-shadow: inset 0 1px 0 var(--kc-hi), 0 2px 0 var(--kc-skirt), 0 3px 2px var(--key-contact), 0 7px 12px -5px var(--key-drop);
-  transform: translateY(0);
-  transition: transform 70ms var(--ease-out), box-shadow 70ms var(--ease-out), background 160ms;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-.key:active:not(:disabled), .key[data-held], .key[aria-pressed="true"] {
-  transform: translateY(2px);
-  box-shadow: inset 0 1px 0 var(--kc-hi), 0 0 0 var(--kc-skirt), 0 1px 1px var(--key-contact), inset 0 2px 5px rgba(0, 0, 0, 0.22);
-}
-.key:disabled { opacity: 0.45; }
-/* touche colorée (couleur passée dans --key-color) */
-.key-tint {
-  --kc-top: color-mix(in srgb, var(--key-color) 84%, white);
-  --kc-bot: var(--key-color);
-  --kc-skirt: color-mix(in srgb, var(--key-color) 55%, black);
-  --kc-hi: rgba(255, 255, 255, 0.32);
-  --kc-glow: rgba(255, 255, 255, 0.16);
-  color: #fff;
-}
-/* creux : la valeur est « dans » la plaque */
-.well { background: var(--well-bg); box-shadow: var(--well-in); }
-/* réglette graduée (progression du repos) */
-.ruler { background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 7px); }
 
 /* zone tactile élargie à 44 px sans changer l'aspect */
 .hit { position: relative; }
@@ -281,110 +220,161 @@ input[type="date"], input[type="time"] { min-height: 44px; }
 @media (max-height: 720px) { .hide-short { display: none !important; } }
 
 /* ==========================================================================
-   Style masculin : bleu électrique, angles plus francs, titres en capitales,
-   surfaces plus plates et plus contrastées. (Le style féminin est le défaut.)
+   Thème 1 « Paceform » : bleu Ocean #01598C, bleu Mist #A9CEE7, orange Vivid #F76926.
+   Club de course : bleu nuit en sombre, titres grasses en italique, photos filées.
    ========================================================================== */
-:root[data-look="feminin"] {
-  --accent: #EF3F73;
-  --muscu: #D9317F;
-  --bg: #0E0E22;
-  --surface: #1A1A34;
-  --surface2: #26264A;
-  --surface3: #353560;
-  --muted: #9C9CC0;
-  --faint: #66668F;
-  --sep: rgba(125,125,200,0.34);
-  --glass: rgba(22,22,46,0.72);
-  --glass-strong: rgba(26,26,54,0.88);
-  --shadow-card: 0 0 0 1px rgba(160,160,255,0.06) inset;
-}
-@media (prefers-color-scheme: light) {
-  :root[data-look="feminin"]:not([data-theme="dark"]) {
-    --bg: #F4EEE5;
-    --surface: #FFFFFF;
-    --surface2: #EDE6DB;
-    --surface3: #E0D7C9;
-    --muted: #7A6E62;
-    --faint: #BDB2A3;
-    --sep: rgba(110,80,40,0.16);
-    --glass: rgba(250,244,235,0.76);
-    --glass-strong: rgba(253,249,242,0.92);
-    --shadow-card: 0 1px 2px rgba(110,70,20,0.07);
-  }
-}
-:root[data-look="feminin"][data-theme="light"] {
-  --bg: #F4EEE5;
-  --surface: #FFFFFF;
-  --surface2: #EDE6DB;
-  --surface3: #E0D7C9;
-  --muted: #7A6E62;
-  --faint: #BDB2A3;
-  --sep: rgba(110,80,40,0.16);
-  --glass: rgba(250,244,235,0.76);
-  --glass-strong: rgba(253,249,242,0.92);
-  --shadow-card: 0 1px 2px rgba(110,70,20,0.07);
-}
-
-:root[data-look="masculin"] {
-  --accent: #E5671F;
-  --muscu: #C8402F;
+:root[data-look="t1"] {
+  --accent: #F76926;
+  --on-accent: #FFFFFF;
+  --muscu: #F76926;
+  --course: #A9CEE7;
+  --on-course: #01304D;
   --r-sheet: 20px;
-  --bg: #0D0506;
-  --surface: #1A0E10;
-  --surface2: #2A1A1D;
-  --surface3: #3B282C;
-  --muted: #A89494;
-  --faint: #76625F;
-  --sep: rgba(160,110,100,0.30);
-  --glass: rgba(28,12,14,0.74);
-  --glass-strong: rgba(32,16,18,0.88);
-  --shadow-card: 0 0 0 1px rgba(255,200,170,0.06) inset;
+  --bg: #02121F;
+  --surface: #061F33;
+  --surface2: #0B2C46;
+  --surface3: #133A59;
+  --text: #FFFFFF;
+  --muted: #9DBBD0;
+  --faint: #5A7A92;
+  --sep: rgba(169, 206, 231, 0.2);
+  --glass: rgba(5, 26, 43, 0.76);
+  --glass-strong: rgba(6, 31, 51, 0.9);
+  --shadow-card: 0 0 0 1px rgba(169, 206, 231, 0.07) inset;
 }
 @media (prefers-color-scheme: light) {
-  :root[data-look="masculin"]:not([data-theme="dark"]) {
-    --bg: #F4EEE5;
-    --surface: #FFFFFF;
-    --surface2: #EBE2D8;
-    --surface3: #E0D7C9;
-    --muted: #7A6E62;
-    --faint: #BDB2A3;
-    --sep: rgba(100,60,30,0.17);
-    --glass: rgba(250,244,235,0.76);
-    --glass-strong: rgba(253,249,242,0.92);
-    --shadow-card: 0 1px 2px rgba(110,70,20,0.07);
+  :root[data-look="t1"]:not([data-theme="dark"]) {
+    --accent: #E85D1C;
+    --on-accent: #FFFFFF;
+    --muscu: #E85D1C;
+    --course: #01598C;
+    --on-course: #FFFFFF;
+    --bg: #F4E9D9;
+    --surface: #FFF9F0;
+    --surface2: #EFE3D1;
+    --surface3: #E3D3BD;
+    --text: #04263D;
+    --muted: #6E6C68;
+    --faint: #B3AA9C;
+    --sep: rgba(80, 55, 20, 0.14);
+    --glass: rgba(248, 239, 226, 0.8);
+    --glass-strong: rgba(255, 249, 240, 0.92);
+    --shadow-card: 0 1px 2px rgba(110, 70, 20, 0.08);
+    --shadow-cover: 0 12px 26px rgba(1, 60, 100, 0.24);
   }
 }
-:root[data-look="masculin"][data-theme="light"] {
-  --bg: #F4EEE5;
-  --surface: #FFFFFF;
-  --surface2: #EBE2D8;
-  --surface3: #E0D7C9;
-  --muted: #7A6E62;
-  --faint: #BDB2A3;
-  --sep: rgba(100,60,30,0.17);
-  --glass: rgba(250,244,235,0.76);
-  --glass-strong: rgba(253,249,242,0.92);
-  --shadow-card: 0 1px 2px rgba(110,70,20,0.07);
+:root[data-look="t1"][data-theme="light"] {
+  --accent: #E85D1C;
+  --on-accent: #FFFFFF;
+  --muscu: #E85D1C;
+  --course: #01598C;
+  --on-course: #FFFFFF;
+  --bg: #F4E9D9;
+  --surface: #FFF9F0;
+  --surface2: #EFE3D1;
+  --surface3: #E3D3BD;
+  --text: #04263D;
+  --muted: #6E6C68;
+  --faint: #B3AA9C;
+  --sep: rgba(80, 55, 20, 0.14);
+  --glass: rgba(248, 239, 226, 0.8);
+  --glass-strong: rgba(255, 249, 240, 0.92);
+  --shadow-card: 0 1px 2px rgba(110, 70, 20, 0.08);
+  --shadow-cover: 0 12px 26px rgba(1, 60, 100, 0.24);
 }
-[data-look="masculin"] .card { border-radius: 14px; }
-[data-look="masculin"] .btn { border-radius: 14px; }
-[data-look="masculin"] .rounded-\[28px\] { border-radius: 18px; }
-[data-look="masculin"] .rounded-b-\[28px\] { border-radius: 0 0 16px 16px; }
-[data-look="masculin"] .rounded-\[26px\] { border-radius: 17px; }
-[data-look="masculin"] .rounded-\[22px\] { border-radius: 15px; }
-[data-look="masculin"] .rounded-\[20px\] { border-radius: 14px; }
-[data-look="masculin"] .rounded-\[18px\] { border-radius: 13px; }
-[data-look="masculin"] .rounded-\[16px\], [data-look="masculin"] .rounded-2xl { border-radius: 12px; }
-[data-look="masculin"] .rounded-\[14px\], [data-look="masculin"] .rounded-xl { border-radius: 10px; }
-[data-look="masculin"] .t-large, [data-look="masculin"] .t-display { text-transform: uppercase; font-weight: 900; letter-spacing: -0.012em; }
-[data-look="masculin"] .t-onb { font-weight: 900; letter-spacing: -0.03em; }
-[data-look="masculin"] .t-large { font-size: 31px; }
-[data-look="masculin"] .t-display { font-size: 30px !important; line-height: 1.02 !important; }
-[data-look="masculin"] .t-title2 { text-transform: uppercase; font-size: 19px; font-weight: 800; letter-spacing: 0.012em; }
-[data-look="masculin"] .t-over { letter-spacing: 0.1em; }
+[data-look="t1"] .card { border-radius: 14px; }
+[data-look="t1"] .btn { border-radius: 14px; }
+[data-look="t1"] .rounded-\[28px\] { border-radius: 18px; }
+[data-look="t1"] .rounded-b-\[28px\] { border-radius: 0 0 16px 16px; }
+[data-look="t1"] .rounded-\[26px\] { border-radius: 17px; }
+[data-look="t1"] .rounded-\[22px\] { border-radius: 15px; }
+[data-look="t1"] .rounded-\[20px\] { border-radius: 14px; }
+[data-look="t1"] .rounded-\[18px\] { border-radius: 13px; }
+[data-look="t1"] .rounded-\[16px\], [data-look="t1"] .rounded-2xl { border-radius: 12px; }
+[data-look="t1"] .rounded-\[14px\], [data-look="t1"] .rounded-xl { border-radius: 10px; }
+[data-look="t1"] .t-large, [data-look="t1"] .t-display, [data-look="t1"] .t-onb, [data-look="t1"] .t-title2 { text-transform: uppercase; font-style: italic; font-weight: 900; letter-spacing: -0.025em; }
+[data-look="t1"] .t-large { font-size: 32px; }
+[data-look="t1"] .t-display { font-size: 31px !important; line-height: 1 !important; }
+[data-look="t1"] .t-title2 { font-size: 19px; letter-spacing: -0.01em; }
+[data-look="t1"] .t-over { letter-spacing: 0.16em; }
 
-/* Filtre beige très clair en mode clair : réchauffe tous les fonds blancs */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"])::after { content: ''; position: fixed; inset: 0; z-index: 90; pointer-events: none; background: #FFEBD0; opacity: .5; mix-blend-mode: multiply; }
+/* ==========================================================================
+   Thème 2 « Kinetic bleu » : bleu Sky #0593C6, blanc #FCFFFF, rose Hot Pink #D83995.
+   « Deux couleurs calmes et une qui crie » : bleu ciel, blanc, traînées roses ; titres très gras serrés.
+   ========================================================================== */
+:root[data-look="t2"] {
+  --accent: #E0449E;
+  --on-accent: #FFFFFF;
+  --muscu: #E0449E;
+  --course: #3DB6E6;
+  --on-course: #02202E;
+  --bg: #021821;
+  --surface: #052633;
+  --surface2: #093546;
+  --surface3: #10465C;
+  --text: #FCFFFF;
+  --muted: #9CC4D4;
+  --faint: #5A8293;
+  --sep: rgba(120, 200, 235, 0.18);
+  --glass: rgba(3, 30, 42, 0.76);
+  --glass-strong: rgba(5, 38, 51, 0.9);
+  --shadow-card: 0 0 0 1px rgba(150, 220, 250, 0.07) inset;
 }
-:root[data-theme="light"]::after { content: ''; position: fixed; inset: 0; z-index: 90; pointer-events: none; background: #FFEBD0; opacity: .5; mix-blend-mode: multiply; }
+@media (prefers-color-scheme: light) {
+  :root[data-look="t2"]:not([data-theme="dark"]) {
+    --accent: #D83995;
+    --on-accent: #FFFFFF;
+    --muscu: #D83995;
+    --course: #0583B0;
+    --on-course: #FFFFFF;
+    --bg: #F4E9D9;
+    --surface: #FFF9F0;
+    --surface2: #EFE3D1;
+    --surface3: #E3D3BD;
+    --text: #0B2430;
+    --muted: #6E6C68;
+    --faint: #B3AA9C;
+    --sep: rgba(80, 55, 20, 0.14);
+    --glass: rgba(248, 239, 226, 0.8);
+    --glass-strong: rgba(255, 249, 240, 0.93);
+    --shadow-card: 0 1px 2px rgba(110, 70, 20, 0.08);
+    --shadow-cover: 0 12px 26px rgba(5, 100, 140, 0.24);
+  }
+}
+:root[data-look="t2"][data-theme="light"] {
+  --accent: #D83995;
+  --on-accent: #FFFFFF;
+  --muscu: #D83995;
+  --course: #0583B0;
+  --on-course: #FFFFFF;
+  --bg: #F4E9D9;
+  --surface: #FFF9F0;
+  --surface2: #EFE3D1;
+  --surface3: #E3D3BD;
+  --text: #0B2430;
+  --muted: #6E6C68;
+  --faint: #B3AA9C;
+  --sep: rgba(80, 55, 20, 0.14);
+  --glass: rgba(248, 239, 226, 0.8);
+  --glass-strong: rgba(255, 249, 240, 0.93);
+  --shadow-card: 0 1px 2px rgba(110, 70, 20, 0.08);
+  --shadow-cover: 0 12px 26px rgba(5, 100, 140, 0.24);
+}
+[data-look="t2"] .t-large, [data-look="t2"] .t-display, [data-look="t2"] .t-onb, [data-look="t2"] .t-title1, [data-look="t2"] .t-title2 { font-weight: 800; letter-spacing: -0.045em; }
+[data-look="t2"] .t-large { font-size: 36px; line-height: 1; }
+[data-look="t2"] .t-display { line-height: 0.98 !important; letter-spacing: -0.05em !important; }
+[data-look="t2"] .t-title2 { font-size: 23px; letter-spacing: -0.035em; }
+
+
+/* ------------------------------------------------------------------ données santé selon le thème
+   Sommeil = les bleus du thème ; pas = l'orange (thème 1) ou le rose (thème 2) ; phases : du plus foncé (profond) au plus clair (éveillé). */
+:root[data-look="t1"] { --sleep: #6FB2E0; --steps: #F76926; --ph-deep: #2C7DBA; --ph-light: #A9CEE7; --ph-rem: #F76926; --ph-awake: #FFC9A8; }
+@media (prefers-color-scheme: light) {
+  :root[data-look="t1"]:not([data-theme="dark"]) { --sleep: #01598C; --steps: #E85D1C; --ph-deep: #01598C; --ph-light: #86B8DC; --ph-rem: #E85D1C; --ph-awake: #F6B48C; }
+}
+:root[data-look="t1"][data-theme="light"] { --sleep: #01598C; --steps: #E85D1C; --ph-deep: #01598C; --ph-light: #86B8DC; --ph-rem: #E85D1C; --ph-awake: #F6B48C; }
+:root[data-look="t2"] { --sleep: #3DB6E6; --steps: #E0449E; --ph-deep: #127BA8; --ph-light: #8FD6F2; --ph-rem: #E0449E; --ph-awake: #F5B3D6; }
+@media (prefers-color-scheme: light) {
+  :root[data-look="t2"]:not([data-theme="dark"]) { --sleep: #0583B0; --steps: #D83995; --ph-deep: #045E80; --ph-light: #7CC9E8; --ph-rem: #D83995; --ph-awake: #F2A6CF; }
+}
+:root[data-look="t2"][data-theme="light"] { --sleep: #0583B0; --steps: #D83995; --ph-deep: #045E80; --ph-light: #7CC9E8; --ph-rem: #D83995; --ph-awake: #F2A6CF; }

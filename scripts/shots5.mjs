@@ -1,9 +1,9 @@
-// Palettes féminin / masculin : Aujourd'hui, Programme, pochettes par type de séance
+// Palettes thème 1 / thème 2 : Aujourd'hui, Programme, pochettes par type de séance
 import { chromium } from 'playwright-core'
 const base = process.env.BASE ?? 'http://localhost:5180'
 const scheme = process.argv[2] ?? 'dark'
 const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true })
-for (const look of ['feminin', 'masculin']) {
+for (const look of ['t1', 't2']) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: scheme, isMobile: true, hasTouch: true })
   const page = await ctx.newPage()
   await page.addInitScript((l) => { try { localStorage.setItem('mind.look', l); sessionStorage.setItem('mind.splash', '1') } catch {} }, look)

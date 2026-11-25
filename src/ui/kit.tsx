@@ -1,10 +1,11 @@
-import { AnimatePresence, motion, useAnimate, useDragControls, useMotionValue } from 'framer-motion'
-import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent as RMouseEvent, type PointerEvent as RPointerEvent, type ReactNode } from 'react'
+import { AnimatePresence, motion, useDragControls, useMotionValue } from 'framer-motion'
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { coverSpec, SPORT_COLOR, type Sport } from './cover'
-import { tick } from '@/lib/haptics'
 
 export const ACCENT = 'var(--accent)'
+/** Couleur du texte posé sur un fond plein de couleur c (le jaune ou le bleu clair d'un thème demandent un texte foncé). */
+export const onColor = (c: string) => (c.includes('--course') ? 'var(--on-course)' : c.includes('--accent') ? 'var(--on-accent)' : '#fff')
 export const spring = { type: 'spring', stiffness: 380, damping: 34 } as const
 export const springSoft = { type: 'spring', stiffness: 260, damping: 30 } as const
 export const springT = spring
@@ -44,6 +45,7 @@ const PATHS: Record<string, string> = {
   target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM12 12h.01',
   bolt: 'M13 3 5 13.5h6L10 21l9-11h-6.5L13 3Z',
   calendar: 'M7 2v3M17 2v3M3.5 8.5h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V6A1.5 1.5 0 0 1 5 4.5Z',
+  steps: 'M8 3.5c1.7 0 2.6 1.9 2.6 4.3 0 2-.7 3.3-1 4.7H6.4c-.3-1.4-1-2.7-1-4.7 0-2.4.9-4.3 2.6-4.3ZM6.5 15.5h3.2v1.4a1.6 1.6 0 0 1-3.2 0v-1.4ZM16 6.5c1.7 0 2.6 1.9 2.6 4.3 0 2-.7 3.3-1 4.7h-3.2c-.3-1.4-1-2.7-1-4.7 0-2.4.9-4.3 2.6-4.3ZM14.3 18.5h3.2v1.4a1.6 1.6 0 0 1-3.2 0v-1.4Z',
   moon: 'M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z',
   heart: 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20Z',
 }
@@ -219,7 +221,7 @@ export function Button({
   const base = `btn hit rounded-full font-semibold inline-flex items-center justify-center gap-2 select-none relative ${small ? 'h-10 px-4 text-[15px]' : 'h-[52px] px-6 text-[17px]'} ${full ? 'w-full' : ''} ${disabled ? 'opacity-40 pointer-events-none' : ''}`
   const c = color ?? ACCENT
   const styles: Record<string, CSSProperties> = {
-    primary: { background: c, color: '#fff', boxShadow: `0 8px 22px -8px color-mix(in srgb, ${c} 70%, transparent)` },
+    primary: { background: c, color: onColor(c), boxShadow: `0 8px 22px -8px color-mix(in srgb, ${c} 70%, transparent)` },
     secondary: { background: 'var(--surface2)', color: 'var(--text)' },
     tinted: { background: `color-mix(in srgb, ${c} 16%, transparent)`, color: c },
     ghost: { color: c },
@@ -235,7 +237,7 @@ export function Button({
 export function Chip({ children, color, active, onClick }: { children: ReactNode; color?: string; active?: boolean; onClick?: () => void }) {
   const c = color ?? ACCENT
   const cls = 'inline-flex items-center gap-1 rounded-full px-3 h-8 text-[14px] font-semibold whitespace-nowrap'
-  const st: CSSProperties = active ? { background: c, color: '#fff' } : { background: `color-mix(in srgb, ${c} 17%, transparent)`, color: c }
+  const st: CSSProperties = active ? { background: c, color: onColor(c) } : { background: `color-mix(in srgb, ${c} 17%, transparent)`, color: c }
   if (!onClick) return <span className={cls} style={st}>{children}</span>
   return <button onClick={onClick} aria-pressed={active} className={`tap hit ${cls}`} style={st}>{children}</button>
 }
@@ -438,28 +440,16 @@ export function NumberInput({ value, onChange, step = 1, min = 0, max = 999, suf
   useEffect(() => {
     if (last.current !== value) { setRaw(value === undefined ? '' : String(value).replace('.', ',')); last.current = value }
   }, [value])
-  // dernier mouvement des touches : sens (le chiffre arrive par en dessous ou par au-dessus) et butée (petite secousse)
-  const [kick, setKick] = useState<{ n: number; dir: 1 | -1 }>({ n: 0, dir: 1 })
-  const [scope, animate] = useAnimate<HTMLDivElement>()
-  const cur = useRef(value)
-  cur.current = value
   const bump = (dir: 1 | -1) => {
-    const base = cur.current ?? 0
+    const base = value ?? 0
     const v = dir > 0 ? Math.min(max, Math.round((base + step) * 100) / 100) : Math.max(min, Math.round((base - step) * 100) / 100)
-    if (v === base && cur.current !== undefined) { if (scope.current) void animate(scope.current, { x: [0, dir * 4, -dir * 3, dir * 1.5, 0] }, { duration: 0.28 }); return false }
-    tick()
-    cur.current = v; last.current = v; setRaw(String(v).replace('.', ',')); onChange(v)
-    setKick((k) => ({ n: k.n + 1, dir }))
-    return true
+    last.current = v; setRaw(String(v).replace('.', ',')); onChange(v)
   }
-  const minus = useHold(() => bump(-1))
-  const plus = useHold(() => bump(1))
   return (
-    <div ref={scope} className="well inline-flex items-center gap-1 rounded-[16px] h-12 p-1 shrink-0" style={{ width: width + 96 }}>
-      <button aria-label="Diminuer" className="key w-10 h-10 shrink-0 rounded-[12px] flex items-center justify-center text-muted" {...minus}><Icon name="minus" size={17} strokeWidth={2.6} /></button>
-      <div className="flex-1 flex items-center justify-center min-w-0 overflow-hidden h-10">
-        <motion.input key={kick.n} initial={kick.n ? { y: kick.dir * 9, opacity: 0.3 } : false} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 700, damping: 32 }}
-          inputMode="decimal" value={raw} className="w-full min-w-0 h-10 bg-transparent text-center outline-none num font-bold text-[17px]"
+    <div className="inline-flex items-center rounded-[14px] bg-surface2 h-12 overflow-hidden shrink-0" style={{ width: width + 96 }}>
+      <button aria-label="Diminuer" className="tap w-12 h-12 flex items-center justify-center text-muted" onClick={() => bump(-1)}><Icon name="minus" size={18} strokeWidth={2.4} /></button>
+      <div className="flex-1 flex items-center justify-center min-w-0">
+        <input inputMode="decimal" value={raw} className="w-full min-w-0 h-12 bg-transparent text-center outline-none num font-bold text-[17px]"
           onChange={(e) => {
             const t = e.target.value.replace(',', '.')
             setRaw(e.target.value)
@@ -467,70 +457,10 @@ export function NumberInput({ value, onChange, step = 1, min = 0, max = 999, suf
             const n = Number(t)
             if (!Number.isNaN(n)) { const v = Math.min(max, Math.max(min, n)); last.current = v; onChange(v) }
           }} />
-        {suffix && <span className="text-muted text-sm pr-1">{suffix}</span>}
+        {suffix && <span className="text-muted text-sm pr-2">{suffix}</span>}
       </div>
-      <button aria-label="Augmenter" className="key w-10 h-10 shrink-0 rounded-[12px] flex items-center justify-center text-muted" {...plus}><Icon name="plus" size={17} strokeWidth={2.6} /></button>
+      <button aria-label="Augmenter" className="tap w-12 h-12 flex items-center justify-center text-muted" onClick={() => bump(1)}><Icon name="plus" size={18} strokeWidth={2.4} /></button>
     </div>
-  )
-}
-
-/**
- * Touche à appui long : un appui = un pas ; garder le doigt dessus répète, de plus en plus vite.
- * `step` renvoie faux à la butée, ce qui arrête la répétition. Le clavier (Entrée, Espace) passe par le clic.
- */
-export function useHold(step: () => boolean | void) {
-  const fn = useRef(step)
-  fn.current = step
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const repeated = useRef(false)
-  const stop = (e?: { currentTarget: HTMLElement }) => {
-    clearTimeout(timer.current)
-    timer.current = undefined
-    e?.currentTarget.removeAttribute('data-held')
-  }
-  useEffect(() => () => clearTimeout(timer.current), [])
-  return {
-    onPointerDown: (e: RPointerEvent<HTMLElement>) => {
-      repeated.current = false
-      const el = e.currentTarget
-      let count = 0
-      const loop = () => {
-        repeated.current = true
-        el.setAttribute('data-held', '')
-        if (fn.current() === false) { stop({ currentTarget: el }); return }
-        count++
-        timer.current = setTimeout(loop, count > 10 ? 45 : count > 4 ? 80 : 140)
-      }
-      clearTimeout(timer.current)
-      timer.current = setTimeout(loop, 420)
-    },
-    onPointerUp: stop,
-    onPointerLeave: stop,
-    onPointerCancel: stop,
-    onContextMenu: (e: RMouseEvent) => e.preventDefault(),
-    onClick: () => { if (repeated.current) { repeated.current = false; return } fn.current() },
-  }
-}
-
-/**
- * Nombre dont chaque chiffre défile quand il change (compteur mécanique). `down` : le nouveau chiffre arrive par le haut.
- * Les chiffres affichés sont dessinés par le CSS (::before) : le texte de la page reste « 2:44 », jamais un mélange
- * de l'ancien et du nouveau chiffre pendant l'animation (lecteurs d'écran, tests).
- */
-export function RollingNumber({ text, down = true, className = '', style }: { text: string; down?: boolean; className?: string; style?: CSSProperties }) {
-  return (
-    <span className={`num relative inline-block whitespace-nowrap ${className}`} style={style}>
-      <span className="sr-only">{text}</span>
-      {text.split('').map((ch, i) => (
-        <span key={i} aria-hidden className="relative inline-block overflow-hidden align-top" style={{ height: '1.08em', lineHeight: 1.08 }}>
-          <span className="invisible roll-ch" data-ch={ch} />
-          <AnimatePresence initial={false}>
-            <motion.span key={ch} className="absolute inset-x-0 top-0 text-center roll-ch" data-ch={ch} initial={{ y: down ? '-100%' : '100%' }} animate={{ y: 0 }} exit={{ y: down ? '100%' : '-100%' }}
-              transition={{ type: 'spring', stiffness: 520, damping: 38 }} />
-          </AnimatePresence>
-        </span>
-      ))}
-    </span>
   )
 }
 

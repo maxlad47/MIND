@@ -8,7 +8,7 @@ import { newLibreProgram, newTemplate, newTemplateExercise, syncFree } from '@/e
 import { generateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
 import { attachRun, extraIdOf, intervalBlocks, runIdOf, targetPaceOf } from '@/engine/runs'
-import type { HealthDay, HrPoint, ImportedLap, ImportedRun, LibrePlanning, Program, Questionnaire, Session, SessionExercise, SessionTemplate } from '@/engine/types'
+import type { HrPoint, ImportedLap, ImportedRun, LibrePlanning, Program, Questionnaire, Session, SessionExercise, SessionTemplate } from '@/engine/types'
 import { addDays, hash, mondayOf, todayISO, uid } from '@/engine/utils'
 import { COACH_EMAIL, getDB, hashPw, mutate, type DB, type Profile } from './store'
 
@@ -240,12 +240,24 @@ function addLeaRuns(db: DB, prog: Program, clientId: string, today: string): voi
     void extraIdOf
     break
   }
-  // 5. Pas et sommeil des 7 derniers jours
-  for (let n = 0; n < 7; n++) {
+  // 5. Pas et sommeil des 3 derniers mois : nuits plus longues le week-end, plus courtes avant les séances mal vécues, plus de pas les jours de séance
+  const done = new Map(allSessions(prog).filter((s) => s.status === 'faite').map((s) => [s.date, s]))
+  for (let n = 0; n < 90; n++) {
     const date = addDays(today, -n)
-    const h: HealthDay = { id: `${clientId}-${date}`, clientId, date, steps: n === 0 ? 3120 : 7200 + (hash('pas' + date) % 5200), sleepMinutes: 380 + (hash('nuit' + date) % 110), sleepScore: 66 + (hash('score' + date) % 25) }
-    db.health.push(h)
+    if (n > 3 && hash('trou' + date) % 23 === 0) continue // montre pas portée cette nuit-là
+    const wd = (new Date(date + 'T12:00:00Z').getUTCDay() + 6) % 7 // 0 = lundi (jour du réveil)
+    const s = done.get(date)
+    const f = s ? (s.runLog?.feeling || s.feeling || 0) : 0
+    let sleep = 405 + (hash('nuit' + date) % 70) + (wd === 5 || wd === 6 ? 40 : 0) - (wd === 0 ? 25 : 0)
+    if (f && f <= 6) sleep -= 55
+    else if (f >= 8) sleep += 20
+    sleep = Math.max(300, Math.min(560, sleep))
+    const deep = Math.round(sleep * (0.15 + (hash('pr' + date) % 7) / 100)), rem = Math.round(sleep * (0.2 + (hash('pp' + date) % 6) / 100)), awake = 8 + (hash('ev' + date) % 22)
+    const score = Math.max(42, Math.min(96, Math.round(40 + (sleep - 300) / 4.2 + (hash('sc' + date) % 12) - awake / 3)))
+    const steps = n === 0 ? 5480 : 6200 + (hash('pas' + date) % 4200) + (s?.sport === 'course' ? 5200 : s ? 1400 : 0) + (wd === 5 ? 2600 : wd === 6 ? -1200 : 0)
+    db.health.push({ id: `${clientId}-${date}`, clientId, date, steps, sleepMinutes: sleep, sleepScore: score, sleepPhases: { deepMin: deep, remMin: rem, awakeMin: awake, lightMin: sleep - deep - rem } })
   }
+  db.garminSettings.push({ id: clientId, clientId, stepGoal: 10000 })
 }
 
 export function buildSeed(today = todayISO()): DB {

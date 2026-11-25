@@ -153,10 +153,10 @@ function DayColumn({ date, children, today, past }: { date: string; children: Re
   return (
     <div ref={setNodeRef} className="rounded-[22px] p-2 transition-colors" style={{ background: isOver ? 'color-mix(in srgb, var(--accent) 14%, transparent)' : 'transparent', outline: isOver ? '2px dashed var(--accent)' : 'none' }}>
       <div className="flex items-center gap-2.5 px-0.5 mb-2" style={{ opacity: past ? 0.55 : 1 }}>
-        <span className="w-8 h-8 rounded-full flex items-center justify-center text-[15px] font-extrabold num" style={today ? { background: 'var(--accent)', color: '#fff' } : { background: 'var(--surface2)' }}>{num}</span>
+        <span className="w-8 h-8 rounded-full flex items-center justify-center text-[15px] font-extrabold num" style={today ? { background: 'var(--accent)', color: 'var(--on-accent)' } : { background: 'var(--surface2)' }}>{num}</span>
         <span className="text-[16px] font-bold capitalize" style={{ color: today ? 'var(--accent)' : undefined }}>{DAY_NAMES[d]}</span>
         <span className="text-[13px] text-muted">{shortDate(date)}</span>
-        {today && <span className="text-[10.5px] font-extrabold tracking-wide rounded-full px-2 py-0.5" style={{ background: 'var(--accent)', color: '#fff' }}>AUJOURD'HUI</span>}
+        {today && <span className="text-[10.5px] font-extrabold tracking-wide rounded-full px-2 py-0.5" style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}>AUJOURD'HUI</span>}
       </div>
       <div className="flex flex-col gap-2 min-h-[28px]">{children}</div>
     </div>

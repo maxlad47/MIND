@@ -13,7 +13,7 @@ import { Card, Cover, EmptyState, Icon, Ring, Segmented, SectionTitle, SportIcon
 type Filter = '4w' | 'cycle' | 'all'
 const axis = { fill: 'var(--muted)', fontSize: 11, fontWeight: 500 }
 const MUSCU = 'var(--muscu)'
-const COURSE = '#FF9F0A'
+const COURSE = 'var(--course)'
 
 /** Infobulle des graphiques : verre dépoli, valeurs tabulaires. */
 function ChartTip({ active, payload, label, unit = '', fmt }: { active?: boolean; payload?: { name?: string; value?: number | string; color?: string; fill?: string; stroke?: string }[]; label?: string; unit?: string; fmt?: (v: number) => string }) {

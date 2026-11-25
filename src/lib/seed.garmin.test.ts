@@ -24,7 +24,8 @@ describe('démo Garmin de Léa', () => {
     expect(sessions.filter(runs.needsReview)).toHaveLength(1)
     expect(sessions.filter(runs.needsReview)[0].runLog!.importedRunId).toBe('ir-garmin-seed-fractionne')
     expect(sessions.some((s) => s.id === runs.extraIdOf('ir-garmin-seed-en-plus') && s.extra && s.status === 'faite')).toBe(true)
-    expect(db.health.filter((h) => h.clientId === lea.id)).toHaveLength(7)
+    expect(db.health.filter((h) => h.clientId === lea.id).length).toBeGreaterThan(80)
+    expect(db.health.filter((h) => h.clientId === lea.id).every((h) => !h.sleepPhases || h.sleepPhases.lightMin! > 0)).toBe(true)
   })
   it('l\'EF déclenche « endurance trop intense » ; la longue « départ trop rapide » ; le fractionné a des tours de travail', async () => {
     const { db, runs, adapt } = await seeded()

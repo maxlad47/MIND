@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { currentUser, runDailyJobs, useDB } from './lib/store'
 import { useLook } from './ui/look'
-import { Toaster } from './ui/kit'
+import { PageSkeleton, Toaster } from './ui/kit'
 import { RestBanner } from './ui/rest'
 import { PagePush, Splash } from './ui/motion'
 import Auth from './pages/Auth'
@@ -12,6 +12,7 @@ import SessionPage from './pages/SessionPage'
 import ClientDetail from './pages/ClientDetail'
 import { scheduleLocalReminder } from './lib/push'
 import { useBoot, useHydrations } from './lib/remote'
+const RecoveryPage = lazy(() => import('./pages/Recovery'))
 
 export default function App() {
   const db = useDB()
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/app/*" element={me.role === 'client' ? (me.onboarded ? <ClientShell /> : <Navigate to="/onboarding" replace />) : <Navigate to="/coach" replace />} />
         <Route path="/coach/client/:id" element={me.role === 'coach' ? <PagePush><ClientDetail /></PagePush> : <Navigate to="/app/today" replace />} />
         <Route path="/coach/*" element={me.role === 'coach' ? <CoachShell /> : <Navigate to="/app/today" replace />} />
+        <Route path="/recovery/:id?" element={<PagePush><Suspense fallback={<div className="max-w-xl mx-auto px-4 pt-24"><PageSkeleton /></div>}><RecoveryPage /></Suspense></PagePush>} />
         <Route path="/session/:id" element={<PagePush><SessionPage /></PagePush>} />
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>

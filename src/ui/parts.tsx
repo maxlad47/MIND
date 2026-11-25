@@ -125,7 +125,7 @@ function Scale({ label, value, onChange, low, high }: { label: string; value: nu
       <div className="flex justify-between text-[15px] mb-1.5"><span className="font-semibold">{label}</span><span className="text-muted text-[13px]">{low} → {high}</span></div>
       <div className="grid grid-cols-5 gap-2">
         {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} onClick={() => onChange(n)} className="tap h-12 rounded-[14px] font-bold text-[17px]" style={{ background: value === n ? 'var(--accent)' : 'var(--surface2)', color: value === n ? '#fff' : 'var(--text)' }}>{n}</button>
+          <button key={n} onClick={() => onChange(n)} className="tap h-12 rounded-[14px] font-bold text-[17px]" style={{ background: value === n ? 'var(--accent)' : 'var(--surface2)', color: value === n ? 'var(--on-accent)' : 'var(--text)' }}>{n}</button>
         ))}
       </div>
     </div>
@@ -266,7 +266,7 @@ export function WeekStrip({ start, sessions, today, onOpen }: { start: string; s
         const done = list.length > 0 && list.every((s) => s.status === 'faite')
         const missed = list.some((s) => s.status === 'manquee')
         const sports = [...new Set(list.map(tintOf))] as ('muscu' | 'course')[]
-        const cols = sports.map((x) => (x === 'muscu' ? 'var(--muscu)' : '#FF9F0A'))
+        const cols = sports.map((x) => (x === 'muscu' ? 'var(--muscu)' : 'var(--course)'))
         const ring = cols.length > 1 ? `conic-gradient(${cols[0]} 0 50%, ${cols[1]} 50% 100%)` : cols[0]
         const isToday = d === today
         const first = list[0]
@@ -276,7 +276,7 @@ export function WeekStrip({ start, sessions, today, onOpen }: { start: string; s
             <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: isToday ? 'var(--accent)' : 'var(--muted)' }}>{DAY_SHORT[i]}</span>
             <span className="relative w-9 h-9 rounded-full flex items-center justify-center text-[14px] font-bold num"
               style={done
-                ? { background: ring, color: '#fff' }
+                ? { background: ring, color: sports.length === 1 && sports[0] === 'course' ? 'var(--on-course)' : '#fff' }
                 : list.length
                   ? { background: ring, padding: 2.5, color: 'var(--text)' }
                   : { background: 'var(--surface2)', color: 'var(--muted)' }}>

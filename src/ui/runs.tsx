@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'rea
 import { useNavigate } from 'react-router-dom'
 import { allSessions } from '@/engine/adapt'
 import {
-  enduranceTooIntense, fmtSleep, fmtSteps, healthOn, needsReview, plannedKm, preAnswer, reasonLabel, resolveMaxHr, RESPECT_LABEL, RPE_ANCHORS, RUN_REASONS, splitsSummary,
+  enduranceTooIntense, needsReview, plannedKm, preAnswer, reasonLabel, resolveMaxHr, RESPECT_LABEL, RPE_ANCHORS, RUN_REASONS, splitsSummary,
   targetPaceOf, timeInZones, workLaps, ZONE_LABELS, type MaxHr, type ZoneTime,
 } from '@/engine/runs'
 import { ZONES, type ImportedRun, type Program, type RunReason, type RunRespect, type Session, type Zone } from '@/engine/types'
@@ -16,7 +16,7 @@ import { Button, Card, Chip, DurationInput, Icon, NumberInput, Sheet, toast } fr
 const SplitsChart = lazy(() => import('./runcharts').then((m) => ({ default: m.SplitsChart })))
 const HrChart = lazy(() => import('./runcharts').then((m) => ({ default: m.HrChart })))
 const ZONE_COLORS = ['#64D2FF', '#30D158', '#FFD60A', '#FF9F0A', '#FF453A']
-const COURSE = '#FF9F0A'
+const COURSE = 'var(--course)'
 const fallback = <div className="skeleton h-40 rounded-2xl" />
 
 /** FC max d'un client : profil, sinon la plus haute des 6 derniers mois, sinon 220 − âge (estimation). */
@@ -201,7 +201,7 @@ export function ReviewSheet({ open, onClose, program, session, run, maxHr }: { o
           <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-label="Effort ressenti de 1 à 10">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
               <button key={n} role="radio" aria-checked={rpe === n} aria-label={`${n}${RPE_ANCHORS[n] ? `, ${RPE_ANCHORS[n]}` : ''}`} onClick={() => setRpe(n)} className="tap min-h-[48px] rounded-[14px] font-bold text-[18px] num"
-                style={{ background: rpe === n ? COURSE : 'var(--surface2)', color: rpe === n ? '#fff' : 'var(--text)' }}>{n}</button>
+                style={{ background: rpe === n ? COURSE : 'var(--surface2)', color: rpe === n ? 'var(--on-course)' : 'var(--text)' }}>{n}</button>
             ))}
           </div>
           <div className="text-[12px] text-muted mt-2 leading-snug">1 très facile · 3 facile · 5 moyen · 7 difficile · 9 très difficile · 10 maximal</div>
@@ -267,7 +267,7 @@ export function FitImportSheet({ open, onClose, clientId, session, onDone }: { o
       <div className="flex flex-col gap-3">
         {FIT_STEPS.map(([t, s], i) => (
           <div key={i} className="flex gap-3.5 bg-surface2 rounded-[18px] p-3.5">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shrink-0" style={{ background: COURSE }}>{i + 1}</div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0" style={{ background: COURSE, color: 'var(--on-course)' }}>{i + 1}</div>
             <div><div className="font-semibold">{t}</div><div className="text-[14px] text-muted">{s}</div></div>
           </div>
         ))}
@@ -338,15 +338,6 @@ export function PendingReviewCards({ program }: { program: Program }) {
       ))}
     </>
   )
-}
-
-/** « 8 412 pas · nuit 7 h 05 », seulement si Garmin a envoyé des données. */
-export function HealthLine({ clientId }: { clientId: string }) {
-  const db = useDB()
-  const h = healthOn(db.health, clientId, todayISO())
-  if (!h || (h.steps === undefined && !h.sleepMinutes)) return null
-  const parts = [h.steps !== undefined ? `${fmtSteps(h.steps)} pas` : '', h.sleepMinutes ? `nuit ${fmtSleep(h.sleepMinutes)}` : ''].filter(Boolean)
-  return <div className="text-center text-[13.5px] text-muted font-medium mb-4 num" aria-label="Santé du jour">{parts.join(' · ')}</div>
 }
 
 export { addDays }

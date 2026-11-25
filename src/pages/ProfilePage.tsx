@@ -1,18 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isLibre } from '@/engine/libre'
-import { programOf, questionnaireOf, resetDB, setSuggestLoads, switchToLibre, updateProfile, useDB } from '@/lib/store'
+import { programOf, questionnaireOf, resetDB, stepGoalOf, setSuggestLoads, switchToLibre, updateProfile, useDB } from '@/lib/store'
 import { signOut } from '@/lib/auth'
 import { REMOTE } from '@/lib/supabase'
 import { ensureSeed } from '@/lib/seed'
 import { isIOS, isStandalone, pushState, requestPush, testNotification } from '@/lib/push'
-import { DAY_NAMES, prettyDate } from '@/engine/utils'
+import { DAY_NAMES, prettyDate, todayISO } from '@/engine/utils'
 import { Button, Card, Cover, Group, Icon, Page, Row, RowIcon, Sheet, Toggle, spring, toast } from '@/ui/kit'
 import { motion } from 'framer-motion'
 import { setLook, useLook, type Look } from '@/ui/look'
 import { DIST_LABEL } from '@/engine/running'
 import { setRestSound, useRest } from '@/lib/rest'
 import { WatchGroup } from '@/ui/watch'
+import { StepGoalSheet } from '@/ui/recovery'
+import { lastNight } from '@/engine/recovery'
+import { fmtSleep, fmtSteps } from '@/engine/runs'
 
 function InstallGuide({ open, onClose, onGranted }: { open: boolean; onClose: () => void; onGranted: () => void }) {
   const standalone = isStandalone()
@@ -52,6 +55,9 @@ export function ProfileView({ userId }: { userId: string }) {
   const program = programOf(db, userId)
   const [guide, setGuide] = useState(false)
   const [switching, setSwitching] = useState(false)
+  const [goalSheet, setGoalSheet] = useState(false)
+  const night = lastNight(db.health, userId, todayISO())
+  const stepGoal = stepGoalOf(db, userId)
   const { sound } = useRest()
   const libre = isLibre(program)
   const edits = db.edits.filter((e) => e.clientId === userId).slice(0, 12)
@@ -86,6 +92,11 @@ export function ProfileView({ userId }: { userId: string }) {
           <Row onClick={() => setSwitching(true)}><RowIcon name="edit" color="var(--muscu)" /><div className="flex-1"><div className="font-semibold">Passer en mode libre</div><div className="text-[13px] text-muted">J'ai déjà mon programme de musculation</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
         </Group>}
       </>)}
+
+      <Group header="Santé" footer="Sommeil et pas viennent de ta montre Garmin.">
+        <Row onClick={() => nav('/recovery')}><RowIcon name="moon" color="var(--sleep)" /><div className="flex-1 min-w-0"><div className="font-semibold">Récupération</div><div className="text-[13px] text-muted truncate">{night ? `Sommeil et pas · dernière nuit ${fmtSleep(night.sleepMinutes!)}` : 'Sommeil et pas'}</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+        <Row onClick={() => setGoalSheet(true)}><RowIcon name="steps" color="var(--steps)" /><div className="flex-1 min-w-0"><div className="font-semibold">Objectif de pas</div><div className="text-[13px] text-muted">{stepGoal ? `${fmtSteps(stepGoal)} pas par jour` : 'Aucun'}</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+      </Group>
 
       {(!program || program.type !== 'muscu' || libre || db.importedRuns.some((r) => r.clientId === userId)) && <WatchGroup userId={userId} />}
 
@@ -134,15 +145,24 @@ export function ProfileView({ userId }: { userId: string }) {
       </div>
 
       <div className="mb-6">
-        <div className="px-4 pb-1.5 text-[13px] uppercase tracking-wide text-muted font-medium">Style</div>
-        <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="Style de l'interface">
-          {([['feminin', 'Féminin', 'doux et rond', ['#F7BCA6', '#E63869', '#3A22DD']], ['masculin', 'Masculin', 'franc et net', ['#E88F30', '#A92A33', '#1A0A0C']]] as [Look, string, string, string[]][]).map(([v, label, sub, cols]) => {
+        <div className="px-4 pb-1.5 text-[13px] uppercase tracking-wide text-muted font-medium">Thème</div>
+        <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="Thème de l'interface">
+          {([['t1', 'Thème 1', 'bleu, ciel, orange', ['#01598C', '#A9CEE7', '#F76926']], ['t2', 'Thème 2', 'bleu ciel, blanc, rose', ['#0593C6', '#FCFFFF', '#D83995']]] as [Look, string, string, string[]][]).map(([v, label, sub, cols]) => {
             const on = look === v
-            const masc = v === 'masculin'
+            const t1 = v === 't1'
             return (
-              <motion.button key={v} role="radio" aria-checked={on} aria-label={`Style ${label}`} whileTap={{ scale: 0.96 }} transition={spring} onClick={() => setLook(v)} className="flex flex-col items-center gap-2 rounded-[18px] bg-surface p-2.5 pb-3" style={{ boxShadow: on ? 'inset 0 0 0 2px var(--accent)' : 'var(--shadow-card)' }}>
-                <div className="w-full h-[74px] overflow-hidden relative flex items-end p-1.5" style={{ borderRadius: masc ? 7 : 14, background: `linear-gradient(${masc ? 150 : 170}deg, ${cols[0]}, ${cols[1]} 55%, ${cols[2]})` }}>
-                  <div className="w-full h-[26px]" style={{ background: 'rgba(0,0,0,.35)', borderRadius: masc ? 4 : 10 }} />
+              <motion.button key={v} role="radio" aria-checked={on} aria-label={label} whileTap={{ scale: 0.96 }} transition={spring} onClick={() => setLook(v)} className="flex flex-col items-center gap-2 rounded-[18px] bg-surface p-2.5 pb-3" style={{ boxShadow: on ? 'inset 0 0 0 2px var(--accent)' : 'var(--shadow-card)' }}>
+                <div className="w-full h-[74px] overflow-hidden relative flex flex-col justify-between p-2" style={{ borderRadius: 9, background: t1 ? `radial-gradient(ellipse 70% 18% at 60% 40%, ${cols[1]}88, transparent 70%), ${cols[0]}` : `radial-gradient(ellipse 60% 40% at 70% 20%, #7FD3F5, transparent 70%), ${cols[0]}` }}>
+                  {t1 ? (<>
+                    <div className="absolute left-[-10%] top-[60%] h-[6px] w-[75%] rounded-full" style={{ background: cols[2], filter: 'blur(3px)', opacity: 0.9 }} />
+                    <span className="relative text-left text-[18px] leading-none font-black italic tracking-tight" style={{ color: cols[2] }}>pace</span>
+                    <span className="relative self-start text-[7px] font-bold italic tracking-[0.3em]" style={{ color: cols[1] }}>RUN CLUB</span>
+                  </>) : (<>
+                    <div className="absolute left-[-5%] top-[38%] h-[8px] w-[70%] rounded-full" style={{ background: cols[2], filter: 'blur(3px)', opacity: 0.95 }} />
+                    <div className="absolute left-[20%] top-[52%] h-[3px] w-[45%] rounded-full" style={{ background: cols[1], filter: 'blur(1.5px)', opacity: 0.8 }} />
+                    <span className="relative self-start h-[14px] pl-0.5 pr-2 rounded-full text-[7.5px] font-bold flex items-center gap-1" style={{ background: cols[1], color: '#0B2430' }}><span className="w-3 h-2.5 rounded-full" style={{ background: cols[2] }} />Go</span>
+                    <span className="relative text-left text-[22px] leading-none font-extrabold" style={{ color: cols[1], letterSpacing: '-0.06em' }}>mind</span>
+                  </>)}
                 </div>
                 <span className="text-[14px] font-semibold flex items-center gap-1">{on && <span style={{ color: 'var(--accent)' }}><Icon name="check" size={14} strokeWidth={3.2} /></span>}{label}</span>
                 <span className="text-[11.5px] text-muted -mt-1.5 leading-tight">{sub}</span>
@@ -173,6 +193,7 @@ export function ProfileView({ userId }: { userId: string }) {
           <Button full variant="secondary" onClick={() => { switchToLibre(userId, false); setSwitching(false); toast('Mode libre activé'); nav(me.role === 'coach' ? '/coach/me' : '/app/sessions') }}>Partir de zéro</Button>
         </div>
       </Sheet>
+      <StepGoalSheet open={goalSheet} onClose={() => setGoalSheet(false)} clientId={userId} />
       <InstallGuide open={guide} onClose={() => setGuide(false)} onGranted={() => updateProfile(me.id, { notifications: true })} />
     </div>
   )

@@ -1,15 +1,18 @@
 import { useSyncExternalStore } from 'react'
 
 /**
- * « Style » de l'interface : féminin (rose, formes très rondes, pochettes lumineuses) ou
- * masculin (bleu électrique, angles plus francs, titres en capitales, pochettes plus sombres et plus nettes).
- * Masculin par défaut à l'ouverture ; choix manuel dans Profil, propre à l'appareil (localStorage). Il ne dépend jamais des réponses du formulaire :
- * l'interface ne change pas quand on choisit « Homme » ou « Femme ».
+ * Thème de l'interface (choix manuel dans Profil, propre à l'appareil, localStorage) :
+ *  - Thème 1 « Paceform » : bleu Ocean #01598C, bleu Mist #A9CEE7, orange Vivid #F76926 — capitales grasses en italique, photos filées, satin.
+ *  - Thème 2 « Kinetic bleu » : bleu Sky #0593C6, blanc #FCFFFF, rose Hot Pink #D83995 — titres très gras serrés, traînées roses.
+ * Thème 1 par défaut. Il ne dépend jamais des réponses du formulaire.
+ * Anciennes valeurs enregistrées : « masculin » → Thème 1, « feminin » → Thème 2.
  */
-export type Look = 'feminin' | 'masculin'
+export type Look = 't1' | 't2'
 
 const KEY = 'mind.look'
-let current: Look = (() => { try { return localStorage.getItem(KEY) === 'feminin' ? 'feminin' : 'masculin' } catch { return 'masculin' } })()
+let current: Look = (() => {
+  try { const v = localStorage.getItem(KEY); return v === 't2' || v === 'feminin' ? 't2' : 't1' } catch { return 't1' }
+})()
 const listeners = new Set<() => void>()
 
 function apply() { document.documentElement.dataset.look = current }

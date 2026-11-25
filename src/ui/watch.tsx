@@ -34,19 +34,19 @@ function LinkSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       <div className="flex flex-col gap-3">
         {STEPS.map(([t, s], i) => (
           <div key={i} className="flex gap-3.5 bg-surface2 rounded-[18px] p-3.5">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shrink-0" style={{ background: '#FF9F0A' }}>{i + 1}</div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0" style={{ background: 'var(--course)', color: 'var(--on-course)' }}>{i + 1}</div>
             <div><div className="font-semibold">{t}</div><div className="text-[14px] text-muted">{s}</div></div>
           </div>
         ))}
         <div>
           <div className="text-[13.5px] text-muted mb-1.5 font-medium">Durée choisie chez Garmin</div>
-          <div className="flex flex-wrap gap-2">{DURATIONS.map((d) => <Chip key={d.days} active={days === d.days} color="#FF9F0A" onClick={() => setDays(d.days)}>{d.label}</Chip>)}</div>
+          <div className="flex flex-wrap gap-2">{DURATIONS.map((d) => <Chip key={d.days} active={days === d.days} color="var(--course)" onClick={() => setDays(d.days)}>{d.label}</Chip>)}</div>
           <div className="text-[13px] text-muted mt-1.5">Ta clé expirera le {frDate(expiryFrom(days))} : MIND te préviendra 10 jours avant.</div>
         </div>
         <input className="w-full h-12 rounded-[14px] bg-surface2 px-4 outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60 font-mono text-[14px]" placeholder="Colle ta clé ici" aria-label="Clé Garmin personnelle"
           autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false} data-1p-ignore value={key} onChange={(e) => setKey(e.target.value)} />
         {error && <p className="text-[14px]" style={{ color: '#FF453A' }} role="alert">{error}</p>}
-        <Button full color="#FF9F0A" disabled={busy || key.trim().length < 8} onClick={() => void submit()}>{busy ? 'Vérification de la clé…' : 'Lier ma montre'}</Button>
+        <Button full color="var(--course)" disabled={busy || key.trim().length < 8} onClick={() => void submit()}>{busy ? 'Vérification de la clé…' : 'Lier ma montre'}</Button>
       </div>
     </Sheet>
   )
@@ -85,16 +85,16 @@ export function WatchGroup({ userId, canEditMaxHr = true }: { userId: string; ca
         {personal && state === 'liee' && (<>
           <Row><RowIcon name="check" color="#30D158" /><div className="flex-1 min-w-0"><div className="font-semibold"><span style={{ color: '#30D158' }}>●</span> Garmin liée</div>
             <div className="text-[13px] text-muted">expire le {link?.expiresAt ? frDate(link.expiresAt) : '—'} · dernière synchro {fmtAgo(link?.lastSyncAt)}</div>{link?.message && <div className="text-[12.5px] mt-0.5" style={{ color: '#FF9F0A' }}>{link.message}</div>}</div></Row>
-          <Row><Button small variant="tinted" color="#FF9F0A" disabled={busy} onClick={() => void sync()}><Icon name="refresh" size={16} /> {busy ? 'Synchro…' : 'Synchroniser'}</Button><Button small variant="danger" onClick={() => setUnlinking(true)}>Délier</Button></Row>
+          <Row><Button small variant="tinted" color="var(--course)" disabled={busy} onClick={() => void sync()}><Icon name="refresh" size={16} /> {busy ? 'Synchro…' : 'Synchroniser'}</Button><Button small variant="danger" onClick={() => setUnlinking(true)}>Délier</Button></Row>
         </>)}
         {personal && state === 'a_renouveler' && (
           <Row onClick={() => setLinking(true)}><RowIcon name="alert" color="#FF9F0A" /><div className="flex-1"><div className="font-semibold" style={{ color: '#FF9F0A' }}>Clé Garmin à renouveler</div><div className="text-[13px] text-muted">{link?.message ?? 'La synchro est arrêtée.'} Crée une nouvelle clé et colle-la ici.</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
         )}
         {personal && state !== 'liee' && state !== 'a_renouveler' && (allowed
-          ? <Row onClick={() => setLinking(true)}><RowIcon name="refresh" color="#FF9F0A" /><div className="flex-1"><div className="font-semibold">Lier avec ma clé Garmin personnelle</div><div className="text-[13px] text-muted">Tes sorties arrivent toutes seules</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+          ? <Row onClick={() => setLinking(true)}><RowIcon name="refresh" color="var(--course)" /><div className="flex-1"><div className="font-semibold">Lier avec ma clé Garmin personnelle</div><div className="text-[13px] text-muted">Tes sorties arrivent toutes seules</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
           : <Row><RowIcon name="info" color="#8E8E93" /><div className="flex-1 text-[14px] text-muted">La liaison Garmin automatique n'est pas activée pour ton compte : demande à ton coach.</div></Row>)}
         {GARMIN_STARTER && <Row onClick={async () => { const r = await startGarminOAuth(); if (!r.ok) toast(r.message ?? 'Liaison impossible') }}><RowIcon name="refresh" color="#0A84FF" /><div className="flex-1 font-semibold">Lier ma montre Garmin</div><Icon name="chevron" size={18} color="var(--faint)" /></Row>}
-        <Row onClick={() => setFit(true)}><RowIcon name="share" color="#FF9F0A" /><div className="flex-1"><div className="font-semibold">Importer une sortie (.FIT)</div><div className="text-[13px] text-muted">Depuis Garmin Connect, sans liaison</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
+        <Row onClick={() => setFit(true)}><RowIcon name="share" color="var(--course)" /><div className="flex-1"><div className="font-semibold">Importer une sortie (.FIT)</div><div className="text-[13px] text-muted">Depuis Garmin Connect, sans liaison</div></div><Icon name="chevron" size={18} color="var(--faint)" /></Row>
       </Group>
       <LinkSheet open={linking} onClose={() => setLinking(false)} />
       <FitImportSheet open={fit} onClose={() => setFit(false)} clientId={userId} onDone={() => toast('Sortie importée')} />

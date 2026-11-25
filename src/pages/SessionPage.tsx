@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { findSession } from '@/engine/adapt'
 import { conflictsOfWeek } from '@/engine/combine'
@@ -19,7 +19,6 @@ import {
   updateGroup, updateRun, useDB, type Recap,
 } from '@/lib/store'
 import { signalChain, startRest, useNow } from '@/lib/rest'
-import { doubleTick, tick } from '@/lib/haptics'
 import { motion } from 'framer-motion'
 import { Button, Card, Cover, DurationInput, Icon, NumberInput, Page, Ring, SectionTitle, Sheet, SportBadge, spring, toast } from '@/ui/kit'
 import { AddExerciseSheet, FormatChips, formatPatch, GroupParams, GroupTag, PlanEditor, type GroupItem } from '@/ui/formats'
@@ -35,20 +34,16 @@ function markStart(id: string) {
 }
 
 const num = (s: string) => Number(s.replace(',', '.')) || 0
-const cellCls = 'well h-11 w-full rounded-[12px] text-center num font-bold text-[17px] outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60 disabled:opacity-100'
-const cellBg = (done: boolean) => (done ? { background: 'color-mix(in srgb, #30D158 18%, var(--well-bg))', color: '#30D158' } : undefined)
+const cellCls = 'h-11 w-full rounded-[12px] text-center num font-bold text-[17px] outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60 disabled:opacity-100'
+const cellBg = (done: boolean) => ({ background: done ? 'color-mix(in srgb, #30D158 16%, var(--surface2))' : 'var(--surface2)' })
 
 /** Bouton rond « valider / annuler » commun à toutes les lignes. */
 function CheckBtn({ done, locked, label, onClick }: { done: boolean; locked: boolean; label: string; onClick: () => void }) {
   return (
-    <button disabled={locked} aria-label={done ? `Annuler ${label}` : `Valider ${label}`} aria-pressed={done}
-      className={`key ${done ? 'key-tint' : ''} w-11 h-11 rounded-[14px] flex items-center justify-center`}
-      style={done ? ({ '--key-color': '#30D158' } as CSSProperties) : { color: 'var(--faint)' }}
-      onClick={() => { if (done) tick(); else doubleTick(); onClick() }}>
-      <motion.span key={done ? 'on' : 'off'} className="flex" initial={done ? { scale: 0.4, rotate: -20 } : false} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 600, damping: 18 }}>
-        <Icon name="check" size={20} strokeWidth={3} />
-      </motion.span>
-    </button>
+    <motion.button disabled={locked} aria-label={done ? `Annuler ${label}` : `Valider ${label}`} whileTap={{ scale: 0.88 }} transition={spring} className="w-11 h-11 rounded-full flex items-center justify-center"
+      style={{ background: done ? '#30D158' : 'var(--surface2)', color: done ? '#fff' : 'var(--faint)', boxShadow: done ? '0 6px 16px -6px rgba(48,209,88,.7)' : undefined }} onClick={onClick}>
+      <Icon name="check" size={20} strokeWidth={3} />
+    </motion.button>
   )
 }
 
@@ -502,9 +497,9 @@ function RunDetail({ s }: { s: Session }) {
       <div className="flex flex-col gap-5">
         <Step label="Échauffement" text={r.warmup} color="#FFD60A" />
         <div className="flex gap-3">
-          <div className="w-1 rounded-full shrink-0" style={{ background: '#FF9F0A' }} />
+          <div className="w-1 rounded-full shrink-0" style={{ background: 'var(--course)' }} />
           <div className="flex-1">
-            <div className="t-over" style={{ color: '#FF9F0A' }}>Corps de séance</div>
+            <div className="t-over" style={{ color: 'var(--course)' }}>Corps de séance</div>
             {r.blocks.map((b, i) => (
               <div key={i} className="mt-2"><div className="text-[20px] font-extrabold leading-snug tracking-tight">{b.label}</div><div className="text-[15px] text-muted num">{describeBlock(b)}</div></div>
             ))}
@@ -528,7 +523,7 @@ function Comments({ program, session }: { program: Program; session: Session }) 
         {list.length === 0 && <p className="text-muted text-[14px] px-1">Pas encore de message. Écris à ton coach si tu as une question sur cette séance.</p>}
         {list.map((c) => (
           <div key={c.id} className={`flex ${c.authorRole === 'coach' ? '' : 'justify-end'}`}>
-            <div className="max-w-[82%] rounded-[20px] px-4 py-2.5" style={{ background: c.authorRole === 'coach' ? 'var(--surface)' : 'var(--accent)', color: c.authorRole === 'coach' ? 'var(--text)' : '#fff', borderBottomLeftRadius: c.authorRole === 'coach' ? 6 : 20, borderBottomRightRadius: c.authorRole === 'coach' ? 20 : 6 }}>
+            <div className="max-w-[82%] rounded-[20px] px-4 py-2.5" style={{ background: c.authorRole === 'coach' ? 'var(--surface)' : 'var(--accent)', color: c.authorRole === 'coach' ? 'var(--text)' : 'var(--on-accent)', borderBottomLeftRadius: c.authorRole === 'coach' ? 6 : 20, borderBottomRightRadius: c.authorRole === 'coach' ? 20 : 6 }}>
               <div className="text-[12px] font-semibold opacity-70">{c.authorName}{c.authorRole === 'coach' ? ' · coach' : ''}</div>
               <div className="text-[15px]">{c.text}</div>
             </div>
@@ -536,7 +531,7 @@ function Comments({ program, session }: { program: Program; session: Session }) 
         ))}
         <div className="flex gap-2 mt-1">
           <input className="flex-1 h-11 rounded-full bg-surface px-4 outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60" placeholder="Écrire un message…" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} />
-          <button className="tap w-11 h-11 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: 'var(--accent)' }} onClick={send} aria-label="Envoyer"><Icon name="chat" size={19} /></button>
+          <button className="tap w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--accent)', color: 'var(--on-accent)' }} onClick={send} aria-label="Envoyer"><Icon name="chat" size={19} /></button>
         </div>
       </div>
     </>
@@ -652,10 +647,10 @@ export default function SessionPage() {
           {runData ? (
             <>
               {needsReview(session) ? (
-                <Card className="p-4" style={{ background: 'color-mix(in srgb, #FF9F0A 13%, var(--surface))', boxShadow: 'inset 0 0 0 1px color-mix(in srgb, #FF9F0A 30%, transparent)' }}>
+                <Card className="p-4" style={{ background: 'color-mix(in srgb, var(--course) 13%, var(--surface))', boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--course) 30%, transparent)' }}>
                   <div className="font-bold text-[17px]">À compléter</div>
                   <p className="text-[14.5px] text-muted mt-0.5 leading-snug">Ta sortie est dans MIND. Dis-nous si la séance a été respectée et quel effort tu as ressenti.</p>
-                  <div className="mt-3"><Button full color="#FF9F0A" onClick={() => setReview(true)}>Remplir mon bilan</Button></div>
+                  <div className="mt-3"><Button full color="var(--course)" onClick={() => setReview(true)}>Remplir mon bilan</Button></div>
                 </Card>
               ) : (
                 <Card className="p-4">

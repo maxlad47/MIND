@@ -295,13 +295,13 @@ function RenfoTemplatesCard({ program }: { program: Program }) {
   const have = new Set((program.libre?.templates ?? []).map((t) => t.name))
   if (program.type !== 'muscu' || names.every((n) => have.has(n))) return null
   return (
-    <Card className="p-4 mt-4" style={{ background: 'color-mix(in srgb, #FF9F0A 11%, var(--surface))' }}>
+    <Card className="p-4 mt-4" style={{ background: 'color-mix(in srgb, var(--course) 11%, var(--surface))' }}>
       <div className="flex gap-3">
-        <span style={{ color: '#FF9F0A' }}><SportIcon sport="course" size={22} /></span>
+        <span style={{ color: 'var(--course)' }}><SportIcon sport="course" size={22} /></span>
         <div className="flex-1">
           <div className="font-bold">Tu cours ? Deux séances de renfo toutes prêtes</div>
           <p className="text-[14px] text-muted mt-0.5 leading-snug">Un circuit de gainage, de force et de pliométrie pensé pour les coureurs : « sans matériel » et « avec élastique ». Tu les ajoutes à tes séances, tu les modifies comme tu veux.</p>
-          <div className="mt-3"><Button small color="#FF9F0A" onClick={() => { addRenfoTemplates(program.id); toast('Séances de renfo ajoutées') }}>Ajouter à mes séances</Button></div>
+          <div className="mt-3"><Button small color="var(--course)" onClick={() => { addRenfoTemplates(program.id); toast('Séances de renfo ajoutées') }}>Ajouter à mes séances</Button></div>
         </div>
       </div>
     </Card>

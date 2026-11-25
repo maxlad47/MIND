@@ -10,7 +10,8 @@ import { acceptAdaptation, addExtraSession, programOf, refuseAdaptation, startNe
 import { analyzeWeek } from '@/lib/ai'
 import { Button, Card, Carousel, Chip, Cover, EmptyState, Icon, Page, Ring, SectionTitle, SportBadge, SportIcon, spring, toast } from '@/ui/kit'
 import { ExtraSessionSheet } from '@/ui/free'
-import { FitImportSheet, HealthLine, PendingReviewCards } from '@/ui/runs'
+import { FitImportSheet, PendingReviewCards } from '@/ui/runs'
+import { RecoveryCard } from '@/ui/recovery'
 import { BellButton, CheckinSheet, coverSeed, NotificationsSheet, SessionTile, sessionMeta, sessionSubtitle, tintOf, WarningBanner, WeekStrip } from '@/ui/parts'
 
 export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSessions }: { clientId: string; onboardPath?: string; onOpenSessions?: () => void }) {
@@ -64,7 +65,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
     <>
       <Card className="p-4 mb-5">
         <div className="flex items-center gap-3 mb-2">
-          <Ring value={stats.planned ? stats.done / stats.planned : 0} size={52} stroke={6} color={program.type === 'course' ? '#FF9F0A' : 'var(--muscu)'}>
+          <Ring value={stats.planned ? stats.done / stats.planned : 0} size={52} stroke={6} color={program.type === 'course' ? 'var(--course)' : 'var(--muscu)'}>
             <span className="text-[13px] font-extrabold num">{stats.done}/{stats.planned}</span>
           </Ring>
           <div className="flex-1 min-w-0">
@@ -75,7 +76,7 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
         <WeekStrip start={week.startDate} sessions={week.sessions} today={today} onOpen={(id) => nav(`/session/${id}`)} />
       </Card>
 
-      <HealthLine clientId={clientId} />
+      <RecoveryCard clientId={clientId} />
       <PendingReviewCards program={program} />
 
       {libre && (program.libre?.templates.length ?? 0) > 0 && trainingDays(program.libre!.planning).length === 0 && (
@@ -166,11 +167,11 @@ export function TodayView({ clientId, onboardPath = '/onboarding', onOpenSession
       )}
       {/* muscu MIND + course libre : une sortie à saisir librement (km, temps, ressenti) */}
       {!libre && program.type === 'muscu' && program.weeks.some((w) => w.startDate === mondayOf(today)) && (
-        <div className="mt-4"><Button full variant="tinted" color="#FF9F0A" onClick={() => { const id = addExtraSession(program.id, 'course'); if (id) nav(`/session/${id}`) }}><SportIcon sport="course" size={18} /> Sortie libre</Button></div>
+        <div className="mt-4"><Button full variant="tinted" color="var(--course)" onClick={() => { const id = addExtraSession(program.id, 'course'); if (id) nav(`/session/${id}`) }}><SportIcon sport="course" size={18} /> Sortie libre</Button></div>
       )}
 
       {(program.type !== 'muscu' || libre || db.importedRuns.some((r) => r.clientId === clientId)) && (
-        <div className="mt-4"><Button full variant="tinted" color="#FF9F0A" onClick={() => setFit(true)}><Icon name="refresh" size={17} /> Importer une sortie (.FIT)</Button></div>
+        <div className="mt-4"><Button full variant="tinted" color="var(--course)" onClick={() => setFit(true)}><Icon name="refresh" size={17} /> Importer une sortie (.FIT)</Button></div>
       )}
 
       {lastWeekN >= 1 && !analysis && program.weeks.some((w) => w.n === lastWeekN) && (

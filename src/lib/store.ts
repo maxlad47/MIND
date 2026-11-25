@@ -1137,6 +1137,15 @@ export function setMaxHr(clientId: string, maxHr: number | undefined): void {
   })
 }
 
+/** Objectif de pas par jour (`undefined` = pas d'objectif). */
+export function setStepGoal(clientId: string, stepGoal: number | undefined): void {
+  mutate((d) => {
+    const cur = d.garminSettings.find((g) => g.clientId === clientId)
+    if (cur) cur.stepGoal = stepGoal
+    else d.garminSettings.push({ id: clientId, clientId, stepGoal })
+  })
+}
+
 /** Mode démo (sans serveur) : statut de liaison écrit localement. En ligne, c'est le serveur qui l'écrit. */
 export function setLinkLocal(clientId: string, patch: Partial<GarminLink>): void {
   mutate((d) => {
@@ -1149,6 +1158,7 @@ export function setLinkLocal(clientId: string, patch: Partial<GarminLink>): void
 // sélecteurs
 export const runsOf = (d: DB, clientId: string): ImportedRun[] => d.importedRuns.filter((r) => r.clientId === clientId)
 export const linkOf = (d: DB, clientId: string): GarminLink | undefined => d.garminLinks.find((g) => g.clientId === clientId)
+export const stepGoalOf = (d: DB, clientId: string): number | undefined => d.garminSettings.find((g) => g.clientId === clientId)?.stepGoal
 export const maxHrSettingOf = (d: DB, clientId: string): number | undefined => d.garminSettings.find((g) => g.clientId === clientId)?.maxHr
 
 /** Date locale pour les tests et le seed. */

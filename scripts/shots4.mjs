@@ -1,4 +1,4 @@
-// Style féminin / masculin + tenue sur l'écran : node scripts/shots4.mjs [dark|light]
+// Thème 1 / thème 2 + tenue sur l'écran : node scripts/shots4.mjs [dark|light]
 import { chromium } from 'playwright-core'
 const base = process.env.BASE ?? 'http://localhost:5180'
 const scheme = process.argv[2] ?? 'dark'
@@ -9,7 +9,7 @@ const fit = async (page, name) => {
   console.log(`${sh <= ih + 1 ? 'OK   ' : 'LONG '} ${name} (${sh}/${ih})`)
 }
 for (const [w, h] of [[390, 844], [375, 667]]) {
-  for (const look of ['feminin', 'masculin']) {
+  for (const look of ['t1', 't2']) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, colorScheme: scheme, isMobile: true, hasTouch: true })
     const page = await ctx.newPage()
     await page.addInitScript((l) => { try { localStorage.setItem('mind.look', l); sessionStorage.setItem('mind.splash', '1') } catch {} }, look)
