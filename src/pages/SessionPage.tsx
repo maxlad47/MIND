@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { findSession } from '@/engine/adapt'
 import { conflictsOfWeek } from '@/engine/combine'
@@ -19,6 +19,7 @@ import {
   updateGroup, updateRun, useDB, type Recap,
 } from '@/lib/store'
 import { signalChain, startRest, useNow } from '@/lib/rest'
+import { doubleTick, tick } from '@/lib/haptics'
 import { motion } from 'framer-motion'
 import { Button, Card, Cover, DurationInput, Icon, NumberInput, Page, Ring, SectionTitle, Sheet, SportBadge, spring, toast } from '@/ui/kit'
 import { AddExerciseSheet, FormatChips, formatPatch, GroupParams, GroupTag, PlanEditor, type GroupItem } from '@/ui/formats'
@@ -34,16 +35,20 @@ function markStart(id: string) {
 }
 
 const num = (s: string) => Number(s.replace(',', '.')) || 0
-const cellCls = 'h-11 w-full rounded-[12px] text-center num font-bold text-[17px] outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60 disabled:opacity-100'
-const cellBg = (done: boolean) => ({ background: done ? 'color-mix(in srgb, #30D158 16%, var(--surface2))' : 'var(--surface2)' })
+const cellCls = 'well h-11 w-full rounded-[12px] text-center num font-bold text-[17px] outline-none focus:ring-2 focus:ring-inset focus:ring-accent/60 disabled:opacity-100'
+const cellBg = (done: boolean) => (done ? { background: 'color-mix(in srgb, #30D158 18%, var(--well-bg))', color: '#30D158' } : undefined)
 
 /** Bouton rond « valider / annuler » commun à toutes les lignes. */
 function CheckBtn({ done, locked, label, onClick }: { done: boolean; locked: boolean; label: string; onClick: () => void }) {
   return (
-    <motion.button disabled={locked} aria-label={done ? `Annuler ${label}` : `Valider ${label}`} whileTap={{ scale: 0.88 }} transition={spring} className="w-11 h-11 rounded-full flex items-center justify-center"
-      style={{ background: done ? '#30D158' : 'var(--surface2)', color: done ? '#fff' : 'var(--faint)', boxShadow: done ? '0 6px 16px -6px rgba(48,209,88,.7)' : undefined }} onClick={onClick}>
-      <Icon name="check" size={20} strokeWidth={3} />
-    </motion.button>
+    <button disabled={locked} aria-label={done ? `Annuler ${label}` : `Valider ${label}`} aria-pressed={done}
+      className={`key ${done ? 'key-tint' : ''} w-11 h-11 rounded-[14px] flex items-center justify-center`}
+      style={done ? ({ '--key-color': '#30D158' } as CSSProperties) : { color: 'var(--faint)' }}
+      onClick={() => { if (done) tick(); else doubleTick(); onClick() }}>
+      <motion.span key={done ? 'on' : 'off'} className="flex" initial={done ? { scale: 0.4, rotate: -20 } : false} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 600, damping: 18 }}>
+        <Icon name="check" size={20} strokeWidth={3} />
+      </motion.span>
+    </button>
   )
 }
 

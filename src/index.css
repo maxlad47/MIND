@@ -65,6 +65,17 @@
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.5);
   --shadow-cover: 0 14px 30px rgba(0, 0, 0, 0.45);
+
+  /* touches en relief et creux (matière « tactile ») */
+  --key-top: color-mix(in srgb, var(--surface3), white 7%);
+  --key-bot: var(--surface2);
+  --key-glow: rgba(255, 255, 255, 0.07);
+  --key-hi: rgba(255, 255, 255, 0.13);
+  --key-skirt: color-mix(in srgb, var(--bg), black 45%);
+  --key-contact: rgba(0, 0, 0, 0.55);
+  --key-drop: rgba(0, 0, 0, 0.6);
+  --well-bg: color-mix(in srgb, var(--bg), black 35%);
+  --well-in: inset 0 1.5px 3px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.035), 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
@@ -83,6 +94,15 @@
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
     --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.18);
     --shadow-cover: 0 12px 26px rgba(40, 20, 80, 0.22);
+  --key-top: var(--surface);
+  --key-bot: color-mix(in srgb, var(--surface2) 55%, var(--surface));
+  --key-glow: rgba(255, 255, 255, 0.7);
+  --key-hi: rgba(255, 255, 255, 0.95);
+  --key-skirt: color-mix(in srgb, var(--surface3), black 13%);
+  --key-contact: rgba(0, 0, 0, 0.1);
+  --key-drop: rgba(0, 0, 0, 0.14);
+  --well-bg: color-mix(in srgb, var(--surface2), black 3%);
+  --well-in: inset 0 1.5px 3px rgba(0, 0, 0, 0.14), inset 0 0 0 1px rgba(0, 0, 0, 0.03), 0 1px 0 rgba(255, 255, 255, 0.9);
   }
 }
 :root[data-theme="light"] {
@@ -101,6 +121,15 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.18);
   --shadow-cover: 0 12px 26px rgba(40, 20, 80, 0.22);
+  --key-top: var(--surface);
+  --key-bot: color-mix(in srgb, var(--surface2) 55%, var(--surface));
+  --key-glow: rgba(255, 255, 255, 0.7);
+  --key-hi: rgba(255, 255, 255, 0.95);
+  --key-skirt: color-mix(in srgb, var(--surface3), black 13%);
+  --key-contact: rgba(0, 0, 0, 0.1);
+  --key-drop: rgba(0, 0, 0, 0.14);
+  --well-bg: color-mix(in srgb, var(--surface2), black 3%);
+  --well-in: inset 0 1.5px 3px rgba(0, 0, 0, 0.14), inset 0 0 0 1px rgba(0, 0, 0, 0.03), 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 @layer base {
@@ -169,6 +198,7 @@ input[type="date"], input[type="time"] { min-height: 44px; }
 .hide-scroll { scrollbar-width: none; }
 .hide-scroll::-webkit-scrollbar { display: none; }
 .num { font-variant-numeric: tabular-nums; }
+.roll-ch::before { content: attr(data-ch); }
 .cap-first::first-letter { text-transform: uppercase; }
 .recharts-wrapper * { outline: none; }
 .recharts-surface:focus { outline: none; }
@@ -177,6 +207,42 @@ input[type="date"], input[type="time"] { min-height: 44px; }
 .tap { transition: transform .22s var(--ease-ios), opacity .22s, filter .22s; }
 .tap:active { transform: scale(.965); opacity: .86; transition-duration: .08s; }
 .tap-soft:active { transform: scale(.985); opacity: .9; }
+
+/* touche en relief : un capuchon posé sur une jupe de 2 px ; enfoncée, elle descend de la hauteur de la jupe */
+.key {
+  --kc-top: var(--key-top);
+  --kc-bot: var(--key-bot);
+  --kc-skirt: var(--key-skirt);
+  --kc-hi: var(--key-hi);
+  --kc-glow: var(--key-glow);
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--kc-glow), transparent 62%),
+    linear-gradient(180deg, var(--kc-top), var(--kc-bot));
+  box-shadow: inset 0 1px 0 var(--kc-hi), 0 2px 0 var(--kc-skirt), 0 3px 2px var(--key-contact), 0 7px 12px -5px var(--key-drop);
+  transform: translateY(0);
+  transition: transform 70ms var(--ease-out), box-shadow 70ms var(--ease-out), background 160ms;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.key:active:not(:disabled), .key[data-held], .key[aria-pressed="true"] {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 0 var(--kc-hi), 0 0 0 var(--kc-skirt), 0 1px 1px var(--key-contact), inset 0 2px 5px rgba(0, 0, 0, 0.22);
+}
+.key:disabled { opacity: 0.45; }
+/* touche colorée (couleur passée dans --key-color) */
+.key-tint {
+  --kc-top: color-mix(in srgb, var(--key-color) 84%, white);
+  --kc-bot: var(--key-color);
+  --kc-skirt: color-mix(in srgb, var(--key-color) 55%, black);
+  --kc-hi: rgba(255, 255, 255, 0.32);
+  --kc-glow: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+/* creux : la valeur est « dans » la plaque */
+.well { background: var(--well-bg); box-shadow: var(--well-in); }
+/* réglette graduée (progression du repos) */
+.ruler { background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 7px); }
 
 /* zone tactile élargie à 44 px sans changer l'aspect */
 .hit { position: relative; }

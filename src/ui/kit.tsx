@@ -1,7 +1,8 @@
-import { AnimatePresence, motion, useDragControls, useMotionValue } from 'framer-motion'
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { AnimatePresence, motion, useAnimate, useDragControls, useMotionValue } from 'framer-motion'
+import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent as RMouseEvent, type PointerEvent as RPointerEvent, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { coverSpec, SPORT_COLOR, type Sport } from './cover'
+import { tick } from '@/lib/haptics'
 
 export const ACCENT = 'var(--accent)'
 export const spring = { type: 'spring', stiffness: 380, damping: 34 } as const
@@ -437,16 +438,28 @@ export function NumberInput({ value, onChange, step = 1, min = 0, max = 999, suf
   useEffect(() => {
     if (last.current !== value) { setRaw(value === undefined ? '' : String(value).replace('.', ',')); last.current = value }
   }, [value])
+  // dernier mouvement des touches : sens (le chiffre arrive par en dessous ou par au-dessus) et butée (petite secousse)
+  const [kick, setKick] = useState<{ n: number; dir: 1 | -1 }>({ n: 0, dir: 1 })
+  const [scope, animate] = useAnimate<HTMLDivElement>()
+  const cur = useRef(value)
+  cur.current = value
   const bump = (dir: 1 | -1) => {
-    const base = value ?? 0
+    const base = cur.current ?? 0
     const v = dir > 0 ? Math.min(max, Math.round((base + step) * 100) / 100) : Math.max(min, Math.round((base - step) * 100) / 100)
-    last.current = v; setRaw(String(v).replace('.', ',')); onChange(v)
+    if (v === base && cur.current !== undefined) { if (scope.current) void animate(scope.current, { x: [0, dir * 4, -dir * 3, dir * 1.5, 0] }, { duration: 0.28 }); return false }
+    tick()
+    cur.current = v; last.current = v; setRaw(String(v).replace('.', ',')); onChange(v)
+    setKick((k) => ({ n: k.n + 1, dir }))
+    return true
   }
+  const minus = useHold(() => bump(-1))
+  const plus = useHold(() => bump(1))
   return (
-    <div className="inline-flex items-center rounded-[14px] bg-surface2 h-12 overflow-hidden shrink-0" style={{ width: width + 96 }}>
-      <button aria-label="Diminuer" className="tap w-12 h-12 flex items-center justify-center text-muted" onClick={() => bump(-1)}><Icon name="minus" size={18} strokeWidth={2.4} /></button>
-      <div className="flex-1 flex items-center justify-center min-w-0">
-        <input inputMode="decimal" value={raw} className="w-full min-w-0 h-12 bg-transparent text-center outline-none num font-bold text-[17px]"
+    <div ref={scope} className="well inline-flex items-center gap-1 rounded-[16px] h-12 p-1 shrink-0" style={{ width: width + 96 }}>
+      <button aria-label="Diminuer" className="key w-10 h-10 shrink-0 rounded-[12px] flex items-center justify-center text-muted" {...minus}><Icon name="minus" size={17} strokeWidth={2.6} /></button>
+      <div className="flex-1 flex items-center justify-center min-w-0 overflow-hidden h-10">
+        <motion.input key={kick.n} initial={kick.n ? { y: kick.dir * 9, opacity: 0.3 } : false} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 700, damping: 32 }}
+          inputMode="decimal" value={raw} className="w-full min-w-0 h-10 bg-transparent text-center outline-none num font-bold text-[17px]"
           onChange={(e) => {
             const t = e.target.value.replace(',', '.')
             setRaw(e.target.value)
@@ -454,10 +467,70 @@ export function NumberInput({ value, onChange, step = 1, min = 0, max = 999, suf
             const n = Number(t)
             if (!Number.isNaN(n)) { const v = Math.min(max, Math.max(min, n)); last.current = v; onChange(v) }
           }} />
-        {suffix && <span className="text-muted text-sm pr-2">{suffix}</span>}
+        {suffix && <span className="text-muted text-sm pr-1">{suffix}</span>}
       </div>
-      <button aria-label="Augmenter" className="tap w-12 h-12 flex items-center justify-center text-muted" onClick={() => bump(1)}><Icon name="plus" size={18} strokeWidth={2.4} /></button>
+      <button aria-label="Augmenter" className="key w-10 h-10 shrink-0 rounded-[12px] flex items-center justify-center text-muted" {...plus}><Icon name="plus" size={17} strokeWidth={2.6} /></button>
     </div>
+  )
+}
+
+/**
+ * Touche à appui long : un appui = un pas ; garder le doigt dessus répète, de plus en plus vite.
+ * `step` renvoie faux à la butée, ce qui arrête la répétition. Le clavier (Entrée, Espace) passe par le clic.
+ */
+export function useHold(step: () => boolean | void) {
+  const fn = useRef(step)
+  fn.current = step
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const repeated = useRef(false)
+  const stop = (e?: { currentTarget: HTMLElement }) => {
+    clearTimeout(timer.current)
+    timer.current = undefined
+    e?.currentTarget.removeAttribute('data-held')
+  }
+  useEffect(() => () => clearTimeout(timer.current), [])
+  return {
+    onPointerDown: (e: RPointerEvent<HTMLElement>) => {
+      repeated.current = false
+      const el = e.currentTarget
+      let count = 0
+      const loop = () => {
+        repeated.current = true
+        el.setAttribute('data-held', '')
+        if (fn.current() === false) { stop({ currentTarget: el }); return }
+        count++
+        timer.current = setTimeout(loop, count > 10 ? 45 : count > 4 ? 80 : 140)
+      }
+      clearTimeout(timer.current)
+      timer.current = setTimeout(loop, 420)
+    },
+    onPointerUp: stop,
+    onPointerLeave: stop,
+    onPointerCancel: stop,
+    onContextMenu: (e: RMouseEvent) => e.preventDefault(),
+    onClick: () => { if (repeated.current) { repeated.current = false; return } fn.current() },
+  }
+}
+
+/**
+ * Nombre dont chaque chiffre défile quand il change (compteur mécanique). `down` : le nouveau chiffre arrive par le haut.
+ * Les chiffres affichés sont dessinés par le CSS (::before) : le texte de la page reste « 2:44 », jamais un mélange
+ * de l'ancien et du nouveau chiffre pendant l'animation (lecteurs d'écran, tests).
+ */
+export function RollingNumber({ text, down = true, className = '', style }: { text: string; down?: boolean; className?: string; style?: CSSProperties }) {
+  return (
+    <span className={`num relative inline-block whitespace-nowrap ${className}`} style={style}>
+      <span className="sr-only">{text}</span>
+      {text.split('').map((ch, i) => (
+        <span key={i} aria-hidden className="relative inline-block overflow-hidden align-top" style={{ height: '1.08em', lineHeight: 1.08 }}>
+          <span className="invisible roll-ch" data-ch={ch} />
+          <AnimatePresence initial={false}>
+            <motion.span key={ch} className="absolute inset-x-0 top-0 text-center roll-ch" data-ch={ch} initial={{ y: down ? '-100%' : '100%' }} animate={{ y: 0 }} exit={{ y: down ? '100%' : '-100%' }}
+              transition={{ type: 'spring', stiffness: 520, damping: 38 }} />
+          </AnimatePresence>
+        </span>
+      ))}
+    </span>
   )
 }
 
