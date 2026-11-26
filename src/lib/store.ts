@@ -180,6 +180,39 @@ export function updateProfile(id: string, patch: Partial<Profile>): void {
   })
 }
 
+/**
+ * Retire de `d` un client et tout ce qui lui appartient (compte, formulaires, programmes, séances, commentaires,
+ * records, courses, santé, réglages Garmin), ainsi que les notifications du coach qui pointent vers sa fiche.
+ */
+export function purgeClient(d: DB, clientId: string): void {
+  const link = `/coach/client/${clientId}`
+  const mine = <T extends { clientId: string }>(xs: T[]) => xs.filter((x) => x.clientId !== clientId)
+  d.users = d.users.filter((u) => u.id !== clientId)
+  d.profiles = d.profiles.filter((p) => p.id !== clientId)
+  d.questionnaires = mine(d.questionnaires)
+  delete d.drafts[clientId]
+  d.programs = mine(d.programs)
+  d.checkins = mine(d.checkins)
+  d.adaptations = mine(d.adaptations)
+  d.edits = mine(d.edits)
+  d.comments = mine(d.comments)
+  d.records = mine(d.records)
+  d.analyses = mine(d.analyses)
+  d.importedRuns = mine(d.importedRuns)
+  d.health = mine(d.health)
+  d.garminSettings = mine(d.garminSettings)
+  d.garminLinks = mine(d.garminLinks)
+  d.notifications = d.notifications.filter((n) => n.userId !== clientId && n.link !== link)
+}
+
+/** Mode démo : le coach supprime un client. En ligne, passer par `deleteClientRemote` (le serveur efface le compte). */
+export function deleteClientLocal(clientId: string): boolean {
+  const target = db.profiles.find((p) => p.id === clientId)
+  if (!target || target.role === 'coach' || currentUser()?.role !== 'coach') return false
+  mutate((d) => purgeClient(d, clientId))
+  return true
+}
+
 // ------------------------------------------------------------------ sélecteurs
 
 export const programOf = (d: DB, clientId: string): Program | undefined =>

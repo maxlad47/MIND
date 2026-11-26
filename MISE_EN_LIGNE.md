@@ -10,6 +10,7 @@ Ils créent un compte, et tu vois leurs programmes et leurs séances dans ton es
 3. **SQL Editor → New query** : ouvre `supabase/setup.sql`, remplace `TON-EMAIL@exemple.com` par **l'email avec lequel tu créeras ton compte coach**, colle tout, **Run**.
 4. **Project Settings → API** : copie **Project URL** et la clé **anon public**.
    (Ne copie jamais la clé `service_role`.)
+5. **Supprimer des profils** (bouton « Supprimer le profil » de la fiche client) : **SQL Editor → New query**, colle tout `supabase/suppression.sql`, **Run** → *« Success. No rows returned »*. Une seule fois ; sans ça, l'app affiche « Suppression pas encore activée sur le serveur ».
 
 ## 2. Brancher le site — 2 min
 

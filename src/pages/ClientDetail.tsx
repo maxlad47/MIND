@@ -6,9 +6,10 @@ import { DIST_LABEL, referencesOf } from '@/engine/running'
 import { SPLIT_LABEL } from '@/engine/strength'
 import { MUSCLE_LABEL, ZONES } from '@/engine/types'
 import { addDays, ageFrom, fmtTime, prettyDate, shortDate, todayISO } from '@/engine/utils'
-import { acceptAdaptation, linkOf, programOf, questionnaireOf, refuseAdaptation, setLinkLocal, setMaxHr, summarizeClient, switchToLibre, useDB } from '@/lib/store'
+import { acceptAdaptation, deleteClientLocal, linkOf, programOf, questionnaireOf, refuseAdaptation, setLinkLocal, setMaxHr, summarizeClient, switchToLibre, useDB } from '@/lib/store'
 import { fmtAgo, GARMIN_PERSONAL, setGarminAllowed } from '@/lib/garmin'
 import { REMOTE } from '@/lib/supabase'
+import { deleteClientRemote } from '@/lib/remote'
 import { maxHrOf, ReviewLine } from '@/ui/runs'
 import { Toggle } from '@/ui/kit'
 import { Button, Card, Chip, Cover, Group, Icon, Page, Row, Segmented, SectionTitle, Sheet, toast } from '@/ui/kit'
@@ -29,6 +30,9 @@ export default function ClientDetail() {
   const nav = useNavigate()
   const [tab, setTab] = useState<'programme' | 'seances' | 'progres' | 'profil'>('programme')
   const [switching, setSwitching] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [hr, setHr] = useState('')
   const profile = db.profiles.find((p) => p.id === id)
   if (!profile) return <Page title="Client" back="/coach" tabbed={false}><p className="text-muted">Client introuvable. Retourne à la liste pour en choisir un autre.</p></Page>
   const sum = summarizeClient(db, profile)
@@ -42,7 +46,6 @@ export default function ClientDetail() {
   const libre = isLibre(program)
   const link = linkOf(db, id)
   const mh = maxHrOf(db, id)
-  const [hr, setHr] = useState('')
   // effort perçu des dernières semaines + 7 derniers jours de santé
   const rpePoints = program ? allSessions(program).filter((s) => s.runLog?.rpe && s.date >= addDays(todayISO(), -56)).sort((a, b) => a.date.localeCompare(b.date)).map((s) => ({ date: s.date, rpe: s.runLog!.rpe! })) : []
   const week = db.health.filter((h) => h.clientId === id && h.date > addDays(todayISO(), -7) && h.date <= todayISO()).sort((a, b) => a.date.localeCompare(b.date))
@@ -164,8 +167,27 @@ export default function ClientDetail() {
             <Row key={e.id}><div className="flex-1"><div className="text-[14.5px]">{e.text}</div><div className="text-[12px] text-muted">{e.byName} ({e.by === 'coach' ? 'coach' : 'client'}) · {shortDate(e.at.slice(0, 10))}</div></div></Row>
           ))}</Group>
         </>)}
-        <div className="text-[12px] text-muted">{Object.keys(MUSCLE_LABEL).length} groupes musculaires suivis.</div>
+        <div className="text-[12px] text-muted mb-6">{Object.keys(MUSCLE_LABEL).length} groupes musculaires suivis.</div>
       </>)}
+      {tab === 'profil' && !q && <p className="text-muted mb-6">{profile.firstName} n'a pas encore rempli son formulaire.</p>}
+      {tab === 'profil' && profile.role === 'client' && (
+        <div className="mb-8"><Button full variant="danger" onClick={() => setDeleting(true)}><Icon name="trash" size={19} /> Supprimer le profil</Button></div>
+      )}
+      <Sheet open={deleting} onClose={() => { if (!busy) setDeleting(false) }} title={`Supprimer ${profile.firstName} ?`}>
+        <div className="flex flex-col gap-3">
+          <p className="text-[14.5px] text-muted leading-snug">Son compte ({profile.email}) et toutes ses données sont effacés définitivement : formulaire, programme, séances, charges, commentaires, sorties et données Garmin. Impossible de revenir en arrière.</p>
+          <Button full variant="danger" disabled={busy} onClick={async () => {
+            setBusy(true)
+            const r = REMOTE ? await deleteClientRemote(id) : { ok: deleteClientLocal(id), error: 'Suppression impossible.' }
+            setBusy(false)
+            if (!r.ok) { toast(r.error ?? 'Suppression impossible.'); return }
+            setDeleting(false)
+            toast(`Profil de ${profile.firstName} supprimé`)
+            nav('/coach', { replace: true })
+          }}>{busy ? 'Suppression…' : 'Supprimer définitivement'}</Button>
+          <Button full variant="secondary" disabled={busy} onClick={() => setDeleting(false)}>Annuler</Button>
+        </div>
+      </Sheet>
       <Sheet open={switching} onClose={() => setSwitching(false)} title="Passer en mode libre">
         <div className="flex flex-col gap-3">
           <p className="text-[14.5px] text-muted leading-snug">{profile.firstName} suivra son propre programme de musculation (MIND n'y touche plus). Un plan de course MIND éventuel est conservé, et l'historique des séances et des charges aussi.</p>

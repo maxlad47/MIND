@@ -9,7 +9,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Adaptation, Checkin, GarminLink, GarminSettings, HealthDay, ImportedRun, Program } from '@/engine/types'
 import {
-  emptyDB, getDB, replaceDB, setChangeHook,
+  emptyDB, getDB, purgeClient, replaceDB, setChangeHook,
   type AppNotification, type Comment, type DB, type Draft, type EditEntry, type Analysis, type PersonalRecord,
   type Profile, type QuestionnaireRow,
 } from './store'
@@ -192,12 +192,18 @@ async function fetchAll<T>(table: string, filter?: (q: any) => any): Promise<T[]
 }
 
 /** Charge tout ce que le compte a le droit de voir et le fusionne avec les données locales. */
-async function hydrate(uid: string): Promise<void> {
+async function hydrate(uid: string): Promise<boolean> {
   const [profiles, records, inbox] = await Promise.all([
     fetchAll<ProfileRow>('profiles'),
     fetchAll<RecRow>('records'),
     fetchAll<InboxRow>('inbox', (q) => q.eq('user_id', uid)),
   ])
+  // compte supprimé par le coach (la session reste valable jusqu'à l'expiration du jeton) : on déconnecte
+  if (!profiles.some((r) => r.id === uid)) {
+    await supabase!.auth.signOut().catch(() => undefined)
+    await endSession()
+    return false
+  }
   const d0 = getDB()
   const next = structuredClone(d0)
   const seen = new Set<string>()
@@ -228,6 +234,7 @@ async function hydrate(uid: string): Promise<void> {
   saveSynced()
   hydrations++
   emit()
+  return true
 }
 
 let channel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
@@ -243,12 +250,49 @@ function listen(uid: string): void {
       else if (p.new && p.new.user_id === uid) { const { id } = splitKey(p.new.id); applyRemote('n', id, p.new.data) }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (p: any) => {
-      if (p.new) applyRemote('profile', p.new.id, toProfile(p.new as ProfileRow))
+      if (p.eventType === 'DELETE') { if (p.old?.id) profileGone(p.old.id, uid) }
+      else if (p.new?.id) applyRemote('profile', p.new.id, toProfile(p.new as ProfileRow))
     })
     .subscribe()
 }
 function stopListening(): void {
   if (channel) { void supabase!.removeChannel(channel); channel = null }
+}
+
+// ------------------------------------------------------------------ suppression d'un client
+
+/** Efface localement un client déjà supprimé sur le serveur, sans rien renvoyer (le serveur a tout effacé en cascade). */
+function forgetClient(clientId: string): void {
+  const d0 = getDB()
+  if (!d0.profiles.some((p) => p.id === clientId)) return
+  const next = structuredClone(d0)
+  purgeClient(next, clientId)
+  const kept = new Set(entsOf(next).map((e) => e.key))
+  for (const e of entsOf(d0)) if (!kept.has(e.key)) synced.delete(e.key)
+  replaceDB(next)
+  saveSynced()
+}
+
+/** Un profil a disparu du serveur : c'est le mien → déconnexion ; sinon on oublie ce client. */
+function profileGone(id: string, uid: string): void {
+  if (id === uid) { void supabase!.auth.signOut().finally(() => void endSession()); return }
+  forgetClient(id)
+}
+
+/** Le coach supprime définitivement un client (compte et données). Nécessite `supabase/suppression.sql`. */
+export async function deleteClientRemote(clientId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) return { ok: false, error: 'Pas de serveur.' }
+  await pushNow().catch(() => undefined) // ce qui attend part avant (sinon un envoi en cours buterait sur le compte effacé)
+  const { error } = await supabase.rpc('delete_client', { target: clientId })
+  if (error) {
+    console.warn('[sync] delete_client', error.message)
+    if (/could not find the function|does not exist|PGRST202/i.test(`${error.code} ${error.message}`))
+      return { ok: false, error: 'Suppression pas encore activée sur le serveur (supabase/suppression.sql).' }
+    if (/fetch|network/i.test(error.message)) return { ok: false, error: 'Pas de connexion : réessaie dans un instant.' }
+    return { ok: false, error: error.message || 'Suppression impossible. Réessaie.' }
+  }
+  forgetClient(clientId)
+  return { ok: true }
 }
 
 // ------------------------------------------------------------------ envoi
@@ -355,7 +399,7 @@ async function startSession(uid: string): Promise<void> {
     saveSynced()
   }
   try {
-    await hydrate(uid)
+    if (!(await hydrate(uid))) return
   } catch (e) {
     console.warn('[sync] chargement impossible (hors ligne ?)', e)
     setSync('error')
@@ -422,8 +466,7 @@ export async function refreshRemote(): Promise<void> {
   refreshing = true
   try {
     await pushNow()
-    await hydrate(uid)
-    listen(uid) // le canal temps réel a pu être coupé pendant la veille
+    if (await hydrate(uid)) listen(uid) // le canal temps réel a pu être coupé pendant la veille
   } catch (e) {
     console.warn('[sync] rechargement impossible (hors ligne ?)', e)
   } finally {
