@@ -111,6 +111,12 @@
 @layer base {
 * { -webkit-tap-highlight-color: transparent; }
 html, body, #root { height: 100%; }
+/* App installée sur iPhone : quand la page est plus courte que l'écran, iOS calcule la hauteur sans la
+   barre d'état et remonte d'autant la barre d'onglets fixe (bande vide en bas, ex. Alertes vide).
+   Le contenu fait donc toujours au moins la hauteur complète de l'écran. */
+@media (display-mode: standalone) {
+  #root { height: auto; min-height: calc(100% + env(safe-area-inset-top)); }
+}
 html { background: var(--bg); }
 body {
   margin: 0;
