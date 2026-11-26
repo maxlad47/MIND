@@ -13,7 +13,7 @@ import {
 } from '@/engine/formats'
 import { renfoTemplates } from '@/engine/renfo'
 import {
-  applyRunPlan, hasLogs, isLibre, libreFromProgram, newLibreProgram, syncFree, templateFromSession, withExtraSession, weekRecap, type ExtraSource,
+  applyRunPlan, hasLogs, isFreeRun, isLibre, libreFromProgram, newLibreProgram, syncFree, templateFromSession, withExtraSession, weekRecap, type ExtraSource,
 } from '@/engine/libre'
 import { generateProgram, nextStrengthCycle, regenerateProgram } from '@/engine/program'
 import { epley } from '@/engine/strength'
@@ -22,7 +22,7 @@ import type {
   Questionnaire, RunBlock, RunData, RunLog, RunReason, RunRespect, Session, SessionExercise, SessionTemplate, SetFormat, SetLog, Zone,
 } from '@/engine/types'
 import { attachRun, detachRun, manualRun, pendingRuns, plannedMeasures, runIdOf } from '@/engine/runs'
-import { vmaFromRecent } from '@/engine/running'
+import { roundRunPlan, vmaFromRecent } from '@/engine/running'
 import { addDays, fmtKm, mondayOf, todayISO, uid, weekday } from '@/engine/utils'
 import { skipRest } from './rest'
 import { REMOTE } from './supabase'
@@ -789,7 +789,21 @@ export function undoAdaptationById(adId: string): void {
 }
 
 /** Tâches « cron » exécutées à l'ouverture de l'app (en ligne : pg_cron + Edge Functions). */
+/** Sortie encore à faire dont les distances ne sont pas au km entier (programmes générés avant cette règle). */
+const needsRound = (s: Session) =>
+  s.sport === 'course' && s.status === 'prevue' && !!s.run && !s.runLog && s.kind !== 'course' && !isFreeRun(s) && roundRunPlan(structuredClone(s.run))
+
+/** Passe au km entier les sorties à venir (4,7 km → 5 km). Idempotent ; en ligne, chacun ne touche que son programme. */
+export function roundPlannedRuns(): void {
+  const own = (d: DB) => d.programs.filter((p) => p.status === 'actif' && (!REMOTE || p.clientId === d.sessionUserId))
+  if (!own(db).some((p) => allSessions(p).some(needsRound))) return
+  mutate((d) => {
+    for (const p of own(d)) for (const s of allSessions(p)) if (needsRound(s)) { roundRunPlan(s.run!); s.estMinutes = s.run!.estMinutes }
+  })
+}
+
 export function runDailyJobs(today = todayISO()): void {
+  roundPlannedRuns()
   const d0 = db
   const stamp = d0.lastJobs['daily']
   if (stamp === today) return

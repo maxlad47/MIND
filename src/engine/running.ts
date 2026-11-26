@@ -373,8 +373,46 @@ export function planMinutes(warmMin: number, blocks: RunBlock[], coolMin: number
 }
 
 const km1 = (x: number) => Math.round(x * 10) / 10
+/** Distances prescrites au km entier (4,7 → 5 km, 4,3 → 4 km) : un plan de coach ne donne pas de décimales. */
+export const kmRound = (x: number) => Math.max(1, Math.round(x))
+/** Bloc d'un seul tenant en distance (footing, partie d'une sortie longue), par opposition aux répétitions. */
+const continuous = (b: RunBlock) => !!b.meters && !(b.reps && b.reps > 1)
 
-function easyPlan(km: number, pace: number, label = 'Footing'): RunPlan {
+/**
+ * Arrondit au km entier une sortie prévue : footing et sortie longue (chaque partie, total = somme), estimation du total
+ * pour les séances fractionnées. Renvoie vrai si quelque chose a changé.
+ */
+export function roundRunPlan(run: RunPlan): boolean {
+  if (!(run.totalKm > 0)) return false
+  const before = JSON.stringify(run)
+  const cont = run.blocks.filter(continuous)
+  if (cont.length && cont.length === run.blocks.length) {
+    const total = kmRound(cont.reduce((a, b) => a + b.meters!, 0) / 1000)
+    let rest = total
+    for (const b of cont.slice(1)) { const k = kmRound(b.meters! / 1000); b.meters = k * 1000; rest -= k }
+    cont[0].meters = Math.max(1, rest) * 1000
+    run.totalKm = cont.reduce((a, b) => a + b.meters!, 0) / 1000
+    run.estMinutes = planMinutes(0, run.blocks, 0)
+  } else run.totalKm = kmRound(run.totalKm)
+  return JSON.stringify(run) !== before
+}
+
+/** Allège ou alourdit une sortie prévue (facteur) en gardant des distances rondes et des répétitions entières. */
+export function scaleRun(run: RunPlan, f: number): void {
+  for (const b of run.blocks) {
+    if (b.reps && b.reps > 1) {
+      const r = Math.max(2, Math.round(b.reps * f))
+      if (r !== b.reps) { b.reps = r; b.label = b.label.replace(/^\d+ ×/, `${r} ×`) }
+    } else if (b.meters) b.meters = Math.round(b.meters * f)
+    else if (b.seconds) b.seconds = Math.round(b.seconds * f)
+  }
+  run.totalKm *= f
+  run.estMinutes = Math.round(run.estMinutes * f)
+  roundRunPlan(run)
+}
+
+function easyPlan(kmIn: number, pace: number, label = 'Footing'): RunPlan {
+  const km = kmRound(kmIn)
   const blocks: RunBlock[] = [{ label, meters: Math.round(km * 1000), paceSec: pace }]
   return {
     warmup: 'Démarre en douceur, les 5 premières minutes très tranquilles.',
@@ -457,7 +495,7 @@ function qualityPlan(kind: RunKind, c: QualityCtx, totalKm: number): RunPlan {
   const reps = b0.reps ?? 1
   const work = b0.meters ? (reps * b0.meters) / 1000 : kind === 'cotes' ? reps * 0.12 : (reps * (b0.seconds ?? 0)) / (b0.paceSec ?? p.ef)
   const recovery = ((b0.recSec ?? 0) * Math.max(0, reps - 1)) / (p.ef * 1.15)
-  const total = km1(((warm + cool) * 60) / p.ef + work + recovery)
+  const total = kmRound(((warm + cool) * 60) / p.ef + work + recovery)
   return {
     warmup: `${warm} min d'allure facile (${fmtPace(p.ef)}/km), puis 3 accélérations de 20 secondes.`,
     blocks, cooldown: `${cool} min de retour au calme très facile.`,
@@ -508,10 +546,10 @@ export function buildRunWeek(c: RunWeekCtx): Session[] {
   const wsum = weights.reduce((a, b) => a + b, 0) || 1
 
   const longPlan = (lkIn: number): RunPlan => {
-    const lk = Math.min(lkIn, longCapKm)
+    const lk = Math.min(kmRound(lkIn), Number.isFinite(longCapKm) ? Math.max(1, Math.floor(longCapKm)) : Infinity)
     const specPhase = phase === 'Spécifique' && (c.distance === 'marathon' || c.distance === 'semi') && !volume.light && c.weekInPhase >= 1
     if (specPhase) {
-      const fast = clamp(lk * 0.35, 4, c.distance === 'marathon' ? 14 : 8)
+      const fast = Math.round(clamp(lk * 0.35, 4, c.distance === 'marathon' ? 14 : 8))
       const target = c.distance === 'marathon' ? paces.marathon : paces.semi
       const blocks: RunBlock[] = [
         { label: 'Facile', meters: Math.round((lk - fast) * 1000), paceSec: paces.ef },
@@ -523,9 +561,9 @@ export function buildRunWeek(c: RunWeekCtx): Session[] {
   }
   const easyFor = (kind: 'ef' | 'recup', kmWanted: number): RunPlan => {
     const pace = kind === 'recup' ? paces.recup : paces.ef
-    let k = Math.max(3, kmWanted)
+    let k = Math.max(3, kmRound(kmWanted))
     const probe = easyPlan(k, pace)
-    if (probe.estMinutes > c.maxMinutes) k = Math.max(3, Math.floor(k * (c.maxMinutes / probe.estMinutes) * 2) / 2)
+    if (probe.estMinutes > c.maxMinutes) k = Math.max(3, Math.floor(k * (c.maxMinutes / probe.estMinutes)))
     return easyPlan(k, pace, kind === 'recup' ? 'Footing très souple' : 'Endurance fondamentale')
   }
 
@@ -567,7 +605,7 @@ export function buildRunWeek(c: RunWeekCtx): Session[] {
   if (phase !== 'Affûtage') {
     const longP = plans.find((p) => p.kind === 'longue')!
     const maxOther = Math.max(0, ...plans.filter((p) => p.kind !== 'longue').map((p) => p.plan!.totalKm))
-    if (longP.plan!.totalKm < maxOther + 0.3) longP.plan = longPlan(maxOther + 0.5)
+    if (longP.plan!.totalKm <= maxOther) longP.plan = longPlan(Math.floor(maxOther) + 1)
   }
 
   return plans.map(({ kind, plan }) => ({

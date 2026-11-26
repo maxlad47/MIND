@@ -5,7 +5,7 @@ import { alternativesFor, exerciseOf } from './exercises'
 import { bestDayFor, daysFor, runClass } from './combine'
 import { capLoad } from './guardrails'
 import { nextLoadPlan, resizeSets, syncRoundsFromMembers } from './formats'
-import { computePaces, isQuality } from './running'
+import { computePaces, isQuality, scaleRun } from './running'
 import type { Adaptation, AdaptationKind, Checkin, Paces, Program, RunPlan, Session, SessionExercise, Zone } from './types'
 import { LOWER_MUSCLES } from './types'
 import { addDays, dayName, fmtKm, mondayOf, round, uid, weekday } from './utils'
@@ -229,10 +229,7 @@ function lightenRun(s: Session): void {
     s.title = 'Endurance fondamentale (allégée)'
     s.estMinutes = plan.estMinutes
   } else {
-    const f = 0.75
-    s.run.blocks.forEach((b) => { if (b.meters) b.meters = Math.round(b.meters * f); if (b.seconds && !b.reps) b.seconds = Math.round(b.seconds * f) })
-    s.run.totalKm = Math.round(s.run.totalKm * f * 10) / 10
-    s.run.estMinutes = Math.round(s.run.estMinutes * f)
+    scaleRun(s.run, 0.75)
     s.estMinutes = s.run.estMinutes
   }
 }
@@ -316,9 +313,7 @@ export function applyScale(program: Program, weekN: number, factor: number): Pro
     for (const e of s.exercises ?? []) resizeSets(e, Math.max(1, Math.round(e.sets * factor)))
     syncRoundsFromMembers(s)
     if (s.run && s.kind !== 'course') {
-      s.run.blocks.forEach((b) => { if (b.meters) b.meters = Math.round(b.meters * factor) })
-      s.run.totalKm = Math.round(s.run.totalKm * factor * 10) / 10
-      s.run.estMinutes = Math.round(s.run.estMinutes * factor)
+      scaleRun(s.run, factor)
     }
     s.estMinutes = Math.max(15, Math.round(s.estMinutes * (0.4 + 0.6 * factor)))
   }
