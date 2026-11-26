@@ -18,7 +18,7 @@ import {
   logSet, moveSession, removeExercise, replaceExercise, resetGroup, restoreSession, setExerciseFormat, skipSession, startGroup, tallyGroup, unlogRound, unlogSet, updateExercise,
   updateGroup, updateRun, useDB, type Recap,
 } from '@/lib/store'
-import { signalChain, startRest, useNow } from '@/lib/rest'
+import { restAutoOn, signalChain, startRest, useNow } from '@/lib/rest'
 import { motion } from 'framer-motion'
 import { Button, Card, Cover, DurationInput, Icon, NumberInput, Page, Ring, SectionTitle, Sheet, SportBadge, spring, toast } from '@/ui/kit'
 import { AddExerciseSheet, FormatChips, formatPatch, GroupParams, GroupTag, PlanEditor, type GroupItem } from '@/ui/formats'
@@ -47,8 +47,12 @@ function CheckBtn({ done, locked, label, onClick }: { done: boolean; locked: boo
   )
 }
 
-/** Lance le repos qui suit la validation d'une série, d'une partie ou d'un tour : bon repos selon la position, ou « Enchaîne ». */
+/**
+ * Lance le repos qui suit la validation d'une série, d'une partie ou d'un tour : bon repos selon la position, ou « Enchaîne ».
+ * Seulement si « Minuteur automatique » est activé dans le profil (coupé par défaut).
+ */
 function restFor(session: Session, e: SessionExercise, n: number, part: number) {
+  if (!restAutoOn()) return
   const r = restAfter(session, e, n, part)
   if (!r) return
   if (r.chain) signalChain(r.label)

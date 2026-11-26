@@ -11,7 +11,7 @@ import { Button, Card, Cover, Group, Icon, Page, Row, RowIcon, Sheet, Toggle, sp
 import { motion } from 'framer-motion'
 import { setLook, useLook, type Look } from '@/ui/look'
 import { DIST_LABEL } from '@/engine/running'
-import { setRestSound, useRest } from '@/lib/rest'
+import { setRestAuto, setRestSound, useRest } from '@/lib/rest'
 import { WatchGroup } from '@/ui/watch'
 import { StepGoalSheet } from '@/ui/recovery'
 import { lastNight } from '@/engine/recovery'
@@ -58,7 +58,7 @@ export function ProfileView({ userId }: { userId: string }) {
   const [goalSheet, setGoalSheet] = useState(false)
   const night = lastNight(db.health, userId, todayISO())
   const stepGoal = stepGoalOf(db, userId)
-  const { sound } = useRest()
+  const { sound, auto } = useRest()
   const libre = isLibre(program)
   const edits = db.edits.filter((e) => e.clientId === userId).slice(0, 12)
 
@@ -100,12 +100,17 @@ export function ProfileView({ userId }: { userId: string }) {
 
       {(!program || program.type !== 'muscu' || libre || db.importedRuns.some((r) => r.clientId === userId)) && <WatchGroup userId={userId} />}
 
-      <Group header="Minuteur de repos" footer="Le repos démarre tout seul quand tu valides une série, une partie ou un tour. Le son de fin ne retentit que si l'app est au premier plan.">
+      <Group header="Minuteur de repos" footer={auto ? 'Le repos démarre tout seul quand tu valides une série, une partie ou un tour. Le son de fin ne retentit que si l\'app est au premier plan.' : 'Active-le pour qu\'un décompte de repos démarre quand tu valides une série.'}>
         <Row>
           <RowIcon name="clock" color="#30D158" />
+          <div className="flex-1"><div className="font-semibold">Minuteur automatique</div><div className="text-[13px] text-muted">{auto ? 'Activé' : 'Coupé'}</div></div>
+          <Toggle checked={auto} label="Minuteur automatique" onChange={() => setRestAuto(!auto)} />
+        </Row>
+        {auto && <Row>
+          <RowIcon name="bell" color="#FF9F0A" />
           <div className="flex-1"><div className="font-semibold">Son de fin de repos</div><div className="text-[13px] text-muted">{sound ? 'Activé' : 'Coupé'}</div></div>
           <Toggle checked={sound} label="Son de fin de repos" onChange={() => setRestSound(!sound)} />
-        </Row>
+        </Row>}
       </Group>
 
       <Group header="Rappels" footer={isIOS() && !isStandalone() ? 'Sur iPhone, ajoute d\'abord MIND à l\'écran d\'accueil.' : undefined}>

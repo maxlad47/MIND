@@ -67,6 +67,15 @@ describe('minuteur : état persistant', () => {
     r.clearChain()
     expect(r.getChain()).toBeNull()
   })
+  it('minuteur automatique coupé par défaut ; le couper arrête le repos en cours', () => {
+    expect(r.restAutoOn()).toBe(false)
+    r.setRestAuto(true)
+    expect(r.restAutoOn()).toBe(true)
+    r.startRest(60, 'Repos')
+    r.setRestAuto(false)
+    expect(r.restAutoOn()).toBe(false)
+    expect(r.getRestTimer()).toBeNull()
+  })
   it('le son se coupe dans le Profil et le réglage reste', () => {
     expect(r.restSoundOn()).toBe(true)
     r.setRestSound(false)

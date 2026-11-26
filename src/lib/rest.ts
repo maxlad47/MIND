@@ -38,6 +38,7 @@ export const isStale = (t: Pick<RestTimer, 'endAt'>, now = Date.now()): boolean 
 
 const KEY = 'mind.rest.v1'
 const SOUND_KEY = 'mind.rest.sound'
+const AUTO_KEY = 'mind.rest.auto'
 
 function load(): RestTimer | null {
   try {
@@ -63,6 +64,15 @@ export const getChain = (): { label: string; at: number } | null => chain
 export function setRestSound(on: boolean): void {
   try { localStorage.setItem(SOUND_KEY, on ? '1' : '0') } catch { /* ok */ }
   emit()
+}
+/** Minuteur qui démarre tout seul quand on valide une série (réglage du profil, par défaut coupé). */
+export function setRestAuto(on: boolean): void {
+  try { localStorage.setItem(AUTO_KEY, on ? '1' : '0') } catch { /* ok */ }
+  if (!on) { timer = null; chain = null; save(null) }
+  emit()
+}
+export function restAutoOn(): boolean {
+  try { return localStorage.getItem(AUTO_KEY) === '1' } catch { return false }
 }
 /** Son activé (par défaut oui). */
 export function restSoundOn(): boolean {
@@ -148,11 +158,12 @@ export function playRestEnd(): void {
 
 // ------------------------------------------------------------------ hooks React
 
-export function useRest(): { timer: RestTimer | null; chain: { label: string; at: number } | null; sound: boolean } {
+export function useRest(): { timer: RestTimer | null; chain: { label: string; at: number } | null; sound: boolean; auto: boolean } {
   const t = useSyncExternalStore((cb) => { listeners.add(cb); return () => { listeners.delete(cb) } }, getRestTimer)
   const c = useSyncExternalStore((cb) => { listeners.add(cb); return () => { listeners.delete(cb) } }, getChain)
   const sound = useSyncExternalStore((cb) => { listeners.add(cb); return () => { listeners.delete(cb) } }, restSoundOn)
-  return { timer: t, chain: c, sound }
+  const auto = useSyncExternalStore((cb) => { listeners.add(cb); return () => { listeners.delete(cb) } }, restAutoOn)
+  return { timer: t, chain: c, sound, auto }
 }
 
 /** Heure courante, rafraîchie toutes les `ms` tant que `active` : sert aux décomptes (repos, EMOM, AMRAP, chrono). */

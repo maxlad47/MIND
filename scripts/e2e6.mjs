@@ -23,8 +23,20 @@ const profileOf = (d, name) => d.profiles.find((p) => p.firstName === name)
 const activeOf = (d, id) => d.programs.find((p) => p.clientId === id && p.status === 'actif')
 const timerText = async () => (await page.getByRole('timer', { name: 'Minuteur de repos' }).count()) ? await page.getByRole('timer', { name: 'Minuteur de repos' }).innerText() : ''
 
-// ---------------------------------------------------------------- Nina : Push = combo 1 + 6 au développé couché + superset
+// ---------------------------------------------------------------- sans réglage : aucun minuteur après une série
 await page.goto(base); await page.waitForTimeout(800)
+await page.getByText('Nina').first().click(); await page.waitForTimeout(900)
+{
+  const d0 = await db(); const n0 = profileOf(d0, 'Nina')
+  const p0 = sessionsOf(activeOf(d0, n0.id)).filter((s) => s.title === 'Push' && s.status === 'prevue' && !s.extra).sort((a, b) => a.date.localeCompare(b.date))[0]
+  await go('/session/' + p0.id); await page.waitForTimeout(900)
+  await page.locator('button[aria-label^="Valider"]:not([disabled])').first().click(); await page.waitForTimeout(500)
+  ok((await timerText()) === '' && (await page.getByRole('status').filter({ hasText: 'Enchaîne' }).count()) === 0, 'minuteur automatique coupé par défaut : rien ne se lance après une série')
+  await page.locator('button[aria-label^="Annuler"]:not([disabled])').first().click(); await page.waitForTimeout(400)
+}
+// la suite teste le minuteur : on l'active comme dans le Profil
+await page.evaluate(() => localStorage.setItem('mind.rest.auto', '1'))
+await logout()
 await page.getByText('Nina').first().click(); await page.waitForTimeout(900)
 let d = await db()
 const nina = profileOf(d, 'Nina')
@@ -194,10 +206,14 @@ await go('/session/' + withExtras[0].id); await page.waitForTimeout(900); await 
 
 // profil : son du minuteur
 await go('/app/profile'); await page.waitForTimeout(700); await shot('85-profil')
+ok((await page.getByText('Minuteur automatique').count()) > 0, 'Profil : réglage « Minuteur automatique »')
 ok((await page.getByText('Son de fin de repos').count()) > 0, 'Profil : réglage « Son de fin de repos »')
 await page.getByLabel('Son de fin de repos').click(); await page.waitForTimeout(300)
 ok(await page.evaluate(() => localStorage.getItem('mind.rest.sound')) === '0', 'Profil : le son se coupe')
 await page.getByLabel('Son de fin de repos').click(); await page.waitForTimeout(300)
+await page.getByLabel('Minuteur automatique').click(); await page.waitForTimeout(300)
+ok(await page.evaluate(() => localStorage.getItem('mind.rest.auto')) === '0' && (await page.getByText('Son de fin de repos').count()) === 0, 'Profil : minuteur coupé → le réglage du son disparaît')
+await shot('86-profil-minuteur-coupe')
 
 // formulaire : nouvelle inscription course → étape renfo, 1 fois par semaine proposé par défaut
 await logout()
